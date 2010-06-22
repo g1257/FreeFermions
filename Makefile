@@ -11,17 +11,13 @@ all: $(EXENAME)
 OBJECTSCOMMON = 
 OBJECTSDMRG    = main.o  
 
-all: clean dmrg
+all: clean ./freeFermions 
 
-dmrg: $(OBJECTSDMRG) $(OBJECTSCOMMON) 
-	$(CXX) -o dmrg  $(OBJECTSCOMMON) $(OBJECTSDMRG)  $(LDFLAGS) 
+freeFermions: $(OBJECTSDMRG) $(OBJECTSCOMMON) 
+	$(CXX) -o freeFermions  $(OBJECTSCOMMON) $(OBJECTSDMRG)  $(LDFLAGS) 
 
-# This target is work in progress...:	
-observe: clean observe.o $(OBJECTSCOMMON)
-	$(CXX) -o observe observe.o $(OBJECTSCOMMON) $(LDFLAGS)
-
-freeSystem: clean freeSystem.o $(OBJECTSCOMMON)
-	$(CXX) -o freeSystem freeSystem.o $(OBJECTSCOMMON) $(LDFLAGS)
+freeSystem: clean  $(OBJECTSCOMMON)
+	$(CXX) -o  $(OBJECTSCOMMON) $(LDFLAGS)
 
 clean:
 	rm -f core* $(EXENAME) *.o *.ii *.tt

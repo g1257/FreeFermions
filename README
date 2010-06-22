@@ -1,0 +1,69 @@
+Let the Hamiltonian H be:
+
+H = \sum_{i,j,s} t_{i,j} c^\dagger_{i s } c_{j s}
+
+Where t is a known symmetric matrix.
+
+We'd like to calculate things like 
+<psi_{gs}| c1 c2 c3 .. |psi_{gs}>
+where c1, c2, c3 are real-space creation or destruction operators.
+
+ 
+git pull http://github.com/g1257/FreeFermions
+cd FreeFermions
+make
+./executable
+
+PLEASE NOTE: THIS PROJECT IS WORK IN PROGRESS.
+But the the basic concepts already work.
+
+Below I explain the sample driver (main.cpp file):
+
+int main() 
+{
+size_t n = 10; // <-- number of sites
+size_t dof = 2; // spin up and down (2 flavors)
+
+// sets up a (let's say) periodic chain to populate matrix t:
+bool isPeriodic = true;
+psimag::Matrix<FieldType> t(n,n);
+for (size_t i=0;i<n;i++) {
+	for (size_t j=0;j<n;j++) {
+		if (i-j==1 || j-i==1) t(i,j) = 1.0;
+	}
+}
+if (isPeriodic) t(0,n-1) = t(n-1,0) = 1.0;
+
+// constructs core engine:
+FreeSystemCoreType fsc(t,dof,true);
+
+std::vector<size_t> ne(dof,5); // 5 up and 5 down
+
+// gets ground state:
+HilbertVectorType gs = fsc.newGroundState(ne);
+// print ground state
+std::cout<<gs;
+	
+// creates a "destruction operator"
+size_t site = 0;
+size_t flavor = 0;
+FreeOperatorType myOp = fsc.newSimpleOperator("destruction",site,flavor);
+	
+// creates a new vector:
+HilbertVectorType phi = fsc.newState();
+	
+// does |phi> = myOp |gs>
+myOp.apply(phi,gs);
+
+// prints <gs|phi>=<gs|myOp|gs> = <gs|c_{site}|gs> = 0
+std::cerr<<"Scalar Product="<<scalarProduct(phi,gs)<<"\n";
+
+// creates a "creation" operator	
+FreeOperatorType myOp2 = fsc.newSimpleOperator("creation",site,flavor);
+
+// another bucket:	
+HilbertVectorType phi2 = fsc.newState();
+// does |phi2> = myOp2 |phi>
+myOp2.apply(phi2,phi);
+// does <gs|phi2> = <gs| myOp2|phi> = <gs|myOp2 myOp|gs> = n_{site}	
+std::cerr<<"Scalar PRoduct="<<scalarProduct(phi2,gs)<<"\n";
