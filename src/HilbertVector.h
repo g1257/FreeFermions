@@ -105,10 +105,13 @@ namespace Dmrg {
 	
 	template<typename FieldType>
 	class HilbertVector {
-			typedef unsigned int long long UnsignedIntegerType;
+			// this is too slow:
+			//typedef unsigned int long long UnsignedIntegerType;
+			// but this is faster:
+			typedef size_t UnsignedIntegerType;
 			//static size_t const SPIN_UP=0,SPIN_DOWN=1;
 			typedef FlavoredState<UnsignedIntegerType> FlavoredStateType;
-			typedef HilbertVector<FieldType> HilbertVectorType;
+			typedef HilbertVector<FieldType> ThisType;
 			
 		public:
 			typedef HilbertTerm<FieldType,FlavoredStateType> HilbertTermType;
@@ -118,17 +121,23 @@ namespace Dmrg {
 			{
 			}
 			
+			void add(const ThisType& another)
+			{
+				for (size_t i=0;i<another.terms();i++)
+					add(another.term(i));
+			}
+			
 			void add(const HilbertTermType& term)
 			{
 				const FlavoredStateType& state = term.state;
 				const FieldType& value = term.value;
-				int x = utils::isInVector(data_,state);
-				if (x<0) {
+				//int x = utils::isInVector(data_,state);
+				//if (x<0) {
 					data_.push_back(state);
 					values_.push_back(value);
-				} else {
-					values_[x] += value;
-				}
+				//} else {
+				//	values_[x] += value;
+				//}
 			}
 			
 			HilbertTermType term(size_t i) const
@@ -158,7 +167,7 @@ namespace Dmrg {
 			template<typename T>
 			friend std::ostream& operator<<(std::ostream& os,const HilbertVector<T>& v);
 
-			FieldType scalarProduct(const HilbertVectorType& v) const
+			FieldType scalarProduct(const ThisType& v) const
 			{
 				if (size_!=v.size_ || dof_!=v.dof_) throw std::runtime_error("ScalarProduct\n");
 				FieldType sum = 0;
@@ -169,8 +178,25 @@ namespace Dmrg {
 				}
 				return sum;
 			}
+			
+			void simplify()
+			{
+				std::vector<FlavoredStateType> dataNew;
+				std::vector<FieldType> valuesNew;
+				for (size_t i=0;i<data_.size();i++) {
+					int x = utils::isInVector(dataNew,data_[i]);
+					if (x<0) {
+						dataNew.push_back(data_[i]);
+						valuesNew.push_back(values_[i]);
+					} else {
+						valuesNew[x] += values_[i];
+					}
+				}
+				data_ = dataNew;
+				values_ = valuesNew;
+			}
 
-		private:
+		private:	
 			size_t size_;
 			size_t dof_;
 			std::vector<FlavoredStateType> data_;

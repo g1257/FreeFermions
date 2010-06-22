@@ -108,6 +108,7 @@ namespace Dmrg {
 				for (size_t i=0;i<src.terms();i++) {
 					apply(dest,src.term(i));
 				}
+				dest.simplify();
 			}
 			
 		private:	
@@ -116,13 +117,13 @@ namespace Dmrg {
 					const HilbertTermType& src) const
 			{
 				
-				size_t size = U_.n_row()/dof_;
+				if (src.value ==0) return;
 				typename HilbertVectorType::HilbertTermType term = src;
 				
 				for (size_t lambda = 0;lambda < U_.n_col();lambda++) {
 					
 					applyInternal(term,src,lambda); // term.value contains sign
-					FieldType factor = U_(site_+flavor_*size,lambda);
+					FieldType factor = U_(site_,lambda);
 					term.value *= factor;
 					if  (term.value ==0) continue;
 					dest.add(term);

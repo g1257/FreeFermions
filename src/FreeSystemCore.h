@@ -106,24 +106,26 @@ namespace Dmrg {
 				std::cerr<<"Created core "<<eigenvectors_.n_row()<<"  times "<<eigenvectors_.n_col()<<"\n";
 			}
 			
-			HilbertVectorType newState()
+			HilbertVectorType newState() const
 			{
 				HilbertVectorType tmp(t_.n_row(),dof_);
 				return tmp;	
 			}
 			
-			HilbertVectorType newGroundState(const std::vector<size_t>& ne)
+			HilbertVectorType newGroundState(const std::vector<size_t>& ne) const
 			{
 				HilbertVectorType tmp(t_.n_row(),dof_);
 				tmp.fill(ne);
 				return tmp;	
 			}
 			
-			FreeOperatorType newSimpleOperator(const std::string& label,size_t site,size_t flavor)
+			FreeOperatorType newSimpleOperator(const std::string& label,size_t site,size_t flavor) const
 			{
 				FreeOperatorType tmp(eigenvectors_,label,site,flavor,dof_);
 				return tmp;
 			}
+			
+			size_t dof() const { return dof_; }
 			
 		private:
 		

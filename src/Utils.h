@@ -428,13 +428,15 @@ C           Wisniewski, J. A., (SNLA)
 	template<typename X,typename Y>
 	inline int isInVector(std::vector<X> const &natBasis,Y const &v)
 	{
-// 		if (natBasis.size()==0) return -1;
-// 		for (size_t ii=0;ii<natBasis.size();ii++) if (natBasis[ii]==v) return ii;
-// 		return -1;
+#if 0
+ 		if (natBasis.size()==0) return -1;
+ 		for (size_t ii=0;ii<natBasis.size();ii++) if (natBasis[ii]==v) return ii;
+ 		return -1;
+#else
 		typename std::vector<X>::const_iterator x = find(natBasis.begin(),natBasis.end(),v);
 		if (x==natBasis.end()) return -1;
 		return x-natBasis.begin();
-		
+#endif
 	}
 	
 	

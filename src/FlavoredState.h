@@ -113,9 +113,13 @@ namespace Dmrg {
 			
 			bool operator==(const ThisType& b) const
 			{
-				if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
+				// eliminated due to performance reasons:
+				//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
+				
 				for (size_t i=0;i<data_.size();i++) 
 					if (data_[i]!=b.data_[i]) return false;
+				
+				
 				return true;
 			}
 			
