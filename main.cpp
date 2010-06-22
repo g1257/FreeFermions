@@ -1,11 +1,11 @@
-#include "FreeSystemCore.h"
+#include "Engine.h"
 
-using namespace Dmrg;
+using namespace FreeFermions;
 
 typedef double FieldType;
-typedef FreeSystemCore<FieldType> FreeSystemCoreType;
-typedef FreeSystemCoreType::HilbertVectorType HilbertVectorType;
-typedef FreeSystemCoreType::FreeOperatorType FreeOperatorType;
+typedef Engine<FieldType> EngineType;
+typedef EngineType::HilbertVectorType HilbertVectorType;
+typedef EngineType::FreeOperatorType FreeOperatorType;
 
 int main()
 {
@@ -20,24 +20,24 @@ int main()
 	}
 	if (isPeriodic) t(0,n-1) = t(n-1,0) = 1.0;
 	
-	FreeSystemCoreType fsc(t,dof,true);
+	EngineType engine(t,dof,true);
 	std::vector<size_t> ne(dof,5); // 5 up and 5 down
-	HilbertVectorType gs = fsc.newGroundState(ne);
+	HilbertVectorType gs = engine.newGroundState(ne);
 	std::cout<<gs;
 	
 	size_t site = 0;
 	size_t flavor = 0;
-	FreeOperatorType myOp = fsc.newSimpleOperator("destruction",site,flavor);
+	FreeOperatorType myOp = engine.newSimpleOperator("destruction",site,flavor);
 	
-	HilbertVectorType phi = fsc.newState();
+	HilbertVectorType phi = engine.newState();
 	
 	myOp.apply(phi,gs);
 	std::cout<<"-----------------\n";
 	std::cout<<phi;
 	std::cerr<<"Scalar Product="<<scalarProduct(phi,gs)<<"\n";
 	
-	FreeOperatorType myOp2 = fsc.newSimpleOperator("creation",site,flavor);
-	HilbertVectorType phi2 = fsc.newState();
+	FreeOperatorType myOp2 = engine.newSimpleOperator("creation",site,flavor);
+	HilbertVectorType phi2 = engine.newState();
 	myOp2.apply(phi2,phi);
 	std::cout<<"-----------------\n";
 	std::cout<<phi2;

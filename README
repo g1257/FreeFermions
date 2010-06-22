@@ -35,22 +35,22 @@ for (size_t i=0;i<n;i++) {
 if (isPeriodic) t(0,n-1) = t(n-1,0) = 1.0;
 
 // constructs core engine:
-FreeSystemCoreType fsc(t,dof,true);
+EngineType engine(t,dof,true);
 
 std::vector<size_t> ne(dof,5); // 5 up and 5 down
 
 // gets ground state:
-HilbertVectorType gs = fsc.newGroundState(ne);
+HilbertVectorType gs = engine.newGroundState(ne);
 // print ground state
 std::cout<<gs;
 	
 // creates a "destruction operator"
 size_t site = 0;
 size_t flavor = 0;
-FreeOperatorType myOp = fsc.newSimpleOperator("destruction",site,flavor);
+FreeOperatorType myOp = engine.newSimpleOperator("destruction",site,flavor);
 	
 // creates a new vector:
-HilbertVectorType phi = fsc.newState();
+HilbertVectorType phi = engine.newState();
 	
 // does |phi> = myOp |gs>
 myOp.apply(phi,gs);
@@ -59,10 +59,10 @@ myOp.apply(phi,gs);
 std::cerr<<"Scalar Product="<<scalarProduct(phi,gs)<<"\n";
 
 // creates a "creation" operator	
-FreeOperatorType myOp2 = fsc.newSimpleOperator("creation",site,flavor);
+FreeOperatorType myOp2 = engine.newSimpleOperator("creation",site,flavor);
 
 // another bucket:	
-HilbertVectorType phi2 = fsc.newState();
+HilbertVectorType phi2 = engine.newState();
 // does |phi2> = myOp2 |phi>
 myOp2.apply(phi2,phi);
 // does <gs|phi2> = <gs| myOp2|phi> = <gs|myOp2 myOp|gs> = n_{site}	

@@ -85,7 +85,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Utils.h"
 #include "FlavoredState.h"
 
-namespace Dmrg {
+namespace FreeFermions {
 	// All interactions == 0
 	
 	template<typename FieldType,typename FlavoredStateType>

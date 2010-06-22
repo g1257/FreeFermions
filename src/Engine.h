@@ -74,22 +74,22 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file FreeSystemCore.h
+/*! \file Engine.h
  *
  * Raw computations for a free Hubbard model
  *
  */
-#ifndef FREE_SYSTEM_CORE_H
-#define FREE_SYSTEM_CORE_H
+#ifndef ENGINE_H
+#define ENGINE_H
 
 #include "Utils.h"
 #include "HilbertVector.h"
 #include "FreeOperator.h"
 
-namespace Dmrg {
+namespace FreeFermions {
 	// All interactions == 0
 	template<typename FieldType>
-	class FreeSystemCore {
+	class Engine {
 			
 			typedef psimag::Matrix<FieldType> MatrixType;
 	
@@ -99,7 +99,7 @@ namespace Dmrg {
 			typedef FreeOperator<MatrixType,HilbertVectorType> FreeOperatorType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
 			
-			FreeSystemCore(const MatrixType& t,size_t dof,bool verbose=false) :
+			Engine(const MatrixType& t,size_t dof,bool verbose=false) :
 				t_(t),dof_(dof),verbose_(verbose)
 			{
 				diagonalize();
@@ -152,7 +152,7 @@ namespace Dmrg {
 			bool verbose_;
 			psimag::Matrix<FieldType> eigenvectors_;
 			std::vector<FieldType> eigenvalues_;
-	}; // FreeSystemCore
+	}; // Engine
 } // namespace Dmrg 
 
 /*@}*/
