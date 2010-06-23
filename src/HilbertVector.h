@@ -162,15 +162,24 @@ namespace FreeFermions {
 				data_.clear();
 				values_.clear();
 			}
-
+			
+			// This function needs to be robust enough to handle the case
+			// where neither this nor v are grouped
 			FieldType scalarProduct(const ThisType& v) const
 			{
 				if (size_!=v.size_ || dof_!=v.dof_) throw std::runtime_error("ScalarProduct\n");
 				FieldType sum = 0;
+				typedef typename std::vector<FlavoredStateType>::const_iterator MyIterator;
+				
+				
 				for (size_t i=0;i<data_.size();i++) {
-					int x = utils::isInVector(v.data_,data_[i]);
-					if (x<0) continue;
-					sum += std::conj(v.values_[x]) * values_[i];
+					MyIterator start = v.data_.begin();
+					while(start!=v.data_.end()) {
+						MyIterator x = find(start,v.data_.end(),data_[i]);
+						if (x==v.data_.end()) break;
+						sum += std::conj(v.values_[x-data_.begin()]) * values_[i];
+						start = x+1;
+					}
 				}
 				return sum;
 			}
