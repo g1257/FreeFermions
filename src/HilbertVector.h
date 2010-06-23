@@ -111,12 +111,9 @@ namespace FreeFermions {
 	
 	template<typename RealType,typename FieldType,typename UnsignedIntegerType>
 	class HilbertVector {
-			// this is too slow:
-			//typedef unsigned int long long UnsignedIntegerType;
-			// but this is faster:
-			//typedef size_t UnsignedIntegerType;
-			//static size_t const SPIN_UP=0,SPIN_DOWN=1;
 			
+			static size_t const TERMS_MAX_SOFT = 500000;
+			static size_t const TERMS_MAX_HARD = 5000000;
 			typedef HilbertVector<RealType,FieldType,UnsignedIntegerType> ThisType;
 			
 		public:
@@ -130,8 +127,16 @@ namespace FreeFermions {
 			
 			void add(const ThisType& another)
 			{
+				std::cerr<<"Adding "<<another.terms()<<" to "<<data_.size()<<"\n";
 				for (size_t i=0;i<another.terms();i++)
 					add(another.term(i));
+				
+				if (data_.size()>TERMS_MAX_SOFT) {
+					std::cerr<<"WARNING: Soft maximum reached, simplifying...\n";
+					simplify();
+				}
+				if (data_.size()>TERMS_MAX_HARD) 
+					std::cerr<<"WARNING: Too many number of terms\n";	
 			}
 			
 			// No grouping here, since it's too expensive
@@ -206,7 +211,46 @@ namespace FreeFermions {
 				}
 				data_ = dataNew;
 				values_ = valuesNew;
+				std::cerr<<"Simplification done\n";
 			}
+			
+			// sort and then simplify
+			void simplifyFast()
+			{
+				if (data_.size()==0) return;
+				std::vector<size_t> iperm(data_.size());
+				std::cerr<<"Tring to sort "<<data_.size()<<" items.\n";
+				utils::sort(data_,iperm);
+				//throw std::runtime_error("Don't forget to reorder values\n");
+				std::vector<FlavoredStateType> dataNew;
+				std::vector<FieldType> valuesNew;
+				size_t j=0;
+				FlavoredStateType prev = data_[0];
+				
+				std::cerr<<"Will now simplify...\n";
+				for (size_t i=0;i<data_.size();i++) {
+					if (i==0 || !(data_[i]==prev)) {
+						j++;
+						prev = data_[i];
+					} else {
+						values_[j-1] += values_[iperm[i]];
+						values_[iperm[i]] = static_cast<FieldType>(0.0);
+					}
+				}
+				
+				typedef typename std::vector<FlavoredStateType>::iterator MyIterator;
+				MyIterator iter = data_.begin();
+				typedef typename std::vector<FieldType>::iterator MyIterator2;
+				MyIterator2 iter2 = values_.begin();
+				for (;iter!=data_.end() && iter2!=values_.end();iter++,iter2++) {
+					if (*iter2 == static_cast<FieldType>(0.0)) {
+						iter = data_.erase(iter);
+						iter2 = values_.erase(iter2);
+					}
+				}
+				std::cerr<<"Simplification done "<<data_.size()<<"\n";
+			}
+			
 			
 			ThisType& operator*=(const FieldType &rhs)
 			{

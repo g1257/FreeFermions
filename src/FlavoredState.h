@@ -147,7 +147,16 @@ namespace FreeFermions {
 			
 			template<typename T>
 			friend bool operator==(const FlavoredState<T>& v1,const FlavoredState<T>& v2);
-
+			
+			template<typename T>
+			friend bool operator<(const FlavoredState<T>& v1,const FlavoredState<T>& v2);
+					
+			template<typename T>
+			friend bool operator>(const FlavoredState<T>& v1,const FlavoredState<T>& v2);
+					
+			template<typename T>
+			friend bool operator<=(const FlavoredState<T>& v1,const FlavoredState<T>& v2);
+			
 		private:
 			
 			void fillInternal(UnsignedIntegerType& x,size_t ne)
@@ -230,6 +239,45 @@ namespace FreeFermions {
 		
 		for (size_t i=0;i<v1.data_.size();i++) 
 			if (v1.data_[i]!=v2.data_[i]) return false;
+		return true;
+	}
+	
+	template<typename T>
+	inline bool operator<(const FlavoredState<T>& v1,const FlavoredState<T>& v2)
+	{
+		// eliminated due to performance reasons:
+		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
+		
+		for (size_t i=0;i<v1.data_.size();i++) {
+			if (v1.data_[i]>=v2.data_[i]) return false;
+			if (v1.data_[i]<v2.data_[i]) return true;
+		}
+		return false;
+	}
+	
+	template<typename T>
+	inline bool operator>(const FlavoredState<T>& v1,const FlavoredState<T>& v2)
+	{
+		// eliminated due to performance reasons:
+		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
+		
+		for (size_t i=0;i<v1.data_.size();i++) {
+			if (v1.data_[i]<=v2.data_[i]) return false;
+			if (v1.data_[i]>v2.data_[i]) return true;
+		}
+		return false;
+	}
+	
+	template<typename T>
+	inline bool operator<=(const FlavoredState<T>& v1,const FlavoredState<T>& v2)
+	{
+		// eliminated due to performance reasons:
+		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
+		
+		for (size_t i=0;i<v1.data_.size();i++) {
+			if (v1.data_[i]>=v2.data_[i]) return false;
+			if (v1.data_[i]<v2.data_[i]) return true;
+		}
 		return true;
 	}
 } // namespace Dmrg 

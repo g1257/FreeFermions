@@ -192,8 +192,6 @@ C           Wisniewski, J. A., (SNLA)
 	template<typename FloatingType,typename ContainerType,typename Field>
 	void sort(ContainerType& x,std::vector<size_t>& iperm)
 	{
-		
-		Field temp;
 		int n = x.size();
 		int i,ij,indx,indx0,istrt,k,l,lm,lmt; 
 		std::vector<int> il(21),iu(21);
@@ -311,7 +309,7 @@ C           Wisniewski, J. A., (SNLA)
 			if (!flags[istrt]) {
 				indx=istrt;
 				indx0=indx;
-				temp=x[istrt];
+				Field temp=x[istrt];
 				while(!flags[indx]) {
 					x[indx]=x[iperm[indx]];
 					indx0=indx;

@@ -23,7 +23,7 @@ typedef ObservableLibrary<EngineType> ObservableLibraryType;
 
 int main(int argc,char *argv[])
 {
-	if (argc!=6) throw std::runtime_error("Needs 5 arguments\n");
+	if (argc!=6) throw std::runtime_error("Needs 6 arguments\n");
 	size_t n = 16; // 16 sites
 	size_t dof = 2; // spin up and down
 	bool isPeriodic = false;
@@ -47,6 +47,9 @@ int main(int argc,char *argv[])
 	size_t sigma3 = 0;
 	for (size_t it=0;it<size_t(atoi(argv[4]));it++) {
 		RealType time = it * atof(argv[5]);
+		EtoTheIhTimeType eih(time,engine);
+		DiagonalOperatorType eihOp(eih);
+				
 		HilbertVectorType timeVector = engine.newState();
 		for (size_t sigma = 0;sigma<2;sigma++) {
 			HilbertVectorType phi = engine.newState();
@@ -56,25 +59,22 @@ int main(int argc,char *argv[])
 			HilbertVectorType phi2 = engine.newState();
 			myOp2.apply(phi2,phi);
 	
-		
 			for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
 				HilbertVectorType phi3 = engine.newState();
-				library.applyNiBarOneFlavor(phi,gs,site2,1-sigma2);
+				library.applyNiBarOneFlavor(phi3,phi2,site2,1-sigma2);
 	
 				FreeOperatorType myOp4 = engine.newSimpleOperator("destruction",site2,sigma2);
 				HilbertVectorType phi4 = engine.newState();
 				myOp4.apply(phi4,phi3);
 	
-				EtoTheIhTimeType eih(time,engine);
-				DiagonalOperatorType eihOp(eih);
 				HilbertVectorType phi5 = engine.newState();
 				eihOp.apply(phi5,phi4);
-	
-		
 		
 				FreeOperatorType myOp6 = engine.newSimpleOperator("destruction",site3,sigma3);
 				HilbertVectorType phi6 = engine.newState();
 				myOp6.apply(phi6,phi5);
+				std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
+				phi6.simplify();
 				timeVector.add(phi6);
 			}
 		}
