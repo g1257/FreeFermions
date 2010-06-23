@@ -9,7 +9,7 @@ CPPFLAGS = -Werror -Wall -I../PartialPsimag  -I../src
 CXX = g++ -O2 -pg -DNDEBUG
 all: $(EXENAME)
 OBJECTSCOMMON = 
-OBJECTSDMRG    = ninj.o  
+OBJECTSDMRG    = EasyExciton.o # ninj.o 
 
 all: clean ./freeFermions 
 

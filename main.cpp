@@ -2,8 +2,10 @@
 
 using namespace FreeFermions;
 
+typedef double RealType;
 typedef double FieldType;
-typedef Engine<FieldType> EngineType;
+typedef size_t UnsignedIntegerType;
+typedef Engine<RealType,FieldType,UnsignedIntegerType> EngineType;
 typedef EngineType::HilbertVectorType HilbertVectorType;
 typedef EngineType::FreeOperatorType FreeOperatorType;
 

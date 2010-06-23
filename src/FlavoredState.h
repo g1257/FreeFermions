@@ -90,6 +90,7 @@ namespace FreeFermions {
 	class FlavoredState {
 			//static size_t const SPIN_UP=0,SPIN_DOWN=1;
 			typedef FlavoredState<UnsignedIntegerType> ThisType;
+			static int const FERMION_SIGN = -1;
 		public:
 			FlavoredState(size_t dof,size_t size) :
 				size_(size),data_(dof),max_((1<<size) -1)
@@ -108,7 +109,8 @@ namespace FreeFermions {
 			{
 				if (flavor>=data_.size()) throw std::runtime_error("FlavoredState::create()\n");
 				if (lambda>=size_) throw std::runtime_error("FlavoredState::create()\n");
-				return applyInternal(label,data_[flavor],lambda);
+				int interSign = (calcInterElectrons(flavor) %2) ? 1 : FERMION_SIGN;
+				return applyInternal(label,data_[flavor],lambda)*interSign;
 			}
 			
 // 			bool operator==(const ThisType& b) const
@@ -155,7 +157,7 @@ namespace FreeFermions {
 				}
 				if (x>max_) throw std::runtime_error("FlavoredState::applyInternal(): too big\n");
 				if (nflips ==0 || nflips % 2 ==0) return 1;
-				return -1;
+				return FERMION_SIGN;
 			}
 			
 			size_t statesBetween(UnsignedIntegerType x,size_t lambda) const
@@ -166,6 +168,25 @@ namespace FreeFermions {
 					sum += (x & 1);
 					x >>= 1;
 					counter++;
+				}
+				return sum;
+			}
+			
+			size_t calcInterElectrons(size_t flavor)
+			{
+				size_t sum = 0;
+				for (size_t flavor2 = 0; flavor2 < flavor; flavor2++) {
+					sum += numberOfDigits(data_[flavor2]);
+				}
+				return sum;
+			}
+			
+			size_t numberOfDigits(UnsignedIntegerType x)
+			{
+				size_t sum = 0;
+				while (x>0) {
+					sum += (x & 1);
+					x >>= 1;
 				}
 				return sum;
 			}

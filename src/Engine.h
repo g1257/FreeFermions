@@ -88,15 +88,15 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename FieldType>
+	template<typename RealType,typename FieldType,typename UnsignedIntegerType>
 	class Engine {
 			
 			typedef psimag::Matrix<FieldType> MatrixType;
 	
 		public:
 			
-			typedef HilbertVector<FieldType> HilbertVectorType;
-			typedef FreeOperator<MatrixType,HilbertVectorType> FreeOperatorType;
+			typedef HilbertVector<RealType,FieldType,UnsignedIntegerType> HilbertVectorType;
+			typedef FreeOperator<RealType,FieldType,UnsignedIntegerType,HilbertVector> FreeOperatorType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
 			
 			Engine(const MatrixType& t,size_t dof,bool verbose=false) :
@@ -123,6 +123,11 @@ namespace FreeFermions {
 			{
 				FreeOperatorType tmp(eigenvectors_,label,site,flavor,dof_);
 				return tmp;
+			}
+			
+			RealType getEnergy(const HilbertTermType& term) const
+			{
+				
 			}
 			
 			size_t dof() const { return dof_; }

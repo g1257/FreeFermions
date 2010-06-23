@@ -103,17 +103,18 @@ namespace FreeFermions {
 		return os;	
 	}
 	
-	template<typename FieldType>
+	template<typename RealType,typename FieldType,typename UnsignedIntegerType>
 	class HilbertVector {
 			// this is too slow:
 			//typedef unsigned int long long UnsignedIntegerType;
 			// but this is faster:
-			typedef size_t UnsignedIntegerType;
+			//typedef size_t UnsignedIntegerType;
 			//static size_t const SPIN_UP=0,SPIN_DOWN=1;
-			typedef FlavoredState<UnsignedIntegerType> FlavoredStateType;
-			typedef HilbertVector<FieldType> ThisType;
+			
+			typedef HilbertVector<RealType,FieldType,UnsignedIntegerType> ThisType;
 			
 		public:
+			typedef FlavoredState<UnsignedIntegerType> FlavoredStateType;
 			typedef HilbertTerm<FieldType,FlavoredStateType> HilbertTermType;
 			
 			HilbertVector(size_t size,size_t dof) :
@@ -127,17 +128,15 @@ namespace FreeFermions {
 					add(another.term(i));
 			}
 			
+			// No grouping here, since it's too expensive
+			// Use simplify if you need to group
 			void add(const HilbertTermType& term)
 			{
 				const FlavoredStateType& state = term.state;
 				const FieldType& value = term.value;
-				//int x = utils::isInVector(data_,state);
-				//if (x<0) {
-					data_.push_back(state);
-					values_.push_back(value);
-				//} else {
-				//	values_[x] += value;
-				//}
+				data_.push_back(state);
+				values_.push_back(value);
+				
 			}
 			
 			HilbertTermType term(size_t i) const
@@ -163,9 +162,6 @@ namespace FreeFermions {
 				data_.clear();
 				values_.clear();
 			}
-			
-			template<typename T>
-			friend std::ostream& operator<<(std::ostream& os,const HilbertVector<T>& v);
 
 			FieldType scalarProduct(const ThisType& v) const
 			{
@@ -196,6 +192,9 @@ namespace FreeFermions {
 				data_ = dataNew;
 				values_ = valuesNew;
 			}
+			
+			template<typename T,typename V, typename U>
+			friend std::ostream& operator<<(std::ostream& os,const HilbertVector<T,V,U>& v);
 
 		private:	
 			size_t size_;
@@ -205,21 +204,21 @@ namespace FreeFermions {
 			
 	}; // HilbertVector
 	
-	template<typename T>
-	std::ostream& operator<<(std::ostream& os,const HilbertVector<T>& v)
+	template<typename T,typename V, typename U>
+	std::ostream& operator<<(std::ostream& os,const HilbertVector<T,V,U>& v)
 	{
 		
 		os<<"size="<<v.size_<<"\n";
 		os<<"dof="<<v.dof_<<"\n";
 		for (size_t i=0;i<v.data_.size();i++) {
-			typename HilbertVector<T>::HilbertTermType term(v.data_[i],v.values_[i]);
+			typename HilbertVector<T,V,U>::HilbertTermType term(v.data_[i],v.values_[i]);
 			os<<term;
 		}
 		return os;
 	}
 	
-	template<typename T>
-	T scalarProduct(const HilbertVector<T>& v1,const HilbertVector<T>& v2)
+	template<typename T,typename V, typename U>
+	T scalarProduct(const HilbertVector<T,V,U>& v1,const HilbertVector<T,V,U>& v2)
 	{
 		return v1.scalarProduct(v2);
 	}

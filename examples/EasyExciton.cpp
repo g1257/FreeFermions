@@ -1,7 +1,6 @@
 
 
-// SAmple of how to use FreeFermions core engine to calculate
-// < n_i n_j >
+// <c^dagger_i exp(iHt) n_j exp(-iHt) c_i>
 
 #include "Engine.h"
 #include "ObservableLibrary.h"
@@ -14,6 +13,8 @@ typedef EngineType::HilbertVectorType HilbertVectorType;
 typedef EngineType::FreeOperatorType FreeOperatorType;
 
 typedef FreeFermions::ObservableLibrary<EngineType> ObservableLibraryType;
+
+
 
 int main()
 {
@@ -31,17 +32,21 @@ int main()
 	EngineType engine(t,dof,false);
 	std::vector<size_t> ne(dof,8); // 8 up and 8 down
 	HilbertVectorType gs = engine.newGroundState(ne);
+	std::cout<<ne;
+	size_t flavor =0;
+	size_t site = 6;
+	FreeOperatorType myOp = engine.newSimpleOperator("destruction",site,flavor);
+	HilbertVectorType phi = engine.newState();
 	
-	ObservableLibraryType library(engine);
+	myOp.apply(phi,gs);
+	FieldType density = scalarProduct(phi,phi);
+	std::cerr<<"density="<<density<<"\n";	
+	for (size_t site2=0;site2<16;site2++) {
+		
+		FreeOperatorType myOp2 = engine.newSimpleOperator("destruction",site2,flavor);
+		HilbertVectorType phi2 = engine.newState();
+		myOp2.apply(phi2,phi);
 	
-	for (size_t site = 0; site<n ; site++) {
-		HilbertVectorType phi = engine.newState();
-		library.applyNiAllFlavors(phi,gs,site);
-		for (size_t site2=0; site2<n; site2++) {
-			HilbertVectorType phi2 = engine.newState();
-			library.applyNiAllFlavors(phi2,phi,site2);
-			std::cout<<scalarProduct(phi2,gs)<<" ";
-		}
-		std::cout<<"\n";
+		std::cout<<site2<<" "<<scalarProduct(phi2,phi2)/density<<"\n";
 	}
 }
