@@ -1,5 +1,5 @@
 
-
+// Calculates
 // <c^dagger_i exp(iHt) n_j exp(-iHt) c_i>
 
 #include "Engine.h"

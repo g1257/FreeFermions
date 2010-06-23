@@ -1,11 +1,10 @@
 #!/usr/bin/perl -w
 
 my ($what)=@ARGV;
-my @possibilities = ("ninj","EasyExciton");
-
-defined($what) or die "perl make.pl whatever\n \twhere whatever is one of @possibilities\n";
+my $possibilities = getPossibilities();
+defined($what) or die "perl make.pl whatever\n \twhere whatever is one of $possibilities\n";
  
-backupMakfile();
+backupMakefile();
 writeMakefile();
 make();
 
@@ -14,7 +13,7 @@ sub make
 	system("make");
 }
 
-sub backupMakfile
+sub backupMakefile
 {
 	system("cp Makefile Makefile.bak") if (-r "Makefile");
 	print "Backup of Makefile in Makefile.bak\n";
@@ -53,5 +52,18 @@ EOF
 
 close(FILE);
 print "Done writing Makefile\n";
+}
+
+sub getPossibilities
+{
+	open(PIPE,"ls *.cpp |") or return "";
+	my $a = "";
+	while(<PIPE>) {
+		chomp;
+		s/\.cpp$//;
+		$a .= $_." ";
+	}
+	close(PIPE);
+	return $a;
 }
 
