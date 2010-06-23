@@ -88,13 +88,14 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename RealType,typename FieldType,typename UnsignedIntegerType>
+	template<typename RealType_,typename FieldType_,typename UnsignedIntegerType>
 	class Engine {
 			
-			typedef psimag::Matrix<FieldType> MatrixType;
+			typedef psimag::Matrix<FieldType_> MatrixType;
 	
 		public:
-			
+			typedef RealType_ RealType;
+			typedef FieldType_ FieldType;
 			typedef HilbertVector<RealType,FieldType,UnsignedIntegerType> HilbertVectorType;
 			typedef FreeOperator<RealType,FieldType,UnsignedIntegerType,HilbertVector> FreeOperatorType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
@@ -125,10 +126,12 @@ namespace FreeFermions {
 				return tmp;
 			}
 			
-			RealType getEnergy(const HilbertTermType& term) const
+			RealType energy(const HilbertTermType& term) const
 			{
-				
+				return HilbertVectorType::energy(eigenvalues_,term);
 			}
+			
+			RealType eigenvalue(size_t i) const { return eigenvalues_[i]; }
 			
 			size_t dof() const { return dof_; }
 			
@@ -156,7 +159,7 @@ namespace FreeFermions {
 			size_t dof_;
 			bool verbose_;
 			psimag::Matrix<FieldType> eigenvectors_;
-			std::vector<FieldType> eigenvalues_;
+			std::vector<RealType> eigenvalues_;
 	}; // Engine
 } // namespace Dmrg 
 

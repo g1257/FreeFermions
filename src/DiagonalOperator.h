@@ -74,36 +74,29 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file FreeOperator.h
+/*! \file DiagonalOperator.h
  *
  * 
  *
  */
-#ifndef FREE_OPERATOR_H
-#define FREE_OPERATOR_H
+#ifndef DIAGONAL_OPERATOR_H
+#define DIAGONAL_OPERATOR_H
 
 #include "Utils.h"
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<
-		typename RealType,
-		typename FieldType,
-		typename UnsignedIntegerType,
-		template<typename,typename,typename> class HilbertVectorTemplate>
-	class FreeOperator {
+	template<typename BackendType>
+	class DiagonalOperator {
 			//typedef unsigned int long long UnsignedIntegerType;
 			
-			typedef HilbertVectorTemplate<RealType,FieldType,UnsignedIntegerType> HilbertVectorType;
-			typedef typename HilbertVectorType::FlavoredStateType FlavoredStateType;
-			typedef psimag::Matrix<FieldType> MatrixType;
-			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
 		public:
-			FreeOperator(const MatrixType& U,const std::string& label,size_t site,size_t flavor,size_t dof) :
-				U_(U),label_(label),site_(site),flavor_(flavor),dof_(dof)
+			DiagonalOperator(const BackendType& backend) :
+				backend_(backend)
 			{
 			}
 			
+			template<typename HilbertVectorType>
 			void apply(
 				
 				HilbertVectorType& dest,
@@ -111,48 +104,16 @@ namespace FreeFermions {
 			{
 				dest.clear();
 				for (size_t i=0;i<src.terms();i++) {
-					apply(dest,src.term(i));
-				}
-			}
-			
-		private:	
-			void apply(
-					HilbertVectorType& dest,
-					const HilbertTermType& src) const
-			{
-				
-				
-				if (src.value ==static_cast<FieldType>(0.0)) return;
-				typename HilbertVectorType::HilbertTermType term = src;
-				
-				for (size_t lambda = 0;lambda < U_.n_col();lambda++) {
-					
-					applyInternal(term,src,lambda); // term.value contains sign
-					FieldType factor = U_(site_,lambda);
-					term.value *= factor;
-					if  (term.value == static_cast<FieldType>(0.0)) continue;
+					typename HilbertVectorType::HilbertTermType term = src.term(i);
+					term.value = backend_(term);
 					dest.add(term);
+					
 				}
 			}
-
-		
-			template<typename HilbertTermType>
-			void applyInternal(
-					HilbertTermType& dest,
-					const HilbertTermType& src,
-					size_t lambda) const
-			{
-				dest = src;
-				RealType sign = dest.state.apply(label_,flavor_,lambda);
-				dest.value *= sign;
-			}
 			
-			const MatrixType& U_;
-			std::string label_;
-			size_t site_;
-			size_t flavor_;
-			size_t dof_;
-	}; // FreeOperator
+		private:
+			const BackendType& backend_;
+	}; // DiagonalOperator
 } // namespace Dmrg 
 
 /*@}*/

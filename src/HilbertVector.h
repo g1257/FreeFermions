@@ -103,6 +103,12 @@ namespace FreeFermions {
 		return os;	
 	}
 	
+	template<typename RealType,typename HilbertTermType>
+	RealType energy(const std::vector<RealType>& eigs,HilbertTermType& term)
+	{
+		return term.value*energy(eigs,term.state);
+	}
+	
 	template<typename RealType,typename FieldType,typename UnsignedIntegerType>
 	class HilbertVector {
 			// this is too slow:
@@ -202,6 +208,12 @@ namespace FreeFermions {
 				values_ = valuesNew;
 			}
 			
+			ThisType& operator*=(const FieldType &rhs)
+			{
+				throw std::runtime_error("Operator *= unimplemented in HilbertVerctor.h\n");
+			}
+
+			
 			template<typename T,typename V, typename U>
 			friend std::ostream& operator<<(std::ostream& os,const HilbertVector<T,V,U>& v);
 
@@ -227,7 +239,7 @@ namespace FreeFermions {
 	}
 	
 	template<typename T,typename V, typename U>
-	T scalarProduct(const HilbertVector<T,V,U>& v1,const HilbertVector<T,V,U>& v2)
+	V scalarProduct(const HilbertVector<T,V,U>& v1,const HilbertVector<T,V,U>& v2)
 	{
 		return v1.scalarProduct(v2);
 	}

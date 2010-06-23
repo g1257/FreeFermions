@@ -113,6 +113,22 @@ namespace FreeFermions {
 				return applyInternal(label,data_[flavor],lambda)*interSign;
 			}
 			
+			
+			void occupations(std::vector<size_t>& ns,size_t flavor) const
+			{
+				ns.resize(size_);
+				for (size_t i = 0; i < size_; i++) ns[i] = 0;
+				
+				UnsignedIntegerType x = data_[flavor];
+				size_t counter = 0;
+				while (x>0) {
+					ns[counter++] = (x & 1);
+					x >>= 1;
+				}
+			}
+			
+			size_t flavors() const { return data_.size(); }
+			
 // 			bool operator==(const ThisType& b) const
 // 			{
 // 				// eliminated due to performance reasons:
@@ -190,7 +206,7 @@ namespace FreeFermions {
 				}
 				return sum;
 			}
-			
+
 			size_t size_;
 			std::vector<UnsignedIntegerType> data_;
 			UnsignedIntegerType max_;

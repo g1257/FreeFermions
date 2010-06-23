@@ -74,85 +74,57 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file FreeOperator.h
+/*! \file EToTheIhTime.h
  *
  * 
  *
  */
-#ifndef FREE_OPERATOR_H
-#define FREE_OPERATOR_H
+#ifndef E_TO_THE_I_H_TIME_H
+#define E_TO_THE_I_H_TIME_H
 
 #include "Utils.h"
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<
-		typename RealType,
-		typename FieldType,
-		typename UnsignedIntegerType,
-		template<typename,typename,typename> class HilbertVectorTemplate>
-	class FreeOperator {
+	template<typename EngineType>
+	class EToTheIhTime {
 			//typedef unsigned int long long UnsignedIntegerType;
 			
-			typedef HilbertVectorTemplate<RealType,FieldType,UnsignedIntegerType> HilbertVectorType;
-			typedef typename HilbertVectorType::FlavoredStateType FlavoredStateType;
-			typedef psimag::Matrix<FieldType> MatrixType;
-			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
+			typedef typename EngineType::RealType RealType;
+			typedef typename EngineType::FieldType FieldType;
+			typedef typename EngineType::HilbertTermType HilbertTermType;
 		public:
-			FreeOperator(const MatrixType& U,const std::string& label,size_t site,size_t flavor,size_t dof) :
-				U_(U),label_(label),site_(site),flavor_(flavor),dof_(dof)
+			EToTheIhTime(RealType time,const EngineType& engine) :
+				time_(time),engine_(engine)
 			{
 			}
 			
-			void apply(
-				
-				HilbertVectorType& dest,
-				const HilbertVectorType& src) const
+			FieldType operator()(const HilbertTermType& src) const
 			{
-				dest.clear();
-				for (size_t i=0;i<src.terms();i++) {
-					apply(dest,src.term(i));
+				RealType energy = 0;
+				for (size_t i = 0;i<src.state.flavors();i++) {
+					std::vector<size_t> ns;
+					src.state.occupations(ns,i);
+					energy += energyInternal(ns);
 				}
+				RealType exponent = -time_*energy;
+				return src.value * FieldType(cos(exponent),sin(exponent));
 			}
 			
-		private:	
-			void apply(
-					HilbertVectorType& dest,
-					const HilbertTermType& src) const
+		private:
+			
+			RealType energyInternal(const std::vector<size_t>& ns) const
 			{
-				
-				
-				if (src.value ==static_cast<FieldType>(0.0)) return;
-				typename HilbertVectorType::HilbertTermType term = src;
-				
-				for (size_t lambda = 0;lambda < U_.n_col();lambda++) {
-					
-					applyInternal(term,src,lambda); // term.value contains sign
-					FieldType factor = U_(site_,lambda);
-					term.value *= factor;
-					if  (term.value == static_cast<FieldType>(0.0)) continue;
-					dest.add(term);
+				RealType sum = 0;
+				for (size_t i=0;i<ns.size();i++) {
+					sum += ns[i] * engine_.eigenvalue(i);
 				}
-			}
-
-		
-			template<typename HilbertTermType>
-			void applyInternal(
-					HilbertTermType& dest,
-					const HilbertTermType& src,
-					size_t lambda) const
-			{
-				dest = src;
-				RealType sign = dest.state.apply(label_,flavor_,lambda);
-				dest.value *= sign;
+				return sum;
 			}
 			
-			const MatrixType& U_;
-			std::string label_;
-			size_t site_;
-			size_t flavor_;
-			size_t dof_;
-	}; // FreeOperator
+			const RealType& time_;
+			const EngineType& engine_;
+	}; // EToTheIhTime
 } // namespace Dmrg 
 
 /*@}*/
