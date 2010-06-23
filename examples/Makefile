@@ -6,21 +6,19 @@
 
 LDFLAGS =      -llapack    -lm  -lpthread 
 CPPFLAGS = -Werror -Wall -I../PartialPsimag  -I../src
-CXX = g++ -O2 -pg -DNDEBUG
-all: $(EXENAME)
-OBJECTSCOMMON = 
-OBJECTSDMRG    = EasyExciton.o # ninj.o 
+CXX = g++ -g3 -DNDEBUG
 
-all: clean ./freeFermions 
 
-freeFermions: $(OBJECTSDMRG) $(OBJECTSCOMMON) 
-	$(CXX) -o freeFermions  $(OBJECTSCOMMON) $(OBJECTSDMRG)  $(LDFLAGS) 
+all: clean ninj 
 
-freeSystem: clean  $(OBJECTSCOMMON)
-	$(CXX) -o  $(OBJECTSCOMMON) $(LDFLAGS)
+ninj.o: ninj.cpp 
+	$(CXX) $(CPPFLAGS) -c ninj.cpp  
+
+ninj: clean  ninj.o
+	$(CXX) -o  ninj ninj.o $(LDFLAGS)
 
 clean:
-	rm -f core* $(EXENAME) *.o *.ii *.tt
+	rm -f core* ninj *.o *.ii *.tt
 
 ######## End of Makefile ########
 

@@ -46,7 +46,6 @@ int main()
 		FreeOperatorType myOp2 = engine.newSimpleOperator("destruction",site2,flavor);
 		HilbertVectorType phi2 = engine.newState();
 		myOp2.apply(phi2,phi);
-		//phi2.simplify();
 		std::cout<<site2<<" "<<scalarProduct(phi2,phi2)/density<<"\n";
 	}
 }

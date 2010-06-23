@@ -177,7 +177,7 @@ namespace FreeFermions {
 					while(start!=v.data_.end()) {
 						MyIterator x = find(start,v.data_.end(),data_[i]);
 						if (x==v.data_.end()) break;
-						sum += std::conj(v.values_[x-data_.begin()]) * values_[i];
+						sum += std::conj(v.values_[x-v.data_.begin()]) * values_[i];
 						start = x+1;
 					}
 				}
