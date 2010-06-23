@@ -179,6 +179,7 @@ namespace FreeFermions {
 				return sum;
 			}
 			
+			// this is an expensive operation due to the search:
 			void simplify()
 			{
 				std::vector<FlavoredStateType> dataNew;

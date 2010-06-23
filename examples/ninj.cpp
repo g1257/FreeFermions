@@ -33,9 +33,9 @@ int main()
 	ObservableLibraryType library(engine);
 	
 	for (size_t site = 0; site<n ; site++) {
+		HilbertVectorType phi = engine.newState();
+		library.applyNiAllFlavors(phi,gs,site);
 		for (size_t site2=0; site2<n; site2++) {
-			HilbertVectorType phi = engine.newState();
-			library.applyNiAllFlavors(phi,gs,site);
 			HilbertVectorType phi2 = engine.newState();
 			library.applyNiAllFlavors(phi2,phi,site2);
 			std::cout<<scalarProduct(phi2,gs)<<" ";

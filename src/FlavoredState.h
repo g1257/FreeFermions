@@ -111,21 +111,24 @@ namespace FreeFermions {
 				return applyInternal(label,data_[flavor],lambda);
 			}
 			
-			bool operator==(const ThisType& b) const
-			{
-				// eliminated due to performance reasons:
-				//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
-				
-				for (size_t i=0;i<data_.size();i++) 
-					if (data_[i]!=b.data_[i]) return false;
-				
-				
-				return true;
-			}
+// 			bool operator==(const ThisType& b) const
+// 			{
+// 				// eliminated due to performance reasons:
+// 				//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
+// 				
+// 				for (size_t i=0;i<data_.size();i++) 
+// 					if (data_[i]!=b.data_[i]) return false;
+// 				
+// 				
+// 				return true;
+// 			}
 			
 			
 			template<typename T>
 			friend std::ostream& operator<<(std::ostream& os,const FlavoredState<T>& v);
+			
+			template<typename T>
+			friend bool operator==(const FlavoredState<T>& v1,const FlavoredState<T>& v2);
 
 		private:
 			
@@ -180,6 +183,17 @@ namespace FreeFermions {
 		for (size_t i=0;i<v.data_.size();i++)
 			os<<v.data_[i]<<" ";
 		return os;
+	}
+	
+	template<typename T>
+	inline bool operator==(const FlavoredState<T>& v1,const FlavoredState<T>& v2)
+	{
+		// eliminated due to performance reasons:
+		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
+		
+		for (size_t i=0;i<v1.data_.size();i++) 
+			if (v1.data_[i]!=v2.data_[i]) return false;
+		return true;
 	}
 } // namespace Dmrg 
 
