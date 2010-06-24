@@ -120,8 +120,8 @@ namespace FreeFermions {
 			typedef FlavoredState<UnsignedIntegerType> FlavoredStateType;
 			typedef HilbertTerm<FieldType,FlavoredStateType> HilbertTermType;
 			
-			HilbertVector(size_t size,size_t dof) :
-				size_(size),dof_(dof)
+			HilbertVector(size_t size,size_t dof,bool verbose=true) :
+				size_(size),dof_(dof),verbose_(verbose)
 			{
 			}
 			
@@ -176,27 +176,47 @@ namespace FreeFermions {
 			
 			// This function needs to be robust enough to handle the case
 			// where neither this nor v are grouped
-			FieldType scalarProduct(const ThisType& v) const
+			FieldType scalarProduct1(const ThisType& v) const
 			{
 				if (size_!=v.size_ || dof_!=v.dof_) throw std::runtime_error("ScalarProduct\n");
 				FieldType sum = 0;
 				typedef typename std::vector<FlavoredStateType>::const_iterator MyIterator;
-				
-				
-				for (size_t i=0;i<data_.size();i++) {
-					MyIterator start = v.data_.begin();
-					while(start!=v.data_.end()) {
-						MyIterator x = find(start,v.data_.end(),data_[i]);
-						if (x==v.data_.end()) break;
-						sum += std::conj(v.values_[x-v.data_.begin()]) * values_[i];
+
+				for (size_t i=0;i<v.data_.size();i++) {
+					MyIterator start = data_.begin();
+					while(start!=data_.end()) {
+						MyIterator x = find(start,data_.end(),v.data_[i]);
+						if (x==data_.end()) break;
+						sum += std::conj(values_[x-data_.begin()]) * v.values_[i];
 						start = x+1;
 					}
 				}
 				return sum;
 			}
 			
+			FieldType scalarProduct(ThisType& v)
+			{
+				if (size_!=v.size_ || dof_!=v.dof_) throw std::runtime_error("ScalarProduct\n");
+				FieldType sum = 0;
+				typedef typename std::vector<FlavoredStateType>::iterator MyIterator;
+				sort();
+				v.sort();
+				size_t j=0;
+				for (size_t i=0;i<v.data_.size();i++) {
+					MyIterator start = data_.begin();
+					while (j<data_.size() && data_[j]<v.data_[i]) j++;
+					size_t k = j;
+					while(k<data_.size() && data_[k] == v.data_[i]) {
+						sum += std::conj(values_[k]) * v.values_[i];
+						k++;
+					}
+				}
+				
+				return sum;
+			}
+			
 			// this is an expensive operation due to the search:
-			void simplify()
+			void simplifySlow()
 			{
 				std::vector<FlavoredStateType> dataNew;
 				std::vector<FieldType> valuesNew;
@@ -215,42 +235,94 @@ namespace FreeFermions {
 			}
 			
 			// sort and then simplify
-			void simplifyFast()
+			void simplifyLowMemory()
 			{
 				if (data_.size()==0) return;
 				std::vector<size_t> iperm(data_.size());
 				std::cerr<<"Tring to sort "<<data_.size()<<" items.\n";
 				utils::sort(data_,iperm);
 				//throw std::runtime_error("Don't forget to reorder values\n");
-				std::vector<FlavoredStateType> dataNew;
-				std::vector<FieldType> valuesNew;
-				size_t j=0;
+				std::vector<FieldType> valuesNew(values_.size(),0);
+				//for (size_t i=0;i<values_.size();i++) valuesNew[i]=values_[iperm[i]];
+				//values_=valuesNew;
+				//return;
+				size_t prevIndex=0;
 				FlavoredStateType prev = data_[0];
-				
+				//for (size_t i=0;i<values_.size();i++) valuesNew[i]=0;
 				std::cerr<<"Will now simplify...\n";
 				for (size_t i=0;i<data_.size();i++) {
 					if (i==0 || !(data_[i]==prev)) {
-						j++;
+						valuesNew[i] = values_[iperm[i]];
+						prevIndex = i;
 						prev = data_[i];
 					} else {
-						values_[j-1] += values_[iperm[i]];
-						values_[iperm[i]] = static_cast<FieldType>(0.0);
+						valuesNew[prevIndex] += values_[iperm[i]];
+						valuesNew[i] = static_cast<FieldType>(0.0);
 					}
 				}
-				
+				std::cerr<<"Now erasing...\n";
+				iperm.clear();
+				values_=valuesNew;
+				valuesNew.clear();
 				typedef typename std::vector<FlavoredStateType>::iterator MyIterator;
 				MyIterator iter = data_.begin();
 				typedef typename std::vector<FieldType>::iterator MyIterator2;
 				MyIterator2 iter2 = values_.begin();
-				for (;iter!=data_.end() && iter2!=values_.end();iter++,iter2++) {
+				while(iter!=data_.end() && iter2!=values_.end()) {
 					if (*iter2 == static_cast<FieldType>(0.0)) {
 						iter = data_.erase(iter);
 						iter2 = values_.erase(iter2);
+					} else {
+						iter++,iter2++;
 					}
 				}
 				std::cerr<<"Simplification done "<<data_.size()<<"\n";
 			}
 			
+			// sort and then simplify
+			void simplify()
+			{
+				if (data_.size()==0) return;
+				std::vector<size_t> iperm(data_.size());
+				std::cerr<<"Tring to sort "<<data_.size()<<" items.\n";
+				utils::sort(data_,iperm);
+				//throw std::runtime_error("Don't forget to reorder values\n");
+				std::vector<FieldType> valuesNew;
+				std::vector<FlavoredStateType> dataNew;
+				//for (size_t i=0;i<values_.size();i++) valuesNew[i]=values_[iperm[i]];
+				//values_=valuesNew;
+				//return;
+				size_t prevIndex=0;
+				FlavoredStateType prev = data_[0];
+				//for (size_t i=0;i<values_.size();i++) valuesNew[i]=0;
+				std::cerr<<"Will now simplify...\n";
+				for (size_t i=0;i<data_.size();i++) {
+					if (i==0 || !(data_[i]==prev)) {
+						valuesNew.push_back(values_[iperm[i]]);
+						dataNew.push_back(data_[i]);
+						prevIndex = valuesNew.size()-1;
+						prev = data_[i];
+					} else {
+						valuesNew[prevIndex] += values_[iperm[i]];
+					}
+				}
+				values_ = valuesNew;
+				valuesNew.clear();
+				data_ = dataNew;
+				std::cerr<<"Simplification done "<<data_.size()<<"\n";
+			}
+			
+			// sort 
+			void sort()
+			{
+				if (data_.size()==0) return;
+				std::vector<size_t> iperm(data_.size());
+				if (verbose_) std::cerr<<"Sorting "<<data_.size()<<" items.\n";
+				utils::sort(data_,iperm);
+				std::vector<FieldType> valuesNew(values_.size());
+				for (size_t i=0;i<values_.size();i++) valuesNew[i]=values_[iperm[i]];
+				values_=valuesNew;
+			}
 			
 			ThisType& operator*=(const FieldType &rhs)
 			{
@@ -264,6 +336,7 @@ namespace FreeFermions {
 		private:	
 			size_t size_;
 			size_t dof_;
+			bool verbose_;
 			std::vector<FlavoredStateType> data_;
 			std::vector<FieldType> values_;
 			
@@ -283,7 +356,7 @@ namespace FreeFermions {
 	}
 	
 	template<typename T,typename V, typename U>
-	V scalarProduct(const HilbertVector<T,V,U>& v1,const HilbertVector<T,V,U>& v2)
+	V scalarProduct(HilbertVector<T,V,U>& v1,HilbertVector<T,V,U>& v2)
 	{
 		return v1.scalarProduct(v2);
 	}

@@ -53,11 +53,10 @@ int main(int argc,char *argv[])
 		DiagonalOperatorType eihOp(eih);
 		HilbertVectorType phi2 = engine.newState();
 		eihOp.apply(phi2,phi);
-	
 		FreeOperatorType myOp2 = engine.newSimpleOperator("destruction",site2,flavor);
 		HilbertVectorType phi3 = engine.newState();
 		myOp2.apply(phi3,phi2);
-		
+		phi2.clear();
 		std::cout<<site2<<" "<<scalarProduct(phi3,phi3)/density<<"\n";
 	}
 }

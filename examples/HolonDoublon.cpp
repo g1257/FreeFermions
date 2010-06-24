@@ -50,7 +50,8 @@ int main(int argc,char *argv[])
 		EtoTheIhTimeType eih(time,engine);
 		DiagonalOperatorType eihOp(eih);
 				
-		HilbertVectorType timeVector = engine.newState();
+		//HilbertVectorType timeVector = engine.newState();
+		FieldType sum = 0;
 		for (size_t sigma = 0;sigma<2;sigma++) {
 			HilbertVectorType phi = engine.newState();
 			library.applyNiOneFlavor(phi,gs,site,1-sigma);
@@ -58,26 +59,34 @@ int main(int argc,char *argv[])
 			FreeOperatorType myOp2 = engine.newSimpleOperator("creation",site,sigma);
 			HilbertVectorType phi2 = engine.newState();
 			myOp2.apply(phi2,phi);
-	
+			phi.clear();
+			
 			for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
 				HilbertVectorType phi3 = engine.newState();
 				library.applyNiBarOneFlavor(phi3,phi2,site2,1-sigma2);
-	
+				
 				FreeOperatorType myOp4 = engine.newSimpleOperator("destruction",site2,sigma2);
 				HilbertVectorType phi4 = engine.newState();
 				myOp4.apply(phi4,phi3);
-	
+				phi3.clear();
+				
+				std::cerr<<"Applying exp(iHt)\n";
 				HilbertVectorType phi5 = engine.newState();
 				eihOp.apply(phi5,phi4);
-		
+				phi4.clear();
+				
+				std::cerr<<"Applying c_p\n";
 				FreeOperatorType myOp6 = engine.newSimpleOperator("destruction",site3,sigma3);
 				HilbertVectorType phi6 = engine.newState();
 				myOp6.apply(phi6,phi5);
+				phi5.clear();
+				
 				std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
-				phi6.simplify();
-				timeVector.add(phi6);
+				sum += scalarProduct(phi6,phi6);
+				std::cerr<<"Done with scalar product\n";
+				//timeVector.add(phi6);
 			}
 		}
-		std::cout<<site3<<" "<<scalarProduct(timeVector,timeVector)<<"\n";
+		std::cout<<site3<<" "<<sum<<"\n";
 	}
 }
