@@ -35,6 +35,7 @@ int main(int argc,char *argv[])
 	}
 	if (isPeriodic) t(0,n-1) = t(n-1,0) = 1.0;
 	
+	bool verbose = false;
 	EngineType engine(t,dof,false);
 	ObservableLibraryType library(engine);
 	
@@ -45,12 +46,14 @@ int main(int argc,char *argv[])
 	size_t site2 = atoi(argv[2]);
 	size_t site3 = atoi(argv[3]);
 	size_t sigma3 = 0;
+	
 	for (size_t it=0;it<size_t(atoi(argv[4]));it++) {
 		RealType time = it * atof(argv[5]);
 		EtoTheIhTimeType eih(time,engine);
 		DiagonalOperatorType eihOp(eih);
 				
-		//HilbertVectorType timeVector = engine.newState();
+		HilbertVectorType savedVector = engine.newState(verbose);
+		FieldType savedValue = 0;
 		FieldType sum = 0;
 		for (size_t sigma = 0;sigma<2;sigma++) {
 			HilbertVectorType phi = engine.newState();
@@ -66,27 +69,33 @@ int main(int argc,char *argv[])
 				library.applyNiBarOneFlavor(phi3,phi2,site2,1-sigma2);
 				
 				FreeOperatorType myOp4 = engine.newSimpleOperator("destruction",site2,sigma2);
-				HilbertVectorType phi4 = engine.newState();
+				HilbertVectorType phi4 = engine.newState(verbose);
 				myOp4.apply(phi4,phi3);
 				phi3.clear();
 				
-				std::cerr<<"Applying exp(iHt)\n";
-				HilbertVectorType phi5 = engine.newState();
+				if (verbose) std::cerr<<"Applying exp(iHt)\n";
+				HilbertVectorType phi5 = engine.newState(verbose);
 				eihOp.apply(phi5,phi4);
 				phi4.clear();
 				
-				std::cerr<<"Applying c_p\n";
+				if (verbose) std::cerr<<"Applying c_p\n";
 				FreeOperatorType myOp6 = engine.newSimpleOperator("destruction",site3,sigma3);
-				HilbertVectorType phi6 = engine.newState();
+				HilbertVectorType phi6 = engine.newState(verbose);
 				myOp6.apply(phi6,phi5);
 				phi5.clear();
 				
-				std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
+				if (verbose) std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
 				sum += scalarProduct(phi6,phi6);
-				std::cerr<<"Done with scalar product\n";
+				if (verbose) std::cerr<<"Done with scalar product\n";
+				if (sigma ==0 && sigma2 ==0) savedVector = phi6;
+				if (sigma ==1 && sigma2 ==1) {
+					savedValue = scalarProduct(phi6,savedVector);
+					savedVector.clear();
+				}
 				//timeVector.add(phi6);
 			}
 		}
+		sum += 2*real(savedValue);
 		std::cout<<site3<<" "<<sum<<"\n";
 	}
 }

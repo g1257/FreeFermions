@@ -249,7 +249,7 @@ namespace FreeFermions {
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
 		
 		for (size_t i=0;i<v1.data_.size();i++) {
-			if (v1.data_[i]>=v2.data_[i]) return false;
+			if (v1.data_[i]>v2.data_[i]) return false;
 			if (v1.data_[i]<v2.data_[i]) return true;
 		}
 		return false;
@@ -262,7 +262,7 @@ namespace FreeFermions {
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
 		
 		for (size_t i=0;i<v1.data_.size();i++) {
-			if (v1.data_[i]<=v2.data_[i]) return false;
+			if (v1.data_[i]<v2.data_[i]) return false;
 			if (v1.data_[i]>v2.data_[i]) return true;
 		}
 		return false;
@@ -275,7 +275,7 @@ namespace FreeFermions {
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
 		
 		for (size_t i=0;i<v1.data_.size();i++) {
-			if (v1.data_[i]>=v2.data_[i]) return false;
+			if (v1.data_[i]>v2.data_[i]) return false;
 			if (v1.data_[i]<v2.data_[i]) return true;
 		}
 		return true;

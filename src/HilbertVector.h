@@ -120,23 +120,17 @@ namespace FreeFermions {
 			typedef FlavoredState<UnsignedIntegerType> FlavoredStateType;
 			typedef HilbertTerm<FieldType,FlavoredStateType> HilbertTermType;
 			
-			HilbertVector(size_t size,size_t dof,bool verbose=true) :
-				size_(size),dof_(dof),verbose_(verbose)
+			HilbertVector(size_t size,size_t dof,bool verbose=false) :
+				size_(size),dof_(dof),verbose_(verbose),sorted_(false)
 			{
 			}
 			
 			void add(const ThisType& another)
 			{
-				std::cerr<<"Adding "<<another.terms()<<" to "<<data_.size()<<"\n";
+				if (verbose_) std::cerr<<"Adding "<<another.terms()<<" to "<<data_.size()<<"\n";
 				for (size_t i=0;i<another.terms();i++)
 					add(another.term(i));
 				
-				if (data_.size()>TERMS_MAX_SOFT) {
-					std::cerr<<"WARNING: Soft maximum reached, simplifying...\n";
-					simplify();
-				}
-				if (data_.size()>TERMS_MAX_HARD) 
-					std::cerr<<"WARNING: Too many number of terms\n";	
 			}
 			
 			// No grouping here, since it's too expensive
@@ -147,7 +141,7 @@ namespace FreeFermions {
 				const FieldType& value = term.value;
 				data_.push_back(state);
 				values_.push_back(value);
-				
+				sorted_ = false;
 			}
 			
 			HilbertTermType term(size_t i) const
@@ -166,12 +160,14 @@ namespace FreeFermions {
 				clear();
 				data_.push_back(fstate);
 				values_.push_back(1.0);
+				sorted_ = false;
 			}
 			
 			void clear()
 			{
 				data_.clear();
 				values_.clear();
+				sorted_ = false;
 			}
 			
 			// This function needs to be robust enough to handle the case
@@ -198,12 +194,11 @@ namespace FreeFermions {
 			{
 				if (size_!=v.size_ || dof_!=v.dof_) throw std::runtime_error("ScalarProduct\n");
 				FieldType sum = 0;
-				typedef typename std::vector<FlavoredStateType>::iterator MyIterator;
 				sort();
 				v.sort();
 				size_t j=0;
 				for (size_t i=0;i<v.data_.size();i++) {
-					MyIterator start = data_.begin();
+					
 					while (j<data_.size() && data_[j]<v.data_[i]) j++;
 					size_t k = j;
 					while(k<data_.size() && data_[k] == v.data_[i]) {
@@ -260,6 +255,7 @@ namespace FreeFermions {
 						valuesNew[i] = static_cast<FieldType>(0.0);
 					}
 				}
+				sorted_ = true;
 				std::cerr<<"Now erasing...\n";
 				iperm.clear();
 				values_=valuesNew;
@@ -284,7 +280,7 @@ namespace FreeFermions {
 			{
 				if (data_.size()==0) return;
 				std::vector<size_t> iperm(data_.size());
-				std::cerr<<"Tring to sort "<<data_.size()<<" items.\n";
+				if (verbose_) std::cerr<<"Tring to sort "<<data_.size()<<" items.\n";
 				utils::sort(data_,iperm);
 				//throw std::runtime_error("Don't forget to reorder values\n");
 				std::vector<FieldType> valuesNew;
@@ -295,7 +291,7 @@ namespace FreeFermions {
 				size_t prevIndex=0;
 				FlavoredStateType prev = data_[0];
 				//for (size_t i=0;i<values_.size();i++) valuesNew[i]=0;
-				std::cerr<<"Will now simplify...\n";
+				if (verbose_) std::cerr<<"Will now simplify...\n";
 				for (size_t i=0;i<data_.size();i++) {
 					if (i==0 || !(data_[i]==prev)) {
 						valuesNew.push_back(values_[iperm[i]]);
@@ -309,25 +305,27 @@ namespace FreeFermions {
 				values_ = valuesNew;
 				valuesNew.clear();
 				data_ = dataNew;
-				std::cerr<<"Simplification done "<<data_.size()<<"\n";
+				sorted_ = true;
+				if (verbose_) std::cerr<<"Simplification done "<<data_.size()<<"\n";
 			}
 			
 			// sort 
 			void sort()
 			{
-				if (data_.size()==0) return;
+				if (data_.size()<2 || sorted_) return;
 				std::vector<size_t> iperm(data_.size());
 				if (verbose_) std::cerr<<"Sorting "<<data_.size()<<" items.\n";
 				utils::sort(data_,iperm);
 				std::vector<FieldType> valuesNew(values_.size());
 				for (size_t i=0;i<values_.size();i++) valuesNew[i]=values_[iperm[i]];
 				values_=valuesNew;
+				sorted_ = true;
 			}
 			
-			ThisType& operator*=(const FieldType &rhs)
-			{
-				throw std::runtime_error("Operator *= unimplemented in HilbertVerctor.h\n");
-			}
+// 			ThisType& operator*=(const FieldType &rhs)
+// 			{
+// 				throw std::runtime_error("Operator *= unimplemented in HilbertVerctor.h\n");
+// 			}
 
 			
 			template<typename T,typename V, typename U>
@@ -337,6 +335,7 @@ namespace FreeFermions {
 			size_t size_;
 			size_t dof_;
 			bool verbose_;
+			bool sorted_;
 			std::vector<FlavoredStateType> data_;
 			std::vector<FieldType> values_;
 			

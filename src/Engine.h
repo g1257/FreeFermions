@@ -107,9 +107,9 @@ namespace FreeFermions {
 				std::cerr<<"Created core "<<eigenvectors_.n_row()<<"  times "<<eigenvectors_.n_col()<<"\n";
 			}
 			
-			HilbertVectorType newState() const
+			HilbertVectorType newState(bool verbose=false) const
 			{
-				HilbertVectorType tmp(t_.n_row(),dof_);
+				HilbertVectorType tmp(t_.n_row(),dof_,verbose);
 				return tmp;	
 			}
 			

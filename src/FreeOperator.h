@@ -113,7 +113,7 @@ namespace FreeFermions {
 				for (size_t i=0;i<src.terms();i++) {
 					apply(dest,src.term(i));
 				}
-				//dest.simplify();
+				dest.simplify();
 			}
 			
 		private:	
