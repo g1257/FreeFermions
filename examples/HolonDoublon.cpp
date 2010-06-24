@@ -21,6 +21,47 @@ typedef EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef ObservableLibrary<EngineType> ObservableLibraryType;
 
+
+FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const EngineType& engine)
+{
+
+	HilbertVectorType savedVector = engine.newState();
+	FieldType savedValue = 0;
+	FieldType sum = 0;
+		
+	for (size_t sigma = 0;sigma<2;sigma++) {
+		HilbertVectorType phi = engine.newState();
+		FreeOperatorType myOp = engine.newSimpleOperator("destruction",site,1-sigma);
+		myOp.apply(phi,gs);
+		
+		FreeOperatorType myOp2 = engine.newSimpleOperator("creation",site,sigma);
+		HilbertVectorType phi2 = engine.newState();
+		myOp2.apply(phi2,phi);
+		phi.clear();
+			
+		for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
+			HilbertVectorType phi3 = engine.newState();
+			FreeOperatorType myOp3 = engine.newSimpleOperator("creation",site2,1-sigma2);
+			myOp3.apply(phi3,phi2);
+			
+			FreeOperatorType myOp4 = engine.newSimpleOperator("destruction",site2,sigma2);
+			HilbertVectorType phi4 = engine.newState();
+			myOp4.apply(phi4,phi3);
+			phi3.clear();
+			
+			sum += scalarProduct(phi4,phi4);
+			if (sigma ==0 && sigma2 ==0) savedVector = phi4;
+			if (sigma ==1 && sigma2 ==1) {
+				savedValue = scalarProduct(phi4,savedVector);
+				savedVector.clear();
+			}
+		}
+	}
+	sum += 2*real(savedValue);
+	return sum;
+}
+
+
 int main(int argc,char *argv[])
 {
 	if (argc!=6) throw std::runtime_error("Needs 6 arguments\n");
@@ -46,6 +87,9 @@ int main(int argc,char *argv[])
 	size_t site2 = atoi(argv[2]);
 	size_t site3 = atoi(argv[3]);
 	size_t sigma3 = 0;
+
+	FieldType superdensity = calcSuperDensity(site,site2,gs,engine);
+	std::cout<<"superdensity="<<superdensity<<"\n";
 	
 	for (size_t it=0;it<size_t(atoi(argv[4]));it++) {
 		RealType time = it * atof(argv[5]);
