@@ -22,7 +22,7 @@ typedef DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef ObservableLibrary<EngineType> ObservableLibraryType;
 
 
-FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const EngineType& engine)
+FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const EngineType& engine,const ObservableLibraryType& library)
 {
 
 	HilbertVectorType savedVector = engine.newState();
@@ -31,8 +31,7 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 		
 	for (size_t sigma = 0;sigma<2;sigma++) {
 		HilbertVectorType phi = engine.newState();
-		FreeOperatorType myOp = engine.newSimpleOperator("destruction",site,1-sigma);
-		myOp.apply(phi,gs);
+		library.applyNiOneFlavor(phi,gs,site,1-sigma);
 		
 		FreeOperatorType myOp2 = engine.newSimpleOperator("creation",site,sigma);
 		HilbertVectorType phi2 = engine.newState();
@@ -41,8 +40,7 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 			
 		for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
 			HilbertVectorType phi3 = engine.newState();
-			FreeOperatorType myOp3 = engine.newSimpleOperator("creation",site2,1-sigma2);
-			myOp3.apply(phi3,phi2);
+			library.applyNiBarOneFlavor(phi3,phi2,site2,1-sigma2);
 			
 			FreeOperatorType myOp4 = engine.newSimpleOperator("destruction",site2,sigma2);
 			HilbertVectorType phi4 = engine.newState();
@@ -67,7 +65,7 @@ int main(int argc,char *argv[])
 	if (argc!=6) throw std::runtime_error("Needs 6 arguments\n");
 	size_t n = 16; // 16 sites
 	size_t dof = 2; // spin up and down
-	bool isPeriodic = false;
+	bool isPeriodic = false; 
 	psimag::Matrix<FieldType> t(n,n);
 	for (size_t i=0;i<n;i++) {
 		for (size_t j=0;j<n;j++) {
@@ -88,7 +86,7 @@ int main(int argc,char *argv[])
 	size_t site3 = atoi(argv[3]);
 	size_t sigma3 = 0;
 
-	FieldType superdensity = calcSuperDensity(site,site2,gs,engine);
+	FieldType superdensity = calcSuperDensity(site,site2,gs,engine,library);
 	std::cout<<"superdensity="<<superdensity<<"\n";
 	
 	for (size_t it=0;it<size_t(atoi(argv[4]));it++) {

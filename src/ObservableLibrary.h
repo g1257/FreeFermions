@@ -102,7 +102,7 @@ namespace FreeFermions {
 					HilbertVectorType& dest,
 					const HilbertVectorType& src,
 					size_t site,
-					size_t flavor)
+					size_t flavor) const
 			{
 				FreeOperatorType myOp = engine_.newSimpleOperator("destruction",site,flavor);
 				HilbertVectorType intermediate = engine_.newState();
@@ -115,7 +115,7 @@ namespace FreeFermions {
 					HilbertVectorType& dest,
 					const HilbertVectorType& src,
 					size_t site,
-					size_t flavor)
+					size_t flavor) const
 			{
 				FreeOperatorType myOp = engine_.newSimpleOperator("creation",site,flavor);
 				HilbertVectorType intermediate = engine_.newState();
@@ -127,7 +127,7 @@ namespace FreeFermions {
 			void applyNiAllFlavors(
 					HilbertVectorType& dest,
 					const HilbertVectorType& src,
-					size_t site)
+					size_t site) const
 			{
 				for (size_t flavor = 0;flavor<engine_.dof();flavor++) {
 					HilbertVectorType tmp = engine_.newState();
