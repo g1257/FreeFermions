@@ -28,7 +28,8 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 	HilbertVectorType savedVector = engine.newState();
 	FieldType savedValue = 0;
 	FieldType sum = 0;
-		
+	//FieldType sum2 = 0;
+	
 	for (size_t sigma = 0;sigma<2;sigma++) {
 		HilbertVectorType phi = engine.newState();
 		library.applyNiOneFlavor(phi,gs,site,1-sigma);
@@ -36,8 +37,10 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 		FreeOperatorType myOp2 = engine.newSimpleOperator("creation",site,sigma);
 		HilbertVectorType phi2 = engine.newState();
 		myOp2.apply(phi2,phi);
+		
+		//sum2 += scalarProduct(phi2,phi2);
 		phi.clear();
-			
+
 		for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
 			HilbertVectorType phi3 = engine.newState();
 			library.applyNiBarOneFlavor(phi3,phi2,site2,1-sigma2);
@@ -56,6 +59,7 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 		}
 	}
 	sum += 2*real(savedValue);
+	//std::cerr<<"sum2="<<sum2<<"\n";
 	return sum;
 }
 

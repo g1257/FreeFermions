@@ -171,7 +171,7 @@ namespace FreeFermions {
 				size_t nflips = statesBetween(x,lambda);
 				if (label == "creation") {
 					size_t r = x & mask;
-					if (r==1) return 0; // can't create, there's already one
+					if (r>0) return 0; // can't create, there's already one
 					x |= mask;
 				} else if (label == "destruction") {
 					size_t r = x & mask;
