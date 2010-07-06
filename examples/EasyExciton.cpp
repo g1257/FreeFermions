@@ -46,7 +46,8 @@ int main(int argc,char *argv[])
 	std::cerr<<"density="<<density<<"\n";	
 	
 	size_t site2=atoi(argv[2]);
-		
+	std::cout<<"#site="<<site<<"\n";
+	std::cout<<"#site2="<<site2<<"\n";
 	for (size_t it = 0; it<size_t(atoi(argv[3])); it++) {
 		RealType time = it * atof(argv[4]);
 		EtoTheIhTimeType eih(time,engine);
@@ -57,6 +58,6 @@ int main(int argc,char *argv[])
 		HilbertVectorType phi3 = engine.newState();
 		myOp2.apply(phi3,phi2);
 		phi2.clear();
-		std::cout<<site2<<" "<<scalarProduct(phi3,phi3)/density<<"\n";
+		std::cout<<time<<" "<<real(scalarProduct(phi3,phi3))<<"\n";
 	}
 }

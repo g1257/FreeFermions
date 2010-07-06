@@ -59,14 +59,14 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 		}
 	}
 	sum += 2*real(savedValue);
-	std::cerr<<"sum2="<<scalarProduct(tmpV,tmpV)<<"\n";
+	std::cerr<<"#sum2="<<scalarProduct(tmpV,tmpV)<<"\n";
 	return sum;
 }
 
 
 int main(int argc,char *argv[])
 {
-	if (argc!=6) throw std::runtime_error("Needs 6 arguments\n");
+	if (argc!=7) throw std::runtime_error("Needs 7 arguments\n");
 	size_t n = 16; // 16 sites
 	size_t dof = 2; // spin up and down
 	bool isPeriodic = false; 
@@ -91,10 +91,10 @@ int main(int argc,char *argv[])
 	size_t sigma3 = 0;
 
 	FieldType superdensity = calcSuperDensity(site,site2,gs,engine,library);
-	std::cout<<"superdensity="<<superdensity<<"\n";
-	
+	std::cout<<"#superdensity="<<superdensity<<"\n";
+	std::cout<<"#site="<<site<<" site2="<<site2<<"\n";	
 	for (size_t it=0;it<size_t(atoi(argv[4]));it++) {
-		RealType time = it * atof(argv[5]);
+		RealType time = it * atof(argv[5]) + atof(argv[6]);
 		EtoTheIhTimeType eih(time,engine);
 		DiagonalOperatorType eihOp(eih);
 				
@@ -142,6 +142,6 @@ int main(int argc,char *argv[])
 			}
 		}
 		sum += 2*real(savedValue);
-		std::cout<<site3<<" "<<sum<<"\n";
+		std::cout<<time<<" "<<sum<<"\n";
 	}
 }

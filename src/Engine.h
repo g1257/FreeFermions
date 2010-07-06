@@ -104,7 +104,7 @@ namespace FreeFermions {
 				t_(t),dof_(dof),verbose_(verbose)
 			{
 				diagonalize();
-				std::cerr<<"Created core "<<eigenvectors_.n_row()<<"  times "<<eigenvectors_.n_col()<<"\n";
+				std::cerr<<"#Created core "<<eigenvectors_.n_row()<<"  times "<<eigenvectors_.n_col()<<"\n";
 			}
 			
 			HilbertVectorType newState(bool verbose=false) const
