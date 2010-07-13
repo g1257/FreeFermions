@@ -5,31 +5,31 @@
 
 #include "Engine.h"
 #include "ObservableLibrary.h"
+#include "GeometryLibrary.h"
 
 typedef double RealType;
 typedef double FieldType;
 typedef size_t UnsignedIntegerType;
+typedef psimag::Matrix<FieldType> MatrixType;
 typedef FreeFermions::Engine<RealType,FieldType,UnsignedIntegerType> EngineType;
 typedef EngineType::HilbertVectorType HilbertVectorType;
 typedef EngineType::FreeOperatorType FreeOperatorType;
-
+typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 typedef FreeFermions::ObservableLibrary<EngineType> ObservableLibraryType;
 
-int main()
+int main(int argc,char* argv[])
 {
-	size_t n = 16; // 16 sites
+	if (argc!=3) throw std::runtime_error("Needs 2 argument(s)\n");
+        size_t n = atoi(argv[1]); 
+
 	size_t dof = 2; // spin up and down
-	bool isPeriodic = false;
-	psimag::Matrix<FieldType> t(n,n);
-	for (size_t i=0;i<n;i++) {
-		for (size_t j=0;j<n;j++) {
-			if (i-j==1 || j-i==1) t(i,j) = 1.0;
-		}
-	}
-	if (isPeriodic) t(0,n-1) = t(n-1,0) = 1.0;
+	MatrixType t(n,n);
+	GeometryLibraryType geometry(n);
+	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
+	geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	
 	EngineType engine(t,dof,false);
-	std::vector<size_t> ne(dof,8); // 8 up and 8 down
+	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
 	HilbertVectorType gs = engine.newGroundState(ne);
 	
 	ObservableLibraryType library(engine);
