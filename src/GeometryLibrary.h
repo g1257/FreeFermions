@@ -3,7 +3,7 @@
 Copyright © 2009 , UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -74,97 +74,95 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file Engine.h
+/*! \file GeometryLibrary.h
  *
- * Raw computations for a free Hubbard model
+ * handy geometries
  *
  */
-#ifndef ENGINE_H
-#define ENGINE_H
+#ifndef GEOMETRY_LIB_H
+#define GEOMETRY_LIB_H
 
-#include "Utils.h"
-#include "HilbertVector.h"
-#include "FreeOperator.h"
 
 namespace FreeFermions {
-	// All interactions == 0
-	template<typename RealType_,typename FieldType_,typename UnsignedIntegerType>
-	class Engine {
-			
-			typedef psimag::Matrix<FieldType_> MatrixType;
-	
+	template<typename MatrixType>
+	class GeometryLibrary {
+			typedef typename MatrixType::value_type FieldType;
 		public:
-			typedef RealType_ RealType;
-			typedef FieldType_ FieldType;
-			typedef HilbertVector<RealType,FieldType,UnsignedIntegerType> HilbertVectorType;
-			typedef FreeOperator<RealType,FieldType,UnsignedIntegerType,HilbertVector> FreeOperatorType;
-			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
+			enum {CHAIN,LADDER};
+			enum {OPTION_NONE,OPTION_PERIODIC};
 			
-			Engine(const MatrixType& t,size_t dof,bool verbose=false) :
-				t_(t),dof_(dof),verbose_(verbose)
+			GeometryLibrary(size_t n,FieldType hopping = 1.0) :
+				sites_(n),hopping_(hopping)
 			{
-				diagonalize();
-				if (verbose_) {
-					std::cerr<<"#Created core "<<eigenvectors_.n_row();
-					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
+			}
+			void setGeometry(MatrixType& t,size_t geometryType,size_t geometryOption=OPTION_NONE)
+			{
+				switch (geometryType) {
+					case CHAIN:
+						setGeometryChain(t,geometryOption);
+						break;
+					case LADDER:
+						setGeometryLadder(t,geometryOption);
+						break;
+					default:
+						throw std::runtime_error("GeometryLibrary:: Unknown geometry type\n");
 				}
 			}
-			
-			HilbertVectorType newState(bool verbose=false) const
-			{
-				HilbertVectorType tmp(t_.n_row(),dof_,verbose);
-				return tmp;	
-			}
-			
-			HilbertVectorType newGroundState(const std::vector<size_t>& ne) const
-			{
-				HilbertVectorType tmp(t_.n_row(),dof_);
-				tmp.fill(ne);
-				return tmp;	
-			}
-			
-			FreeOperatorType newSimpleOperator(const std::string& label,size_t site,size_t flavor) const
-			{
-				FreeOperatorType tmp(eigenvectors_,label,site,flavor,dof_);
-				return tmp;
-			}
-			
-			RealType energy(const HilbertTermType& term) const
-			{
-				return HilbertVectorType::energy(eigenvalues_,term);
-			}
-			
-			RealType eigenvalue(size_t i) const { return eigenvalues_[i]; }
-			
-			size_t dof() const { return dof_; }
 			
 		private:
-		
-			void diagonalize()
+			void setGeometryChain(MatrixType& t,size_t geometryOption)
 			{
-				eigenvectors_ = t_;
-				
-				if (verbose_) {
-					std::cerr<<"Matrix\n";
-					std::cerr<<eigenvectors_;
+				for (size_t i=0;i<sites_;i++) {
+					for (size_t j=0;j<sites_;j++) {
+						if (i-j==1 || j-i==1) t(i,j) = hopping_;
+					}
 				}
-				utils::diag(eigenvectors_,eigenvalues_,'V');
-				
-				if (verbose_) {
-					utils::vectorPrint(eigenvalues_,"eigenvalues",std::cerr);
-					std::cerr<<"*************\n";
-					std::cerr<<"Eigenvectors:\n";
-					std::cerr<<eigenvectors_;
+				if (geometryOption==OPTION_PERIODIC) t(0,sites_-1) = t(sites_-1,0) = hopping_;
+			}
+			
+			void setGeometryLadder(MatrixType& t,size_t leg)
+			{
+				if (leg<2) throw std::runtime_error("GeometryLibrary:: ladder must have leg>1\n");
+				for (size_t i=0;i<sites_;i++) {
+					std::vector<size_t> v;
+					ladderFindNeighbors(v,i,leg);
+					for (size_t k=0;k<v.size();k++) {
+						size_t j = v[k];
+						t(i,j) = t(j,i) = hopping_;
+					}
 				}
 			}
+			
+			void ladderFindNeighbors(std::vector<size_t>& v,size_t i,size_t leg)
+			{
+				v.clear();
+				size_t k = i + 1;
+				if (k<sites_ && ladderSameColumn(k,i,leg)) v.push_back(k);
+				k = i + leg;
+				if (k<sites_)  v.push_back(k);
+				
+				// careful with substracting because i and k are unsigned!
+				if (i==0) return;
+				k = i-1;
+				if (ladderSameColumn(i,k,leg)) v.push_back(k);
+				
+				if (i<leg) return;
+				k= i-leg;
+				v.push_back(k);
+			}
+			
+			bool ladderSameColumn(size_t i,size_t k,size_t leg)
+			{
+				size_t i1 = i/leg;
+				size_t k1 = k/leg;
+				if (i1 == k1) return true;
+				return false;
+			}
 
-			const MatrixType& t_;
-			size_t dof_;
-			bool verbose_;
-			psimag::Matrix<FieldType> eigenvectors_;
-			std::vector<RealType> eigenvalues_;
-	}; // Engine
-} // namespace Dmrg 
+			size_t sites_;
+			FieldType hopping_;
+	}; // GeometryLibrary
+} // namespace FreeFermions
 
 /*@}*/
-#endif
+#endif //GEOMETRY_LIB_H

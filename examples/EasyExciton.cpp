@@ -5,33 +5,32 @@
 #include "Engine.h"
 #include "EtoTheIhTime.h"
 #include "DiagonalOperator.h"
+#include "GeometryLibrary.h"
 
 using namespace FreeFermions;
 
 typedef double RealType;
 typedef std::complex<double> FieldType;
 typedef size_t UnsignedIntegerType;
+typedef psimag::Matrix<FieldType> MatrixType;
 typedef Engine<RealType,FieldType,UnsignedIntegerType> EngineType;
 typedef EngineType::HilbertVectorType HilbertVectorType;
 typedef EngineType::FreeOperatorType FreeOperatorType;
 typedef EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
-
+typedef GeometryLibrary<MatrixType> GeometryLibraryType;
 
 int main(int argc,char *argv[])
 {
 	if (argc!=5) throw std::runtime_error("Needs 5 arguments\n");
 	size_t n = 16; // 16 sites
 	size_t dof = 2; // spin up and down
-	bool isPeriodic = false;
-	psimag::Matrix<FieldType> t(n,n);
-	for (size_t i=0;i<n;i++) {
-		for (size_t j=0;j<n;j++) {
-			if (i-j==1 || j-i==1) t(i,j) = 1.0;
-		}
-	}
-	if (isPeriodic) t(0,n-1) = t(n-1,0) = 1.0;
+	MatrixType t(n,n);
 	
+	GeometryLibraryType geometry(n);
+	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
+	geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
+	std::cerr<<t;
 	EngineType engine(t,dof,false);
 	std::vector<size_t> ne(dof,8); // 8 up and 8 down
 	HilbertVectorType gs = engine.newGroundState(ne);
