@@ -23,7 +23,8 @@ typedef GeometryLibrary<MatrixType> GeometryLibraryType;
 int main(int argc,char *argv[])
 {
 	if (argc!=5) throw std::runtime_error("Needs 5 arguments\n");
-	size_t n = 16; // 16 sites
+	size_t n = 16; 
+	size_t electronsUp = 8;
 	size_t dof = 2; // spin up and down
 	MatrixType t(n,n);
 	
@@ -32,7 +33,7 @@ int main(int argc,char *argv[])
 	geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	std::cerr<<t;
 	EngineType engine(t,dof,false);
-	std::vector<size_t> ne(dof,8); // 8 up and 8 down
+	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	HilbertVectorType gs = engine.newGroundState(ne);
 	std::cout<<ne;
 	size_t flavor =0;
