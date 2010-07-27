@@ -114,8 +114,10 @@ namespace FreeFermions {
 			}
 			
 			Engine(const std::vector<MatrixType>& t,size_t dof,bool verbose=false) :
-				t_(*t),sites_(t_[0].n_row()),edof_(t.size()),dof_(dof),verbose_(verbose)
+				t_(*t),sites_(t_[0].n_row()),edof_(sqrt(t.size())),dof_(dof),verbose_(verbose)
 			{
+				if ((edof_) * (edof_) != t.size()) 
+					throw std::runtime_error("t.size must be a perfect square\n");
 				diagonalize();
 				if (verbose_) {
 					std::cerr<<"#Created core "<<eigenvectors_.n_row();
@@ -125,13 +127,13 @@ namespace FreeFermions {
 			
 			HilbertVectorType newState(bool verbose=false) const
 			{
-				HilbertVectorType tmp(sites_,dof_,verbose);
+				HilbertVectorType tmp(sites_*edof_,dof_,verbose);
 				return tmp;	
 			}
 			
 			HilbertVectorType newGroundState(const std::vector<size_t>& ne) const
 			{
-				HilbertVectorType tmp(sites_,dof_);
+				HilbertVectorType tmp(sites_*edof_,dof_);
 				tmp.fill(ne);
 				return tmp;
 			}
@@ -156,8 +158,8 @@ namespace FreeFermions {
 			void diagonalize()
 			{
 				eigenvectors_.resize(sites_*edof_,sites_*edof_);
-				std::vector<MatrixType> eigenvectors(edof_);
-				std::vector<std::vector<RealType> > eigenvalues(edof_);
+				std::vector<MatrixType> eigenvectors(edof_*edof_);
+				std::vector<std::vector<RealType> > eigenvalues(edof_*edof_);
 				
 				for (size_t i=0;i<eigenvectors.size();i++) {
 					diagonalize(i,eigenvectors[i],eigenvalues[i]);
@@ -228,7 +230,7 @@ namespace FreeFermions {
 				FieldType sum = 0.0;
 				for (size_t gamma=0;gamma<ek.n_row();gamma++) {
 					for (size_t gamma2=0;gamma2<ek.n_col();gamma2++) {
-						sum += conj(ek(lambda,gamma))*
+						sum += std::conj(ek(lambda,gamma))*
 							eigenvectors[gamma+gamma2*ek.n_row()](i,k)*
 							ek(lambda2,gamma2);
 					}
