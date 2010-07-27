@@ -101,7 +101,20 @@ namespace FreeFermions {
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
 			
 			Engine(const MatrixType& t,size_t dof,bool verbose=false) :
-				t_(t),dof_(dof),verbose_(verbose)
+				sites_(t.n_row()),edof_(1),dof_(dof),verbose_(verbose)
+			{
+				std::vector<MatrixType>* tt = new std::vector<MatrixType>(1);
+				(*tt)[0] = t;
+				t_ = tt;
+				diagonalize();
+				if (verbose_) {
+					std::cerr<<"#Created core "<<eigenvectors_.n_row();
+					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
+				}
+			}
+			
+			Engine(const std::vector<MatrixType>& t,size_t dof,bool verbose=false) :
+				t_(*t),sites_(t_[0].n_row()),edof_(t.size()),dof_(dof),verbose_(verbose)
 			{
 				diagonalize();
 				if (verbose_) {
@@ -112,15 +125,15 @@ namespace FreeFermions {
 			
 			HilbertVectorType newState(bool verbose=false) const
 			{
-				HilbertVectorType tmp(t_.n_row(),dof_,verbose);
+				HilbertVectorType tmp(sites_,dof_,verbose);
 				return tmp;	
 			}
 			
 			HilbertVectorType newGroundState(const std::vector<size_t>& ne) const
 			{
-				HilbertVectorType tmp(t_.n_row(),dof_);
+				HilbertVectorType tmp(sites_,dof_);
 				tmp.fill(ne);
-				return tmp;	
+				return tmp;
 			}
 			
 			FreeOperatorType newSimpleOperator(const std::string& label,size_t site,size_t flavor) const
@@ -142,23 +155,101 @@ namespace FreeFermions {
 		
 			void diagonalize()
 			{
-				eigenvectors_ = t_;
+				eigenvectors_.resize(sites_*edof_,sites_*edof_);
+				std::vector<MatrixType> eigenvectors(edof_);
+				std::vector<std::vector<RealType> > eigenvalues(edof_);
+				
+				for (size_t i=0;i<eigenvectors.size();i++) {
+					diagonalize(i,eigenvectors[i],eigenvalues[i]);
+				}
+				
+				size_t counter = 0;
+				eigenvalues_.resize(edof_*edof_*sites_);
+				for (size_t k=0;k<eigenvalues[0].size();k++) {
+					MatrixType ek(edof_,edof_);
+					for (size_t gamma=0;gamma<ek.n_row();gamma++) {
+						for (size_t gamma2=0;gamma2<ek.n_col();gamma2++) {
+							size_t ind = gamma + gamma2*ek.n_row();
+							ek(gamma,gamma2) = eigenvalues[ind][k];
+						}
+					}
+					std::vector<RealType> elambda(edof_);
+					utils::diag(ek,elambda,'V');
+					for (size_t lambda=0;lambda<elambda.size();lambda++) {
+						eigenvalues_[counter++] = elambda[lambda];
+						for (size_t lambda2=0;lambda2<elambda.size();lambda2++) {
+							eigenvecSecondTransform(k,lambda,lambda2,ek,eigenvectors);
+						}
+					}
+				}
+				std::vector<size_t> perm(eigenvalues_.size());
+				utils::sort(eigenvalues_,perm);
+				
+				permuteEigenvectors(perm);
 				
 				if (verbose_) {
 					std::cerr<<"Matrix\n";
-					std::cerr<<eigenvectors_;
-				}
-				utils::diag(eigenvectors_,eigenvalues_,'V');
-				
-				if (verbose_) {
-					utils::vectorPrint(eigenvalues_,"eigenvalues",std::cerr);
+					std::cerr<<eigenvectors;
+					utils::vectorPrint(eigenvalues,"eigenvalues",std::cerr);
 					std::cerr<<"*************\n";
 					std::cerr<<"Eigenvectors:\n";
 					std::cerr<<eigenvectors_;
 				}
 			}
-
-			const MatrixType& t_;
+			
+			void diagonalize(size_t orbitalPair,MatrixType& eigenvectors,std::vector<RealType>& eigenvalues)
+			{
+				eigenvectors = (*t_)[orbitalPair];
+				eigenvalues.resize(eigenvectors.n_row());
+				utils::diag(eigenvectors,eigenvalues,'V');
+			}
+			
+			void eigenvecSecondTransform(
+					size_t k,
+					size_t lambda,
+					size_t lambda2,
+					const MatrixType& ek,
+					const std::vector<MatrixType>& eigenvectors)
+			{
+				for (size_t i=0;i<sites_;i++) {
+					eigenvectors_(i+lambda*sites_,k+lambda2*sites_) = 
+						eigenvecSecondTransform(lambda,lambda2,i,k,ek,eigenvectors);
+				}
+			}
+			
+			FieldType eigenvecSecondTransform(
+						size_t lambda,
+						size_t lambda2,
+						size_t i,
+						size_t k,
+						const MatrixType& ek,
+						const std::vector<MatrixType>& eigenvectors)
+			{
+				FieldType sum = 0.0;
+				for (size_t gamma=0;gamma<ek.n_row();gamma++) {
+					for (size_t gamma2=0;gamma2<ek.n_col();gamma2++) {
+						sum += conj(ek(lambda,gamma))*
+							eigenvectors[gamma+gamma2*ek.n_row()](i,k)*
+							ek(lambda2,gamma2);
+					}
+				}
+				return sum;
+			}
+			
+			void permuteEigenvectors(const std::vector<size_t>& perm)
+			{
+				MatrixType a(eigenvectors_.n_row(),eigenvectors_.n_col());
+				for (size_t il=0;il<a.n_row();il++) {
+					for (size_t il2=0;il2<a.n_col();il2++) {
+						a(il,il2)=eigenvectors_(perm[il],perm[il2]);
+					}
+				}
+				eigenvectors_ = a;
+			}
+			
+			const std::vector<MatrixType>* t_;
+			size_t sites_;
+			size_t edof_;
 			size_t dof_;
 			bool verbose_;
 			psimag::Matrix<FieldType> eigenvectors_;

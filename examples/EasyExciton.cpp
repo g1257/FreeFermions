@@ -29,8 +29,8 @@ int main(int argc,char *argv[])
 	MatrixType t(n,n);
 	
 	GeometryLibraryType geometry(n);
-	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
+	geometry.setGeometry(t,GeometryLibraryType::CHAIN);
+	//geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	std::cerr<<t;
 	EngineType engine(t,dof,false);
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
