@@ -3,19 +3,7 @@
 // SAmple of how to use FreeFermions core engine to calculate
 // < n_i n_j >
 
-#include "Engine.h"
-//#include "ObservableLibrary.h"
-#include "GeometryLibrary.h"
-
-typedef double RealType;
-typedef double FieldType;
-typedef size_t UnsignedIntegerType;
-typedef psimag::Matrix<FieldType> MatrixType;
-typedef FreeFermions::Engine<RealType,FieldType,UnsignedIntegerType> EngineType;
-typedef EngineType::HilbertVectorType HilbertVectorType;
-typedef EngineType::FreeOperatorType FreeOperatorType;
-typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
-//typedef FreeFermions::ObservableLibrary<EngineType> ObservableLibraryType;
+#include "Includes.h"
 
 int main(int argc,char* argv[])
 {
@@ -27,7 +15,7 @@ int main(int argc,char* argv[])
 	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
 	geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	std::cerr<<t;	
-	EngineType engine(t,dof,false);
+	EngineType engine(t,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
 	HilbertVectorType gs = engine.newGroundState(ne);
 	RealType sum = 0;

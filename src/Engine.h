@@ -99,7 +99,7 @@ namespace FreeFermions {
 			typedef HilbertVector<RealType,FieldType,LevelsType> HilbertVectorType;
 			typedef FreeOperator<HilbertVectorType> FreeOperatorType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
-			
+
 			Engine(const MatrixType& t,size_t dof,bool verbose=false) :
 				sites_(t.n_row()),edof_(1),dof_(dof),verbose_(verbose)
 			{
@@ -112,7 +112,7 @@ namespace FreeFermions {
 					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
 				}
 			}
-			
+
 			Engine(const std::vector<MatrixType>& t,size_t dof,bool verbose=false) :
 				t_(&t),sites_(t[0].n_row()),edof_(sqrt(t.size())),dof_(dof),verbose_(verbose)
 			{
@@ -124,35 +124,35 @@ namespace FreeFermions {
 					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
 				}
 			}
-			
+
 			HilbertVectorType newState(bool verbose=false) const
 			{
 				HilbertVectorType tmp(sites_*edof_,dof_,verbose);
 				return tmp;	
 			}
-			
+
 			HilbertVectorType newGroundState(const std::vector<size_t>& ne) const
 			{
 				HilbertVectorType tmp(sites_*edof_,dof_);
 				tmp.fill(ne);
 				return tmp;
 			}
-			
+
 			FreeOperatorType newSimpleOperator(const std::string& label,size_t site,size_t flavor) const
 			{
 				FreeOperatorType tmp(eigenvectors_,label,site,flavor,dof_);
 				return tmp;
 			}
-			
+
 			RealType energy(const HilbertTermType& term) const
 			{
 				return HilbertVectorType::energy(eigenvalues_,term);
 			}
-			
+
 			RealType eigenvalue(size_t i) const { return eigenvalues_[i]; }
-			
+
 			size_t dof() const { return dof_; }
-			
+
 		private:
 		
 			void diagonalize()
@@ -189,8 +189,6 @@ namespace FreeFermions {
 				permuteEigenvectors(perm);
 				
 				if (verbose_) {
-					std::cerr<<"Matrix\n";
-					std::cerr<<eigenvectors;
 					utils::vectorPrint(eigenvalues,"eigenvalues",std::cerr);
 					std::cerr<<"*************\n";
 					std::cerr<<"Eigenvectors:\n";
@@ -202,6 +200,10 @@ namespace FreeFermions {
 			{
 				eigenvectors = (*t_)[orbitalPair];
 				eigenvalues.resize(eigenvectors.n_row());
+				if (verbose_) {
+					std::cerr<<"Matrix\n";
+					std::cerr<<eigenvectors;
+				}
 				utils::diag(eigenvectors,eigenvalues,'V');
 			}
 			

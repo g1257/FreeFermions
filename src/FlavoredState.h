@@ -93,8 +93,13 @@ namespace FreeFermions {
 			static int const FERMION_SIGN = -1;
 		public:
 			FlavoredState(size_t dof,size_t size) :
-				size_(size),data_(dof)
+				size_(size)
 			{
+				
+				for (size_t i=0;i<dof;i++) {
+					LevelsType tmpV(size_,false);
+					data_.push_back(tmpV);
+				}
 			}
 			
 			void fill(const std::vector<size_t>& ne)
@@ -160,7 +165,7 @@ namespace FreeFermions {
 			void fillInternal(LevelsType& x,size_t ne)
 			{
 				if (ne>size_) throw std::runtime_error("FlavoredState::fillInternal\n");
-				for (size_t i=ne;i<x.size();i++) x[i] = (i<ne) ? true : false;
+				for (size_t i=0;i<x.size();i++) x[i] = (i<ne) ? true : false;
 			}
 			
 			int applyInternal(const std::string& label,LevelsType& x,size_t lambda)
