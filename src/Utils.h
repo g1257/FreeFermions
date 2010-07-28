@@ -92,7 +92,52 @@ namespace std {
 	inline double conj(double const &v) { return v; }
 	inline double real(double const &v) { return v; }
 	inline double imag(double const &v) { return 0.0; }
-
+	
+	bool operator<(const std::vector<bool>& x,const std::vector<bool>& y)
+	{
+		if (x.size()!=y.size()) throw std::runtime_error("boolLess: Not comparable\n");
+		for (size_t i=0;i<x.size();i++) {
+			if (x[i]==y[i]) continue;
+			size_t x1 = (x[i]) ? 1 : 0;
+			size_t y1 = (y[i]) ? 1 : 0;
+			return (x1<y1);
+		}
+		return false; // strictly less
+	}
+	
+	bool operator>=(const std::vector<bool>& x,const std::vector<bool>& y)
+	{
+		return !(x<y);
+	}
+	
+	bool operator==(const std::vector<bool>& x,const std::vector<bool>& y)
+	{
+		if (x.size()!=y.size()) throw std::runtime_error("boolEqual: Not comparable\n");
+		for (size_t i=0;i<x.size();i++) if (x[i]!=y[i]) return false;
+		return true;
+	}
+	
+	bool operator!=(const std::vector<bool>& x,const std::vector<bool>& y)
+	{
+		return !(x==y);	
+	}
+	
+	bool operator<=(const std::vector<bool>& x,const std::vector<bool>& y)
+	{
+		return (x<y || x==y);
+	}
+	
+	bool operator>(const std::vector<bool>& x,const std::vector<bool>& y)
+	{
+		return !(x<=y);
+	}
+	
+	ostream &operator<<(std::ostream &os,const std::vector<bool>& x)
+	{
+		for (size_t j=0;j<x.size();j++) os<<x[j];
+		return os;
+	}
+	
 	template<class T1,class T2>
 	ostream &operator<<(std::ostream &os,const pair<T1,T2>& p)
 	{
@@ -189,9 +234,10 @@ C           Wisniewski, J. A., (SNLA)
 	
 	
 	
-	template<typename FloatingType,typename ContainerType,typename Field>
+	template<typename FloatingType,typename ContainerType>
 	void sort(ContainerType& x,std::vector<size_t>& iperm)
 	{
+		typedef typename ContainerType::value_type Field;
 		int n = x.size();
 		int i,ij,indx,indx0,istrt,k,l,lm,lmt; 
 		std::vector<int> il(21),iu(21);
@@ -320,11 +366,11 @@ C           Wisniewski, J. A., (SNLA)
 			}
 		}
 	} // end of sort function
-	
+			
 	template<template<typename,typename> class ContainerTemplate,typename Field,typename A>
 	void sort(ContainerTemplate<Field,A>& x,std::vector<size_t>& iperm)
 	{
-		sort<double,std::vector<Field,A>,Field>(x,iperm);				
+		sort<double,std::vector<Field,A> >(x,iperm);				
 	}
 	
 	template<template<typename,typename,typename,typename> class ContainerTemplate,typename Field,typename Cmp,typename A>
@@ -332,6 +378,7 @@ C           Wisniewski, J. A., (SNLA)
 	{
 		sort<double,ContainerTemplate<size_t,Field,Cmp,A>,Field>(x,iperm);				
 	}
+	
 	
 	std::string getTimeDate()
 	{

@@ -19,7 +19,6 @@ int main(int argc,char* argv[])
 	EngineType engine(t,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
 	HilbertVectorType gs = engine.newGroundState(ne);
-	
 	ObservableLibraryType library(engine);
 	
 	for (size_t site = 0; site<n ; site++) {

@@ -217,9 +217,10 @@ namespace FreeFermions {
 	template<typename T>
 	std::ostream& operator<<(std::ostream& os,const FlavoredState<T>& v)
 	{
-		os<<"["<<v.data_.size()<<"] ";
-		for (size_t i=0;i<v.data_.size();i++)
+		os<<"size="<<v.data_.size()<<"\n";
+		for (size_t i=0;i<v.data_.size();i++) {
 			os<<v.data_[i]<<" ";
+		}
 		return os;
 	}
 	

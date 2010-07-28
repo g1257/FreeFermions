@@ -99,7 +99,8 @@ namespace FreeFermions {
 	template<typename T,typename V>
 	std::ostream& operator<<(std::ostream& os,const HilbertTerm<T,V>& v)
 	{
-		os<<v.state<<" "<<v.value<<"\n";
+		os<<v.state<<"\n";
+		os<<"value="<<v.value<<"\n";
 		return os;	
 	}
 	
@@ -174,23 +175,23 @@ namespace FreeFermions {
 			
 			// This function needs to be robust enough to handle the case
 			// where neither this nor v are grouped
-			FieldType scalarProduct1(const ThisType& v) const
-			{
-				if (size_!=v.size_ || dof_!=v.dof_) throw std::runtime_error("ScalarProduct\n");
-				FieldType sum = 0;
-				typedef typename std::vector<FlavoredStateType>::const_iterator MyIterator;
-
-				for (size_t i=0;i<v.data_.size();i++) {
-					MyIterator start = data_.begin();
-					while(start!=data_.end()) {
-						MyIterator x = find(start,data_.end(),v.data_[i]);
-						if (x==data_.end()) break;
-						sum += std::conj(values_[x-data_.begin()]) * v.values_[i];
-						start = x+1;
-					}
-				}
-				return sum;
-			}
+// 			FieldType scalarProduct1(const ThisType& v) const
+// 			{
+// 				if (size_!=v.size_ || dof_!=v.dof_) throw std::runtime_error("ScalarProduct\n");
+// 				FieldType sum = 0;
+// 				typedef typename std::vector<FlavoredStateType>::const_iterator MyIterator;
+// 
+// 				for (size_t i=0;i<v.data_.size();i++) {
+// 					MyIterator start = data_.begin();
+// 					while(start!=data_.end()) {
+// 						MyIterator x = find(start,data_.end(),v.data_[i]);
+// 						if (x==data_.end()) break;
+// 						sum += std::conj(values_[x-data_.begin()]) * v.values_[i];
+// 						start = x+1;
+// 					}
+// 				}
+// 				return sum;
+// 			}
 			
 			FieldType scalarProduct(ThisType& v)
 			{
@@ -203,7 +204,7 @@ namespace FreeFermions {
 					
 					while (j<data_.size() && data_[j]<v.data_[i]) j++;
 					size_t k = j;
-					while(k<data_.size() && data_[k] == v.data_[i]) {
+					while(k<data_.size() && data_[k]==v.data_[i]) {
 						sum += std::conj(values_[k]) * v.values_[i];
 						k++;
 					}
@@ -213,70 +214,70 @@ namespace FreeFermions {
 			}
 			
 			// this is an expensive operation due to the search:
-			void simplifySlow()
-			{
-				std::vector<FlavoredStateType> dataNew;
-				std::vector<FieldType> valuesNew;
-				for (size_t i=0;i<data_.size();i++) {
-					int x = utils::isInVector(dataNew,data_[i]);
-					if (x<0) {
-						dataNew.push_back(data_[i]);
-						valuesNew.push_back(values_[i]);
-					} else {
-						valuesNew[x] += values_[i];
-					}
-				}
-				data_ = dataNew;
-				values_ = valuesNew;
-				std::cerr<<"Simplification done\n";
-			}
-			
-			// sort and then simplify
-			void simplifyLowMemory()
-			{
-				if (data_.size()==0) return;
-				std::vector<size_t> iperm(data_.size());
-				std::cerr<<"Tring to sort "<<data_.size()<<" items.\n";
-				utils::sort(data_,iperm);
-				//throw std::runtime_error("Don't forget to reorder values\n");
-				std::vector<FieldType> valuesNew(values_.size(),0);
-				//for (size_t i=0;i<values_.size();i++) valuesNew[i]=values_[iperm[i]];
-				//values_=valuesNew;
-				//return;
-				size_t prevIndex=0;
-				FlavoredStateType prev = data_[0];
-				//for (size_t i=0;i<values_.size();i++) valuesNew[i]=0;
-				std::cerr<<"Will now simplify...\n";
-				for (size_t i=0;i<data_.size();i++) {
-					if (i==0 || !(data_[i]==prev)) {
-						valuesNew[i] = values_[iperm[i]];
-						prevIndex = i;
-						prev = data_[i];
-					} else {
-						valuesNew[prevIndex] += values_[iperm[i]];
-						valuesNew[i] = static_cast<FieldType>(0.0);
-					}
-				}
-				sorted_ = true;
-				std::cerr<<"Now erasing...\n";
-				iperm.clear();
-				values_=valuesNew;
-				valuesNew.clear();
-				typedef typename std::vector<FlavoredStateType>::iterator MyIterator;
-				MyIterator iter = data_.begin();
-				typedef typename std::vector<FieldType>::iterator MyIterator2;
-				MyIterator2 iter2 = values_.begin();
-				while(iter!=data_.end() && iter2!=values_.end()) {
-					if (*iter2 == static_cast<FieldType>(0.0)) {
-						iter = data_.erase(iter);
-						iter2 = values_.erase(iter2);
-					} else {
-						iter++,iter2++;
-					}
-				}
-				std::cerr<<"Simplification done "<<data_.size()<<"\n";
-			}
-			
+// 			void simplifySlow()
+// 			{
+// 				std::vector<FlavoredStateType> dataNew;
+// 				std::vector<FieldType> valuesNew;
+// 				for (size_t i=0;i<data_.size();i++) {
+// 					int x = utils::isInVector(dataNew,data_[i]);
+// 					if (x<0) {
+// 						dataNew.push_back(data_[i]);
+// 						valuesNew.push_back(values_[i]);
+// 					} else {
+// 						valuesNew[x] += values_[i];
+// 					}
+// 				}
+// 				data_ = dataNew;
+// 				values_ = valuesNew;
+// 				std::cerr<<"Simplification done\n";
+// 			}
+// 			
+// 			// sort and then simplify
+// 			void simplifyLowMemory()
+// 			{
+// 				if (data_.size()==0) return;
+// 				std::vector<size_t> iperm(data_.size());
+// 				std::cerr<<"Tring to sort "<<data_.size()<<" items.\n";
+// 				utils::sort(data_,iperm);
+// 				//throw std::runtime_error("Don't forget to reorder values\n");
+// 				std::vector<FieldType> valuesNew(values_.size(),0);
+// 				//for (size_t i=0;i<values_.size();i++) valuesNew[i]=values_[iperm[i]];
+// 				//values_=valuesNew;
+// 				//return;
+// 				size_t prevIndex=0;
+// 				FlavoredStateType prev = data_[0];
+// 				//for (size_t i=0;i<values_.size();i++) valuesNew[i]=0;
+// 				std::cerr<<"Will now simplify...\n";
+// 				for (size_t i=0;i<data_.size();i++) {
+// 					if (i==0 || !(data_[i]==prev)) {
+// 						valuesNew[i] = values_[iperm[i]];
+// 						prevIndex = i;
+// 						prev = data_[i];
+// 					} else {
+// 						valuesNew[prevIndex] += values_[iperm[i]];
+// 						valuesNew[i] = static_cast<FieldType>(0.0);
+// 					}
+// 				}
+// 				sorted_ = true;
+// 				std::cerr<<"Now erasing...\n";
+// 				iperm.clear();
+// 				values_=valuesNew;
+// 				valuesNew.clear();
+// 				typedef typename std::vector<FlavoredStateType>::iterator MyIterator;
+// 				MyIterator iter = data_.begin();
+// 				typedef typename std::vector<FieldType>::iterator MyIterator2;
+// 				MyIterator2 iter2 = values_.begin();
+// 				while(iter!=data_.end() && iter2!=values_.end()) {
+// 					if (*iter2 == static_cast<FieldType>(0.0)) {
+// 						iter = data_.erase(iter);
+// 						iter2 = values_.erase(iter2);
+// 					} else {
+// 						iter++,iter2++;
+// 					}
+// 				}
+// 				std::cerr<<"Simplification done "<<data_.size()<<"\n";
+// 			}
+// 			
 			// sort and then simplify
 			void simplify()
 			{
@@ -320,10 +321,16 @@ namespace FreeFermions {
 				utils::sort(data_,iperm);
 				std::vector<FieldType> valuesNew(values_.size());
 				for (size_t i=0;i<values_.size();i++) valuesNew[i]=values_[iperm[i]];
+				/*std::cerr<<values_;
+				std::cerr<<"---------------\n";
+				std::cerr<<valuesNew;
+				std::cerr<<"-+-+-+-+-+-+-+-\n";
+				std::cerr<<data_<<"\n";
+				std::cerr<<"-+-+-+-+-+-+-+-\n";*/
 				values_=valuesNew;
 				sorted_ = true;
 			}
-			
+// 			
 // 			ThisType& operator*=(const FieldType &rhs)
 // 			{
 // 				throw std::runtime_error("Operator *= unimplemented in HilbertVerctor.h\n");
