@@ -4,25 +4,7 @@
 // where 
 // |phi> = c_{p up} exp(iHt) c_{i\sigma} nbar_{i \bar{sigma}} c^dagger_{j sigma'} n_{j \bar{sigma'}} |gs>
 
-#include "Engine.h"
-#include "ObservableLibrary.h"
-#include "EtoTheIhTime.h"
-#include "DiagonalOperator.h"
-#include "GeometryLibrary.h"
-
-using namespace FreeFermions;
-
-typedef double RealType;
-typedef std::complex<double> FieldType;
-typedef size_t UnsignedIntegerType;
-typedef psimag::Matrix<FieldType> MatrixType;
-typedef Engine<RealType,FieldType,UnsignedIntegerType> EngineType;
-typedef EngineType::HilbertVectorType HilbertVectorType;
-typedef EngineType::FreeOperatorType FreeOperatorType;
-typedef EToTheIhTime<EngineType> EtoTheIhTimeType;
-typedef DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
-typedef ObservableLibrary<EngineType> ObservableLibraryType;
-typedef GeometryLibrary<MatrixType> GeometryLibraryType;
+#include "IncludesTime.h"
 
 FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const EngineType& engine,const ObservableLibraryType& library)
 {
@@ -69,14 +51,14 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 int main(int argc,char *argv[])
 {
 	if (argc!=7) throw std::runtime_error("Needs 7 arguments\n");
-	size_t n = 12; 
-	size_t electronsUp = 6;
+	size_t n = 16; 
+	size_t electronsUp = 8;
 	size_t dof = 2; // spin up and down
 	
 	MatrixType t(n,n);
 	GeometryLibraryType geometry(n);
-	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
+	geometry.setGeometry(t,GeometryLibraryType::CHAIN);
+	//geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	std::cerr<<t;
 	
 	bool verbose = false;

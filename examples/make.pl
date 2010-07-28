@@ -3,7 +3,8 @@
 my ($what)=@ARGV;
 my $possibilities = getPossibilities();
 defined($what) or die "perl make.pl whatever\n \twhere whatever is one of $possibilities\n";
- 
+$what=~s/\.cpp$//;
+
 backupMakefile();
 writeMakefile();
 make();
@@ -22,7 +23,7 @@ sub backupMakefile
 sub writeMakefile
 {
 open(FILE,">Makefile") or die "Cannot open Makefile for writing: $!\n";
-
+my $headers = join(' ',glob("../Engine/*.h"));
 print FILE<<EOF;
 # DO NOT EDIT!!! Changes will be lost. Modify configure.pl instead
 # This Makefile was written by configure.pl
@@ -37,7 +38,7 @@ CXX = g++ -O2 -pg -DNDEBUG
 
 all: clean $what 
 
-$what.o: $what.cpp 
+$what.o: $what.cpp $headers
 	\$(CXX) \$(CPPFLAGS) -c $what.cpp  
 
 $what: clean  $what.o

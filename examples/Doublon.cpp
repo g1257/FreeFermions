@@ -4,22 +4,7 @@
 // where 
 // |phi> = c_{p up} exp(iHt) c_{i\sigma} nbar_{i \bar{sigma}} c^dagger_{j sigma'} n_{j \bar{sigma'}} |gs>
 
-#include "Engine.h"
-#include "ObservableLibrary.h"
-#include "EtoTheIhTime.h"
-#include "DiagonalOperator.h"
-
-using namespace FreeFermions;
-
-typedef double RealType;
-typedef std::complex<double> FieldType;
-typedef size_t UnsignedIntegerType;
-typedef Engine<RealType,FieldType,UnsignedIntegerType> EngineType;
-typedef EngineType::HilbertVectorType HilbertVectorType;
-typedef EngineType::FreeOperatorType FreeOperatorType;
-typedef EToTheIhTime<EngineType> EtoTheIhTimeType;
-typedef DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
-typedef ObservableLibrary<EngineType> ObservableLibraryType;
+#include "IncludesTime.h"
 
 
 FieldType calcSuperDensity(size_t site, HilbertVectorType gs,const EngineType& engine,const ObservableLibraryType& library)

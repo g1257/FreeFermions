@@ -2,23 +2,7 @@
 // Calculates
 // <c^dagger_i exp(iHt) n_j exp(-iHt) c_i>
 
-#include "Engine.h"
-#include "EtoTheIhTime.h"
-#include "DiagonalOperator.h"
-#include "GeometryLibrary.h"
-
-using namespace FreeFermions;
-
-typedef double RealType;
-typedef std::complex<double> FieldType;
-typedef size_t UnsignedIntegerType;
-typedef psimag::Matrix<FieldType> MatrixType;
-typedef Engine<RealType,FieldType,UnsignedIntegerType> EngineType;
-typedef EngineType::HilbertVectorType HilbertVectorType;
-typedef EngineType::FreeOperatorType FreeOperatorType;
-typedef EToTheIhTime<EngineType> EtoTheIhTimeType;
-typedef DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
-typedef GeometryLibrary<MatrixType> GeometryLibraryType;
+#include "IncludesTime.h"
 
 int main(int argc,char *argv[])
 {

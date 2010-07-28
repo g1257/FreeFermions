@@ -15,7 +15,7 @@ int main(int argc,char* argv[])
 	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
 	geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	std::cerr<<t;	
-	EngineType engine(t,dof,true);
+	EngineType engine(t,dof,false);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
 	HilbertVectorType gs = engine.newGroundState(ne);
 	RealType sum = 0;
