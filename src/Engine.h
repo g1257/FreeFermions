@@ -114,7 +114,7 @@ namespace FreeFermions {
 			}
 
 			Engine(const std::vector<MatrixType>& t,size_t dof,bool verbose=false) :
-				t_(&t),sites_(t[0].n_row()),edof_(sqrt(t.size())),dof_(dof),verbose_(verbose)
+				t_(&t),sites_(t[0].n_row()),edof_(size_t(sqrt(t.size()))),dof_(dof),verbose_(verbose)
 			{
 				if ((edof_) * (edof_) != t.size()) 
 					throw std::runtime_error("t.size must be a perfect square\n");
@@ -158,98 +158,32 @@ namespace FreeFermions {
 			void diagonalize()
 			{
 				eigenvectors_.resize(sites_*edof_,sites_*edof_);
-				std::vector<MatrixType> eigenvectors(edof_*edof_);
-				std::vector<std::vector<RealType> > eigenvalues(edof_*edof_);
 				
-				for (size_t i=0;i<eigenvectors.size();i++) {
-					diagonalize(i,eigenvectors[i],eigenvalues[i]);
-				}
-
+				for (size_t i=0;i<edof_*edof_;i++) 
+					sumHoppings(i);
+					
 				eigenvalues_.resize(edof_*sites_);
-				for (size_t k=0;k<sites_;k++) {
-					MatrixType ek(edof_,edof_);
-					for (size_t gamma=0;gamma<ek.n_row();gamma++) {
-						for (size_t gamma2=0;gamma2<ek.n_col();gamma2++) {
-							size_t ind = gamma + gamma2*ek.n_row();
-							ek(gamma,gamma2) = eigenvalues[ind][k];
-						}
-					}
-					std::vector<RealType> elambda(edof_);
-					utils::diag(ek,elambda,'V');
-					for (size_t lambda=0;lambda<elambda.size();lambda++) {
-						eigenvalues_[k+lambda*sites_] = elambda[lambda];
-						for (size_t lambda2=0;lambda2<elambda.size();lambda2++) {
-							eigenvecSecondTransform(k,lambda,lambda2,ek,eigenvectors);
-						}
-					}
-				}
-				std::vector<size_t> perm(eigenvalues_.size());
-				utils::sort(eigenvalues_,perm);
+				if (!isHermitian(eigenvectors_,true)) throw std::runtime_error("Matrix not hermitian\n");
 				
-				permuteEigenvectors(perm);
-				
+				utils::diag(eigenvectors_,eigenvalues_,'V');
+					
 				if (verbose_) {
-					utils::vectorPrint(eigenvalues,"eigenvalues",std::cerr);
+					utils::vectorPrint(eigenvalues_,"eigenvalues",std::cerr);
 					std::cerr<<"*************\n";
 					std::cerr<<"Eigenvectors:\n";
 					std::cerr<<eigenvectors_;
 				}
 			}
 			
-			void diagonalize(size_t orbitalPair,MatrixType& eigenvectors,std::vector<RealType>& eigenvalues)
+			void sumHoppings(size_t orbitalPair)
 			{
-				eigenvectors = (*t_)[orbitalPair];
-				eigenvalues.resize(eigenvectors.n_row());
-				if (verbose_) {
-					std::cerr<<"Matrix\n";
-					std::cerr<<eigenvectors;
-				}
-				utils::diag(eigenvectors,eigenvalues,'V');
+				size_t orb1 = (orbitalPair & 1);
+				size_t orb2 = orbitalPair/2;
+				for (size_t i=0;i<sites_;i++)
+					for (size_t j=0;j<sites_;j++)
+						eigenvectors_(i+orb1*sites_,j+orb2*sites_) += (*t_)[orbitalPair](i,j);
 			}
-			
-			void eigenvecSecondTransform(
-					size_t k,
-					size_t lambda,
-					size_t lambda2,
-					const MatrixType& ek,
-					const std::vector<MatrixType>& eigenvectors)
-			{
-				for (size_t i=0;i<sites_;i++) {
-					eigenvectors_(i+lambda*sites_,k+lambda2*sites_) = 
-						eigenvecSecondTransform(lambda,lambda2,i,k,ek,eigenvectors);
-				}
-			}
-			
-			FieldType eigenvecSecondTransform(
-						size_t lambda,
-						size_t lambda2,
-						size_t i,
-						size_t k,
-						const MatrixType& ek,
-						const std::vector<MatrixType>& eigenvectors)
-			{
-				FieldType sum = 0.0;
-				for (size_t gamma=0;gamma<ek.n_row();gamma++) {
-					for (size_t gamma2=0;gamma2<ek.n_col();gamma2++) {
-						sum += std::conj(ek(lambda,gamma))*
-							eigenvectors[gamma+gamma2*ek.n_row()](i,k)*
-							ek(lambda2,gamma2);
-					}
-				}
-				return sum;
-			}
-			
-			void permuteEigenvectors(const std::vector<size_t>& perm)
-			{
-				MatrixType a(eigenvectors_.n_row(),eigenvectors_.n_col());
-				for (size_t il=0;il<a.n_row();il++) {
-					for (size_t il2=0;il2<a.n_col();il2++) {
-						a(il,il2)=eigenvectors_(perm[il],perm[il2]);
-					}
-				}
-				eigenvectors_ = a;
-			}
-			
+
 			const std::vector<MatrixType>* t_;
 			size_t sites_;
 			size_t edof_;

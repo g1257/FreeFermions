@@ -95,12 +95,10 @@ namespace std {
 	
 	bool operator<(const std::vector<bool>& x,const std::vector<bool>& y)
 	{
-		if (x.size()!=y.size()) throw std::runtime_error("boolLess: Not comparable\n");
+		//if (x.size()!=y.size()) throw std::runtime_error("boolLess: Not comparable\n");
 		for (size_t i=0;i<x.size();i++) {
 			if (x[i]==y[i]) continue;
-			size_t x1 = (x[i]) ? 1 : 0;
-			size_t y1 = (y[i]) ? 1 : 0;
-			return (x1<y1);
+			return y[i];
 		}
 		return false; // strictly less
 	}
@@ -112,7 +110,7 @@ namespace std {
 	
 	bool operator==(const std::vector<bool>& x,const std::vector<bool>& y)
 	{
-		if (x.size()!=y.size()) throw std::runtime_error("boolEqual: Not comparable\n");
+		//if (x.size()!=y.size()) throw std::runtime_error("boolEqual: Not comparable\n");
 		for (size_t i=0;i<x.size();i++) if (x[i]!=y[i]) return false;
 		return true;
 	}

@@ -122,6 +122,7 @@ namespace FreeFermions {
 				for (size_t i=0;i<edof*edof;i++) { // 4 cases: aa ab ba and bb
 					MatrixType oneT(sites_,sites_);
 					setGeometryFeAs(oneT,i,oneSiteHoppings,geometryOption);
+					if (!isHermitian(oneT,true)) throw std::runtime_error("Hopping matrix not hermitian\n");
 					t.push_back(oneT);
 				}
 			}
@@ -180,7 +181,7 @@ namespace FreeFermions {
 			void setGeometryFeAs(MatrixType& t,size_t orborb,const std::vector<FieldType>& oneSiteHoppings,size_t geometryOption)
 			{
 				FieldType tx = oneSiteHoppings[orborb+DIRECTION_X*4];
-				size_t length = sqrt(sites_);
+				size_t length = size_t(sqrt(sites_));
 				if ((length*length) != sites_) throw std::runtime_error("Lattice must be square for FeAs\n");
 				for (size_t j=0;j<length;j++) {
 					for (size_t i=0;i<length;i++) {
@@ -199,27 +200,28 @@ namespace FreeFermions {
 					}
 					if (geometryOption==OPTION_PERIODIC)  t(i,i+(length-1)*length) = t(i+(length-1)*length,i) = ty;
 				}
-				
 				FieldType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*4];
 				FieldType txmy = oneSiteHoppings[orborb+DIRECTION_XMY*4];
 				for (size_t i=0;i<length;i++) {
 					for (size_t j=0;j<length;j++) {
 						if (j+1<length && i+1<length)
 							t(i+1+(j+1)*length,i+j*length) = t(i+j*length,i+1+(j+1)*length) = txpy;
-						if (i>0 && j>0)
-							t(i-1+(j-1)*length,i+j*length) = t(i+j*length,i-1+(j-1)*length) = txmy;
+						if (i+1<length && j>0)
+							t(i+1+(j-1)*length,i+j*length) = t(i+j*length,i+1+(j-1)*length) = txmy;
 						if (geometryOption!=OPTION_PERIODIC || i>0) continue;
-						
 						if (j+1<length)
-							t(length-1+(j+1)*length,j*length) = t(j*length,length-1+(j+1)*length) = txpy;
+							t((j+1)*length,length-1+j*length) = t(length-1+j*length,(j+1)*length) = txpy;
 						if (j>0)
-						t((j-1)*length,j*length) = t(j*length,length-1+(j-1)*length) = txmy;
+							t((j-1)*length,length-1+j*length) = t(length-1+j*length,(j-1)*length) = txmy;
 					}
 					if (geometryOption!=OPTION_PERIODIC) continue;
-					if (i+1<length)
-						t(i+1+(length-1)*length,i) = t(i,i+1+(length-1)*length) = txpy;
-					if (i>0)
-						t(i-1+(length-1)*length,i) = t(i,i-1+(length-1)*length) = txmy;
+					if (i+1<length) {
+						t(i+1,i+(length-1)*length) = t(i+(length-1)*length,i+1) = txpy;
+						t(i+1+(length-1)*length,i) = t(i,i+1+(length-1)*length) = txmy;
+					}
+					if (i>0) continue;
+					t(0,length-1+(length-1)*length) = t(length-1+(length-1)*length,0) = txpy;
+					t(0+(length-1)*length,length-1) = t(length-1,0+(length-1)*length) = txmy;
 				}
 				
 			}
