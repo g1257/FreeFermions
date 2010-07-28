@@ -21,24 +21,29 @@ int main(int argc,char* argv[])
 	HilbertVectorType gs = engine.newGroundState(ne);
 	
 	ObservableLibraryType library(engine);
-	FieldType sum2 = 0.0;
 	MatrixType m(n,n);
+	FieldType sum2 = 0;
 	for (size_t site = 0; site<n ; site++) {
-		HilbertVectorType phi = engine.newState();
-		library.applyNiAllFlavors(phi,gs,site);
-		FieldType y = scalarProduct(phi,gs);
-		for (size_t site2=0; site2<n; site2++) {
-			HilbertVectorType phi2 = engine.newState();
-			library.applyNiAllFlavors(phi2,phi,site2);
-			FieldType x = scalarProduct(phi2,gs);
-			std::cout<<x<<" "<<y;
-			m(site,site2) = x;
-			sum2 += y*y;
+		FieldType y = 0;
+		for (size_t orb1 = 0;orb1<2; orb1++) {
+			HilbertVectorType phi = engine.newState();
+			library.applyNiAllFlavors(phi,gs,site+orb1*n);
+			y += scalarProduct(phi,gs);
+			for (size_t site2=0; site2<n; site2++) {
+				for (size_t orb2=0;orb2<2;orb2++) {
+					HilbertVectorType phi2 = engine.newState();
+					library.applyNiAllFlavors(phi2,phi,site2+orb2*n);
+					FieldType x = scalarProduct(phi2,gs);
+					std::cout<<x<<" ";
+					m(site,site2) += x;
+					sum2 += y*y;
+				}
+			}
+			std::cout<<"\n";
 		}
-		std::cout<<"\n";
 	}
 	std::vector<std::complex<FieldType> > fm(n);
 	geometry.fourierTransform(fm,m);
 	std::cout<<"Fourier transform:\n";
-	std::cout<<m;
+	std::cout<<fm;
 }
