@@ -23,13 +23,13 @@ int main(int argc,char* argv[])
 	ObservableLibraryType library(engine);
 	MatrixType m(n,n);
 	FieldType sum2 = 0;
-	for (size_t site = 0; site<n ; site++) {
+	for (size_t site = 0; site<1 ; site++) {
 		FieldType y = 0;
 		for (size_t orb1 = 0;orb1<2; orb1++) {
 			HilbertVectorType phi = engine.newState();
 			library.applyNiAllFlavors(phi,gs,site+orb1*n);
 			y += scalarProduct(phi,gs);
-			for (size_t site2=0; site2<n; site2++) {
+			for (size_t site2=0; site2<1; site2++) {
 				for (size_t orb2=0;orb2<2;orb2++) {
 					HilbertVectorType phi2 = engine.newState();
 					library.applyNiAllFlavors(phi2,phi,site2+orb2*n);

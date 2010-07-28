@@ -93,7 +93,7 @@ namespace std {
 	inline double real(double const &v) { return v; }
 	inline double imag(double const &v) { return 0.0; }
 	
-	bool operator<(const std::vector<bool>& x,const std::vector<bool>& y)
+	inline bool operator<(const std::vector<bool>& x,const std::vector<bool>& y)
 	{
 		//if (x.size()!=y.size()) throw std::runtime_error("boolLess: Not comparable\n");
 		for (size_t i=0;i<x.size();i++) {
@@ -103,29 +103,29 @@ namespace std {
 		return false; // strictly less
 	}
 	
-	bool operator>=(const std::vector<bool>& x,const std::vector<bool>& y)
+	inline bool operator>=(const std::vector<bool>& x,const std::vector<bool>& y)
 	{
 		return !(x<y);
 	}
 	
-	bool operator==(const std::vector<bool>& x,const std::vector<bool>& y)
+	inline bool operator==(const std::vector<bool>& x,const std::vector<bool>& y)
 	{
 		//if (x.size()!=y.size()) throw std::runtime_error("boolEqual: Not comparable\n");
 		for (size_t i=0;i<x.size();i++) if (x[i]!=y[i]) return false;
 		return true;
 	}
 	
-	bool operator!=(const std::vector<bool>& x,const std::vector<bool>& y)
+	inline bool operator!=(const std::vector<bool>& x,const std::vector<bool>& y)
 	{
 		return !(x==y);	
 	}
 	
-	bool operator<=(const std::vector<bool>& x,const std::vector<bool>& y)
+	inline bool operator<=(const std::vector<bool>& x,const std::vector<bool>& y)
 	{
 		return (x<y || x==y);
 	}
 	
-	bool operator>(const std::vector<bool>& x,const std::vector<bool>& y)
+	inline bool operator>(const std::vector<bool>& x,const std::vector<bool>& y)
 	{
 		return !(x<=y);
 	}
