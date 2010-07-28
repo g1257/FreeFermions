@@ -88,7 +88,6 @@ namespace FreeFermions {
 	// All interactions == 0
 	template<typename BackendType>
 	class DiagonalOperator {
-			//typedef unsigned int long long UnsignedIntegerType;
 			
 		public:
 			DiagonalOperator(const BackendType& backend) :

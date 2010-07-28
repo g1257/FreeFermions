@@ -88,7 +88,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename RealType_,typename FieldType_,typename UnsignedIntegerType>
+	template<typename RealType_,typename FieldType_,typename LevelsType>
 	class Engine {
 			
 			typedef psimag::Matrix<FieldType_> MatrixType;
@@ -96,8 +96,8 @@ namespace FreeFermions {
 		public:
 			typedef RealType_ RealType;
 			typedef FieldType_ FieldType;
-			typedef HilbertVector<RealType,FieldType,UnsignedIntegerType> HilbertVectorType;
-			typedef FreeOperator<RealType,FieldType,UnsignedIntegerType,HilbertVector> FreeOperatorType;
+			typedef HilbertVector<RealType,FieldType,LevelsType> HilbertVectorType;
+			typedef FreeOperator<HilbertVectorType> FreeOperatorType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
 			
 			Engine(const MatrixType& t,size_t dof,bool verbose=false) :
@@ -114,7 +114,7 @@ namespace FreeFermions {
 			}
 			
 			Engine(const std::vector<MatrixType>& t,size_t dof,bool verbose=false) :
-				t_(*t),sites_(t_[0].n_row()),edof_(sqrt(t.size())),dof_(dof),verbose_(verbose)
+				t_(&t),sites_(t[0].n_row()),edof_(sqrt(t.size())),dof_(dof),verbose_(verbose)
 			{
 				if ((edof_) * (edof_) != t.size()) 
 					throw std::runtime_error("t.size must be a perfect square\n");
@@ -164,10 +164,9 @@ namespace FreeFermions {
 				for (size_t i=0;i<eigenvectors.size();i++) {
 					diagonalize(i,eigenvectors[i],eigenvalues[i]);
 				}
-				
-				size_t counter = 0;
-				eigenvalues_.resize(edof_*edof_*sites_);
-				for (size_t k=0;k<eigenvalues[0].size();k++) {
+
+				eigenvalues_.resize(edof_*sites_);
+				for (size_t k=0;k<sites_;k++) {
 					MatrixType ek(edof_,edof_);
 					for (size_t gamma=0;gamma<ek.n_row();gamma++) {
 						for (size_t gamma2=0;gamma2<ek.n_col();gamma2++) {
@@ -178,7 +177,7 @@ namespace FreeFermions {
 					std::vector<RealType> elambda(edof_);
 					utils::diag(ek,elambda,'V');
 					for (size_t lambda=0;lambda<elambda.size();lambda++) {
-						eigenvalues_[counter++] = elambda[lambda];
+						eigenvalues_[k+lambda*sites_] = elambda[lambda];
 						for (size_t lambda2=0;lambda2<elambda.size();lambda2++) {
 							eigenvecSecondTransform(k,lambda,lambda2,ek,eigenvectors);
 						}

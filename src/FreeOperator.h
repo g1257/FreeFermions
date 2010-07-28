@@ -86,15 +86,11 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<
-		typename RealType,
-		typename FieldType,
-		typename UnsignedIntegerType,
-		template<typename,typename,typename> class HilbertVectorTemplate>
+	template<typename HilbertVectorType>
 	class FreeOperator {
-			//typedef unsigned int long long UnsignedIntegerType;
 			
-			typedef HilbertVectorTemplate<RealType,FieldType,UnsignedIntegerType> HilbertVectorType;
+			typedef typename HilbertVectorType::RealType RealType;
+   			typedef typename HilbertVectorType::FieldType FieldType;
 			typedef typename HilbertVectorType::FlavoredStateType FlavoredStateType;
 			typedef psimag::Matrix<FieldType> MatrixType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;

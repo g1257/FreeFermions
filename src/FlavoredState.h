@@ -86,14 +86,14 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename UnsignedIntegerType>
+	template<typename LevelsType>
 	class FlavoredState {
 			//static size_t const SPIN_UP=0,SPIN_DOWN=1;
-			typedef FlavoredState<UnsignedIntegerType> ThisType;
+			typedef FlavoredState<LevelsType> ThisType;
 			static int const FERMION_SIGN = -1;
 		public:
 			FlavoredState(size_t dof,size_t size) :
-				size_(size),data_(dof),max_((1<<size) -1)
+				size_(size),data_(dof)
 			{
 			}
 			
@@ -119,11 +119,9 @@ namespace FreeFermions {
 				ns.resize(size_);
 				for (size_t i = 0; i < size_; i++) ns[i] = 0;
 				
-				UnsignedIntegerType x = data_[flavor];
-				size_t counter = 0;
-				while (x>0) {
-					ns[counter++] = (x & 1);
-					x >>= 1;
+				for (size_t counter=0;counter<data_[flavor].size();counter++) {
+					ns[counter] = (data_[flavor][counter]) ? 1 : 0;
+					counter++;
 				}
 			}
 			
@@ -159,41 +157,33 @@ namespace FreeFermions {
 			
 		private:
 			
-			void fillInternal(UnsignedIntegerType& x,size_t ne)
+			void fillInternal(LevelsType& x,size_t ne)
 			{
 				if (ne>size_) throw std::runtime_error("FlavoredState::fillInternal\n");
-				x = (1<<ne) -1;
+				for (size_t i=ne;i<x.size();i++) x[i] = (i<ne) ? true : false;
 			}
 			
-			int applyInternal(const std::string& label,UnsignedIntegerType& x,size_t lambda)
+			int applyInternal(const std::string& label,LevelsType& x,size_t lambda)
 			{
-				UnsignedIntegerType mask = (1<<lambda);
 				size_t nflips = statesBetween(x,lambda);
 				if (label == "creation") {
-					size_t r = x & mask;
-					if (r>0) return 0; // can't create, there's already one
-					x |= mask;
+					if (x[lambda]) return 0; // can't create, there's already one
+					x[lambda] = true;
 				} else if (label == "destruction") {
-					size_t r = x & mask;
-					if (r==0) return 0; // can't destroy, there's nothing
-					x ^= mask;
+					if (!x[lambda]) return 0; // can't destroy, there's nothing
+					x[lambda] =false;
 				} else {
 					throw std::runtime_error("FlavoredState::applyInternal()\n");
 				}
-				if (x>max_) throw std::runtime_error("FlavoredState::applyInternal(): too big\n");
 				if (nflips ==0 || nflips % 2 ==0) return 1;
 				return FERMION_SIGN;
 			}
 			
-			size_t statesBetween(UnsignedIntegerType x,size_t lambda) const
+			size_t statesBetween(LevelsType x,size_t lambda) const
 			{
 				size_t sum = 0;
-				size_t counter = 0;
-				while (x>0 && counter<lambda) {
-					sum += (x & 1);
-					x >>= 1;
-					counter++;
-				}
+				for (size_t counter = 0;counter < lambda ; counter++)
+					if (x[counter]) sum ++;
 				return sum;
 			}
 			
@@ -206,20 +196,17 @@ namespace FreeFermions {
 				return sum;
 			}
 			
-			size_t numberOfDigits(UnsignedIntegerType x)
+			size_t numberOfDigits(const LevelsType& x)
 			{
 				size_t sum = 0;
-				while (x>0) {
-					sum += (x & 1);
-					x >>= 1;
+				for (size_t i=0;i<x.size();i++) {
+					if (x[i]) sum ++;
 				}
 				return sum;
 			}
 
 			size_t size_;
-			std::vector<UnsignedIntegerType> data_;
-			UnsignedIntegerType max_;
-			
+			std::vector<LevelsType> data_;
 	}; // FlavoredState
 	
 	template<typename T>

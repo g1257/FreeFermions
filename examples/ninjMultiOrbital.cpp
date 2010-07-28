@@ -11,10 +11,10 @@ int main(int argc,char* argv[])
         size_t n = atoi(argv[1]); 
 
 	size_t dof = 2; // spin up and down
-	MatrixType t(n,n);
+	std::vector<MatrixType> t;
 	GeometryLibraryType geometry(n);
 	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
+	geometry.setGeometry(t,GeometryLibraryType::FEAS,"feasHoppings.inp",GeometryLibraryType::OPTION_PERIODIC);
 	
 	EngineType engine(t,dof,false);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down

@@ -109,15 +109,17 @@ namespace FreeFermions {
 		return term.value*energy(eigs,term.state);
 	}
 	
-	template<typename RealType,typename FieldType,typename UnsignedIntegerType>
+	template<typename RealType_,typename FieldType_,typename LevelsType>
 	class HilbertVector {
 			
 			static size_t const TERMS_MAX_SOFT = 500000;
 			static size_t const TERMS_MAX_HARD = 5000000;
-			typedef HilbertVector<RealType,FieldType,UnsignedIntegerType> ThisType;
+			typedef HilbertVector<RealType_,FieldType_,LevelsType> ThisType;
 			
 		public:
-			typedef FlavoredState<UnsignedIntegerType> FlavoredStateType;
+			typedef RealType_ RealType;
+			typedef FieldType_ FieldType;
+			typedef FlavoredState<LevelsType> FlavoredStateType;
 			typedef HilbertTerm<FieldType,FlavoredStateType> HilbertTermType;
 			
 			HilbertVector(size_t size,size_t dof,bool verbose=false) :

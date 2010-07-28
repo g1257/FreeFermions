@@ -81,15 +81,16 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
  */
 #ifndef GEOMETRY_LIB_H
 #define GEOMETRY_LIB_H
-
+#include "IoSimple.h"
 
 namespace FreeFermions {
 	template<typename MatrixType>
 	class GeometryLibrary {
 			typedef typename MatrixType::value_type FieldType;
 		public:
-			enum {CHAIN,LADDER};
+			enum {CHAIN,LADDER,FEAS};
 			enum {OPTION_NONE,OPTION_PERIODIC};
+			enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 			
 			GeometryLibrary(size_t n,FieldType hopping = 1.0) :
 				sites_(n),hopping_(hopping)
@@ -106,6 +107,22 @@ namespace FreeFermions {
 						break;
 					default:
 						throw std::runtime_error("GeometryLibrary:: Unknown geometry type\n");
+				}
+			}
+			
+			void setGeometry(std::vector<MatrixType>& t,
+					size_t geometryType,const std::string& filename,size_t geometryOption=OPTION_NONE)
+			{
+				if (geometryType!=FEAS) throw std::runtime_error("Unsupported\n");
+				size_t edof = 2; // 2 orbitals
+				std::vector<FieldType> oneSiteHoppings;
+				readOneSiteHoppings(oneSiteHoppings,filename);
+	
+				t.clear();
+				for (size_t i=0;i<edof*edof;i++) { // 4 cases: aa ab ba and bb
+					MatrixType oneT(sites_,sites_);
+					setGeometryFeAs(oneT,i,oneSiteHoppings,geometryOption);
+					t.push_back(oneT);
 				}
 			}
 			
@@ -158,7 +175,62 @@ namespace FreeFermions {
 				if (i1 == k1) return true;
 				return false;
 			}
+			
+			// only 2 orbitals supported
+			void setGeometryFeAs(MatrixType& t,size_t orborb,const std::vector<FieldType>& oneSiteHoppings,size_t geometryOption)
+			{
+				FieldType tx = oneSiteHoppings[orborb+DIRECTION_X*4];
+				size_t length = sqrt(sites_);
+				if ((length*length) != sites_) throw std::runtime_error("Lattice must be square for FeAs\n");
+				for (size_t j=0;j<length;j++) {
+					for (size_t i=0;i<length;i++) {
+						if (i+1<length) t(i+1+j*length,i+j*length) = t(i+j*length,i+1+j*length) = tx;
+						if (i>0) t(i-1+j*length,i+j*length) = t(i+j*length,i-1+j*length) = tx;
+					}
+					if (geometryOption==OPTION_PERIODIC) 
+						t(j*length,length-1+j*length) = t(length-1+j*length,j*length) = tx;
+				}
 
+				FieldType ty = oneSiteHoppings[orborb+DIRECTION_Y*4];
+				for (size_t i=0;i<length;i++) {
+					for (size_t j=0;j<length;j++) {
+						if (j>0) t(i+(j-1)*length,i+j*length) = t(i+j*length,i+(j-1)*length) = ty;
+						if (j+1<length) t(i+(j+1)*length,i+j*length) = t(i+j*length,i+(j+1)*length) = ty;
+					}
+					if (geometryOption==OPTION_PERIODIC)  t(i,i+(length-1)*length) = t(i+(length-1)*length,i) = ty;
+				}
+				
+				FieldType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*4];
+				FieldType txmy = oneSiteHoppings[orborb+DIRECTION_XMY*4];
+				for (size_t i=0;i<length;i++) {
+					for (size_t j=0;j<length;j++) {
+						if (j+1<length && i+1<length)
+							t(i+1+(j+1)*length,i+j*length) = t(i+j*length,i+1+(j+1)*length) = txpy;
+						if (i>0 && j>0)
+							t(i-1+(j-1)*length,i+j*length) = t(i+j*length,i-1+(j-1)*length) = txmy;
+						if (geometryOption!=OPTION_PERIODIC || i>0) continue;
+						
+						if (j+1<length)
+							t(length-1+(j+1)*length,j*length) = t(j*length,length-1+(j+1)*length) = txpy;
+						if (j>0)
+						t((j-1)*length,j*length) = t(j*length,length-1+(j-1)*length) = txmy;
+					}
+					if (geometryOption!=OPTION_PERIODIC) continue;
+					if (i+1<length)
+						t(i+1+(length-1)*length,i) = t(i,i+1+(length-1)*length) = txpy;
+					if (i>0)
+						t(i-1+(length-1)*length,i) = t(i,i-1+(length-1)*length) = txmy;
+				}
+				
+			}
+			
+			void readOneSiteHoppings(std::vector<FieldType>& v,
+							const std::string& filename)
+			{
+				typename Dmrg::IoSimple::In io(filename);
+				io.read(v,"hoppings");
+			}
+			
 			size_t sites_;
 			FieldType hopping_;
 	}; // GeometryLibrary
