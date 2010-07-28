@@ -92,13 +92,13 @@ namespace FreeFermions {
 			enum {OPTION_NONE,OPTION_PERIODIC};
 			enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 			
-			GeometryLibrary(size_t n,FieldType hopping = 1.0) :
-				sites_(n),hopping_(hopping)
+			GeometryLibrary(size_t n,size_t geometryType,FieldType hopping = 1.0) :
+				sites_(n),geometryType_(geometryType),hopping_(hopping)
 			{
 			}
-			void setGeometry(MatrixType& t,size_t geometryType,size_t geometryOption=OPTION_NONE)
+			void setGeometry(MatrixType& t,size_t geometryOption=OPTION_NONE)
 			{
-				switch (geometryType) {
+				switch (geometryType_) {
 					case CHAIN:
 						setGeometryChain(t,geometryOption);
 						break;
@@ -110,10 +110,9 @@ namespace FreeFermions {
 				}
 			}
 			
-			void setGeometry(std::vector<MatrixType>& t,
-					size_t geometryType,const std::string& filename,size_t geometryOption=OPTION_NONE)
+			void setGeometry(std::vector<MatrixType>& t,const std::string& filename,size_t geometryOption=OPTION_NONE)
 			{
-				if (geometryType!=FEAS) throw std::runtime_error("Unsupported\n");
+				if (geometryType_!=FEAS) throw std::runtime_error("Unsupported\n");
 				size_t edof = 2; // 2 orbitals
 				std::vector<FieldType> oneSiteHoppings;
 				readOneSiteHoppings(oneSiteHoppings,filename);
@@ -125,6 +124,26 @@ namespace FreeFermions {
 					if (!isHermitian(oneT,true)) throw std::runtime_error("Hopping matrix not hermitian\n");
 					t.push_back(oneT);
 				}
+			}
+			
+			template<typename ComplexFieldType>
+			void fourierTransform(std::vector<ComplexFieldType>& dest,const MatrixType& src) const
+			{
+				
+				size_t n = src.n_row();
+				if (n!=sites_) throw std::runtime_error("src must have the same number of sites as lattice\n");
+				psimag::Matrix<ComplexFieldType> B(n,n);
+				getFourierMatrix(B);
+				for (size_t k=0;k<n;k++) {
+					ComplexFieldType sum = 0.0;
+					for (size_t i=0;i<n;i++) {
+						for (size_t j=0;j<n;j++) {
+							sum += conj(B(i,k)) * src(i,j) * B(j,k);
+						}
+					}
+					dest[k] = sum;
+				}
+				 
 			}
 			
 		private:
@@ -233,7 +252,31 @@ namespace FreeFermions {
 				io.read(v,"hoppings");
 			}
 			
+			template<typename MatrixComplexType>
+			void getFourierMatrix(MatrixComplexType& B) const
+			{
+				typedef typename MatrixComplexType::value_type ComplexType;
+				if (geometryType_!=FEAS) throw std::runtime_error("getFourierMatrix: unsupported\n");
+				size_t n = B.n_row();
+				size_t length = size_t(sqrt(n));
+				if ((length*length) !=n) throw std::runtime_error("Only square lattices supported for FEAS\n");
+				for (size_t i=0;i<n;i++) {
+					size_t rx = i % length;
+					size_t ry = i/length;
+					for (size_t k=0;k<n;k++) {
+						size_t kx = k % length;
+						size_t ky = k / length;
+						FieldType tmpx = rx*kx*2.0*M_PI/length;
+						FieldType tmpy = ry*ky*2.0*M_PI/length;
+						FieldType tmp1 = cos(tmpx+tmpy);
+						FieldType tmp2 = sin(tmpx+tmpy);
+						B(i,k) = ComplexType(tmp1,tmp2);
+					}
+				}
+			}
+			
 			size_t sites_;
+			size_t geometryType_;
 			FieldType hopping_;
 	}; // GeometryLibrary
 } // namespace FreeFermions

@@ -12,9 +12,9 @@ int main(int argc,char* argv[])
 
 	size_t dof = 2; // spin up and down
 	MatrixType t(n,n);
-	GeometryLibraryType geometry(n);
+	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
 	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
+	geometry.setGeometry(t,2);
 	
 	EngineType engine(t,dof,false);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down

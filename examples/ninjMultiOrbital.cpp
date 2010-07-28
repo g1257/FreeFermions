@@ -12,30 +12,33 @@ int main(int argc,char* argv[])
 
 	size_t dof = 2; // spin up and down
 	std::vector<MatrixType> t;
-	GeometryLibraryType geometry(n);
+	GeometryLibraryType geometry(n,GeometryLibraryType::FEAS);
 	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t,GeometryLibraryType::FEAS,"feasHoppings.inp",GeometryLibraryType::OPTION_PERIODIC);
+	geometry.setGeometry(t,"feasHoppings.inp",GeometryLibraryType::OPTION_PERIODIC);
 	
 	EngineType engine(t,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
 	HilbertVectorType gs = engine.newGroundState(ne);
 	
 	ObservableLibraryType library(engine);
-	FieldType sum = 0.0, sum2 = 0.0;
+	FieldType sum2 = 0.0;
+	MatrixType m(n,n);
 	for (size_t site = 0; site<n ; site++) {
 		HilbertVectorType phi = engine.newState();
 		library.applyNiAllFlavors(phi,gs,site);
 		FieldType y = scalarProduct(phi,gs);
-		//size_t site2 = site;
-		//for (size_t site2=0; site2<n; site2++) {
-			//HilbertVectorType phi2 = engine.newState();
-			//library.applyNiAllFlavors(phi2,phi,site2);
-			FieldType x = scalarProduct(phi,phi);
+		for (size_t site2=0; site2<n; site2++) {
+			HilbertVectorType phi2 = engine.newState();
+			library.applyNiAllFlavors(phi2,phi,site2);
+			FieldType x = scalarProduct(phi2,gs);
 			std::cout<<x<<" "<<y;
-			sum += x;
+			m(site,site2) = x;
 			sum2 += y*y;
-		//}
+		}
 		std::cout<<"\n";
 	}
-	std::cout<<"Sum="<<sum<<" "<<sum2<<"\n";
+	std::vector<std::complex<FieldType> > fm(n);
+	geometry.fourierTransform(fm,m);
+	std::cout<<"Fourier transform:\n";
+	std::cout<<m;
 }

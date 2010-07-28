@@ -56,8 +56,8 @@ int main(int argc,char *argv[])
 	size_t dof = 2; // spin up and down
 	
 	MatrixType t(n,n);
-	GeometryLibraryType geometry(n);
-	geometry.setGeometry(t,GeometryLibraryType::CHAIN);
+	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
+	geometry.setGeometry(t);
 	//geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	std::cerr<<t;
 	
