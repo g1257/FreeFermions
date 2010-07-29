@@ -101,7 +101,8 @@ namespace FreeFermions {
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
 
 			Engine(const MatrixType& t,size_t dof,bool verbose=false) :
-				sites_(t.n_row()),edof_(1),dof_(dof),verbose_(verbose)
+				sites_(t.n_row()),edof_(1),dof_(dof),verbose_(verbose),eigenvectors_(sites_,sites_),
+				       eigenvalues_(sites_)
 			{
 				std::vector<MatrixType>* tt = new std::vector<MatrixType>(1);
 				(*tt)[0] = t;
@@ -114,7 +115,8 @@ namespace FreeFermions {
 			}
 
 			Engine(const std::vector<MatrixType>& t,size_t dof,bool verbose=false) :
-				t_(&t),sites_(t[0].n_row()),edof_(size_t(sqrt(t.size()))),dof_(dof),verbose_(verbose)
+				t_(&t),sites_(t[0].n_row()),edof_(size_t(sqrt(t.size()))),dof_(dof),verbose_(verbose),
+				    eigenvectors_(sites_*edof_,sites_*edof_),eigenvalues_(sites_*edof_)
 			{
 				if ((edof_) * (edof_) != t.size()) 
 					throw std::runtime_error("t.size must be a perfect square\n");
@@ -157,12 +159,9 @@ namespace FreeFermions {
 		
 			void diagonalize()
 			{
-				eigenvectors_.resize(sites_*edof_,sites_*edof_);
-				
 				for (size_t i=0;i<edof_*edof_;i++) 
 					sumHoppings(i);
-					
-				eigenvalues_.resize(edof_*sites_);
+
 				if (!isHermitian(eigenvectors_,true)) throw std::runtime_error("Matrix not hermitian\n");
 				
 				utils::diag(eigenvectors_,eigenvalues_,'V');

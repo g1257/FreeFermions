@@ -211,7 +211,32 @@ namespace std {
 }
 	
 namespace utils {
-
+	
+// 	template<typename ContainerType>
+// 	inline size_t findInOrdered(ContainerType& x,typename ContainerType::value_type& val,size_t start,size_t end)
+// 	{
+// 		while (start<end) {
+// 			size_t ix = (end+start)/2;
+// 			if (x[ix]==val) return ix;
+// 			if (x[ix]<val) {
+// 				start = ix+1;
+// 			} else {
+// 				end = ix;
+// 			}
+// 		}
+// 		throw std::runtime_error("findInOrdered: Not found\n");
+// 	}
+// 	
+// 	template<typename ContainerType>
+// 	void sortAndGetPermutation(ContainerType& x,std::vector<size_t>& iperm)
+// 	{
+// 		// it's mind bogling that stl sort doesn't return the permutation!!!
+// 		ContainerType xold = x;
+// 		std::sort(x.begin(),x.end());
+// 		for (size_t i=0;i<xold.size();i++)
+// 			iperm[i] = findInOrdered(x,xold[i],0,x.size());
+// 	}
+	
 	// Sorts x in increasing order and sets iperm to the resulting permutation vector.
 	// Is there any good C++ function to do this that also calculates the permutation vector?
 	// I haven't found one. The one I give here is modified from spsort. Original prologue read:
@@ -233,7 +258,7 @@ C           Wisniewski, J. A., (SNLA)
 	
 	
 	template<typename FloatingType,typename ContainerType>
-	void sort(ContainerType& x,std::vector<size_t>& iperm)
+	void sortFortran(ContainerType& x,std::vector<size_t>& iperm)
 	{
 		typedef typename ContainerType::value_type Field;
 		int n = x.size();
@@ -368,13 +393,13 @@ C           Wisniewski, J. A., (SNLA)
 	template<template<typename,typename> class ContainerTemplate,typename Field,typename A>
 	void sort(ContainerTemplate<Field,A>& x,std::vector<size_t>& iperm)
 	{
-		sort<double,std::vector<Field,A> >(x,iperm);				
+		sortFortran<double,std::vector<Field,A> >(x,iperm);				
 	}
 	
 	template<template<typename,typename,typename,typename> class ContainerTemplate,typename Field,typename Cmp,typename A>
 	void sort(ContainerTemplate<size_t,Field,Cmp,A>& x,std::vector<size_t>& iperm)
 	{
-		sort<double,ContainerTemplate<size_t,Field,Cmp,A>,Field>(x,iperm);				
+		sortFortran<double,ContainerTemplate<size_t,Field,Cmp,A>,Field>(x,iperm);				
 	}
 	
 	

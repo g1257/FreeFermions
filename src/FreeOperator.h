@@ -95,6 +95,9 @@ namespace FreeFermions {
 			typedef psimag::Matrix<FieldType> MatrixType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
 		public:
+			
+			enum {SIMPLIFY,DO_NOT_SIMPLIFY};
+			
 			FreeOperator(const MatrixType& U,const std::string& label,size_t site,size_t flavor,size_t dof) :
 				U_(U),label_(label),site_(site),flavor_(flavor),dof_(dof)
 			{
@@ -103,13 +106,14 @@ namespace FreeFermions {
 			void apply(
 				
 				HilbertVectorType& dest,
-				const HilbertVectorType& src) const
+				const HilbertVectorType& src,
+				size_t simplifyOrNot) const
 			{
 				dest.clear();
 				for (size_t i=0;i<src.terms();i++) {
 					apply(dest,src.term(i));
 				}
-				dest.simplify();
+				if (simplifyOrNot==SIMPLIFY) dest.simplify();
 			}
 			
 		private:	

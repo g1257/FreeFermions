@@ -138,7 +138,7 @@ namespace FreeFermions {
 					ComplexFieldType sum = 0.0;
 					for (size_t i=0;i<n;i++) {
 						for (size_t j=0;j<n;j++) {
-							sum += conj(B(i,k)) * src(i,j) * B(j,k);
+							sum += std::conj(B(i,k)) * src(i,j) * B(j,k);
 						}
 					}
 					dest[k] = sum;

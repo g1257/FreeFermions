@@ -38,7 +38,7 @@ CXX = g++ -O2 -pg -DNDEBUG
 
 all: clean $what 
 
-$what.o: $what.cpp $headers
+$what.o: $what.cpp $headers Makefile
 	\$(CXX) \$(CPPFLAGS) -c $what.cpp  
 
 $what: clean  $what.o

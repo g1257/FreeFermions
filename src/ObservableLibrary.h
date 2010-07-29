@@ -106,9 +106,9 @@ namespace FreeFermions {
 			{
 				FreeOperatorType myOp = engine_.newSimpleOperator("destruction",site,flavor);
 				HilbertVectorType intermediate = engine_.newState();
-				myOp.apply(intermediate,src);
+				myOp.apply(intermediate,src,FreeOperatorType::DO_NOT_SIMPLIFY);
 				FreeOperatorType myOp2 = engine_.newSimpleOperator("creation",site,flavor);
-				myOp2.apply(dest,intermediate);
+				myOp2.apply(dest,intermediate,FreeOperatorType::DO_NOT_SIMPLIFY);
 			}
 			
 			void applyNiBarOneFlavor(
@@ -134,6 +134,7 @@ namespace FreeFermions {
 					applyNiOneFlavor(tmp,src,site,flavor);
 					dest.add(tmp);
 				}
+				dest.simplify();
 			}
 			
 			
