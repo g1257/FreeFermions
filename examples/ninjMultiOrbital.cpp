@@ -33,8 +33,8 @@ int main(int argc,char* argv[])
 			for (size_t site2=0; site2<effectiveN; site2++) {
 				for (size_t orb2=0;orb2<2;orb2++) {
 					HilbertVectorType phi2 = engine.newState();
-					library.applyNiAllFlavors(phi2,phi,site2+orb2*n); // phi2 = operator2 |phi>
-					FieldType x = scalarProduct(phi2,gs);
+					library.applyNiAllFlavors(phi2,gs,site2+orb2*n); // phi2 = operator2 |phi>
+					FieldType x = scalarProduct(phi2,phi);
 					std::cout<<x<<" ";
 					m(site,site2) += x;
 					sum2 += y*y;
