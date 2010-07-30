@@ -185,8 +185,9 @@ namespace FreeFermions {
 
 			const std::vector<MatrixType>* t_;
 			size_t sites_;
-			size_t edof_;
-			size_t dof_;
+			size_t edof_; // degrees of freedom that are coupled (feas : = 2 , orbitals)
+			size_t dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
+					// feas =2 spin
 			bool verbose_;
 			psimag::Matrix<FieldType> eigenvectors_;
 			std::vector<RealType> eigenvalues_;

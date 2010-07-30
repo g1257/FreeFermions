@@ -17,7 +17,7 @@ int main(int argc,char* argv[])
 	geometry.setGeometry(t,"feasHoppings.inp",GeometryLibraryType::OPTION_PERIODIC);
 	
 	EngineType engine(t,dof,true);
-	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
+	std::vector<size_t> ne(dof,atoi(argv[2])); // argv[2] up and argv[2] down
 	HilbertVectorType gs = engine.newGroundState(ne);
 	
 	ObservableLibraryType library(engine);
@@ -28,15 +28,15 @@ int main(int argc,char* argv[])
 		FieldType y = 0;
 		for (size_t orb1 = 0;orb1<2; orb1++) {
 			HilbertVectorType phi = engine.newState();
-			library.applyNiAllFlavors(phi,gs,site+orb1*n);
+			library.applyNiAllFlavors(phi,gs,site+orb1*n); // phi = operator |gs>
 			y += scalarProduct(phi,gs);
 			for (size_t site2=0; site2<effectiveN; site2++) {
 				for (size_t orb2=0;orb2<2;orb2++) {
 					HilbertVectorType phi2 = engine.newState();
-					library.applyNiAllFlavors(phi2,phi,site2+orb2*n);
+					library.applyNiAllFlavors(phi2,phi,site2+orb2*n); // phi2 = operator2 |phi>
 					FieldType x = scalarProduct(phi2,gs);
 					std::cout<<x<<" ";
-					m(site,site2) = x;
+					m(site,site2) += x;
 					sum2 += y*y;
 				}
 			}
