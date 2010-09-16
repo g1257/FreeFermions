@@ -12,11 +12,11 @@ int main(int argc,char* argv[])
 
 	size_t dof = 2; // spin up and down
 	MatrixType t(n,n);
-	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
-	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t,2);
+	//GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
+	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
+	geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
 	
-	EngineType engine(t,dof,false);
+	EngineType engine(t,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
 	HilbertVectorType gs = engine.newGroundState(ne);
 	ObservableLibraryType library(engine);

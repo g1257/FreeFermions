@@ -110,7 +110,7 @@ namespace FreeFermions {
 				}
 			}
 			
-			void setGeometry(std::vector<MatrixType>& t,const std::string& filename,size_t geometryOption=OPTION_NONE)
+			void setGeometry(std::vector<MatrixType>& t,const std::string& filename,size_t leg,size_t geometryOption=OPTION_NONE)
 			{
 				if (geometryType_!=FEAS) throw std::runtime_error("Unsupported\n");
 				size_t edof = 2; // 2 orbitals
@@ -120,20 +120,20 @@ namespace FreeFermions {
 				t.clear();
 				for (size_t i=0;i<edof*edof;i++) { // 4 cases: aa ab ba and bb
 					MatrixType oneT(sites_,sites_);
-					setGeometryFeAs(oneT,i,oneSiteHoppings,geometryOption);
+					setGeometryFeAs(oneT,i,oneSiteHoppings,leg,geometryOption);
 					if (!isHermitian(oneT,true)) throw std::runtime_error("Hopping matrix not hermitian\n");
 					t.push_back(oneT);
 				}
 			}
 			
 			template<typename ComplexFieldType>
-			void fourierTransform(std::vector<ComplexFieldType>& dest,const MatrixType& src) const
+			void fourierTransform(std::vector<ComplexFieldType>& dest,const MatrixType& src,size_t leg) const
 			{
 				
 				size_t n = src.n_row();
 				if (n!=sites_) throw std::runtime_error("src must have the same number of sites as lattice\n");
 				psimag::Matrix<ComplexFieldType> B(n,n);
-				getFourierMatrix(B);
+				getFourierMatrix(B,leg);
 				for (size_t k=0;k<n;k++) {
 					ComplexFieldType sum = 0.0;
 					for (size_t i=0;i<n;i++) {
@@ -197,50 +197,51 @@ namespace FreeFermions {
 			}
 			
 			// only 2 orbitals supported
-			void setGeometryFeAs(MatrixType& t,size_t orborb,const std::vector<FieldType>& oneSiteHoppings,size_t geometryOption)
+			void setGeometryFeAs(MatrixType& t,size_t orborb,const std::vector<FieldType>& oneSiteHoppings,
+						size_t leg,size_t geometryOption)
 			{
 				FieldType tx = oneSiteHoppings[orborb+DIRECTION_X*4];
-				size_t length = size_t(sqrt(sites_));
-				if ((length*length) != sites_) throw std::runtime_error("Lattice must be square for FeAs\n");
-				for (size_t j=0;j<length;j++) {
-					for (size_t i=0;i<length;i++) {
-						if (i+1<length) t(i+1+j*length,i+j*length) = t(i+j*length,i+1+j*length) = tx;
-						if (i>0) t(i-1+j*length,i+j*length) = t(i+j*length,i-1+j*length) = tx;
+				size_t lengthx  = sites_/leg;
+				if (sites_%leg!=0) throw std::runtime_error("Leg must divide number of sites.\n");
+				for (size_t j=0;j<leg;j++) {
+					for (size_t i=0;i<lengthx;i++) {
+						if (i+1<lengthx) t(i+1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+j*lengthx) = tx;
+						if (i>0) t(i-1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i-1+j*lengthx) = tx;
 					}
 					if (geometryOption==OPTION_PERIODIC) 
-						t(j*length,length-1+j*length) = t(length-1+j*length,j*length) = tx;
+						t(j*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,j*lengthx) = tx;
 				}
 
 				FieldType ty = oneSiteHoppings[orborb+DIRECTION_Y*4];
-				for (size_t i=0;i<length;i++) {
-					for (size_t j=0;j<length;j++) {
-						if (j>0) t(i+(j-1)*length,i+j*length) = t(i+j*length,i+(j-1)*length) = ty;
-						if (j+1<length) t(i+(j+1)*length,i+j*length) = t(i+j*length,i+(j+1)*length) = ty;
+				for (size_t i=0;i<lengthx;i++) {
+					for (size_t j=0;j<leg;j++) {
+						if (j>0) t(i+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j-1)*lengthx) = ty;
+						if (j+1<leg) t(i+(j+1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j+1)*lengthx) = ty;
 					}
-					if (geometryOption==OPTION_PERIODIC)  t(i,i+(length-1)*length) = t(i+(length-1)*length,i) = ty;
+					if (geometryOption==OPTION_PERIODIC)  t(i,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i) = ty;
 				}
 				FieldType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*4];
 				FieldType txmy = oneSiteHoppings[orborb+DIRECTION_XMY*4];
-				for (size_t i=0;i<length;i++) {
-					for (size_t j=0;j<length;j++) {
-						if (j+1<length && i+1<length)
-							t(i+1+(j+1)*length,i+j*length) = t(i+j*length,i+1+(j+1)*length) = txpy;
-						if (i+1<length && j>0)
-							t(i+1+(j-1)*length,i+j*length) = t(i+j*length,i+1+(j-1)*length) = txmy;
+				for (size_t i=0;i<lengthx;i++) {
+					for (size_t j=0;j<leg;j++) {
+						if (j+1<leg && i+1<lengthx)
+							t(i+1+(j+1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+(j+1)*lengthx) = txpy;
+						if (i+1<lengthx && j>0)
+							t(i+1+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+(j-1)*lengthx) = txmy;
 						if (geometryOption!=OPTION_PERIODIC || i>0) continue;
-						if (j+1<length)
-							t((j+1)*length,length-1+j*length) = t(length-1+j*length,(j+1)*length) = txpy;
+						if (j+1<leg)
+							t((j+1)*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,(j+1)*lengthx) = txpy;
 						if (j>0)
-							t((j-1)*length,length-1+j*length) = t(length-1+j*length,(j-1)*length) = txmy;
+							t((j-1)*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,(j-1)*lengthx) = txmy;
 					}
 					if (geometryOption!=OPTION_PERIODIC) continue;
-					if (i+1<length) {
-						t(i+1,i+(length-1)*length) = t(i+(length-1)*length,i+1) = txpy;
-						t(i+1+(length-1)*length,i) = t(i,i+1+(length-1)*length) = txmy;
+					if (i+1<lengthx) {
+						t(i+1,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i+1) = txpy;
+						t(i+1+(leg-1)*lengthx,i) = t(i,i+1+(leg-1)*lengthx) = txmy;
 					}
 					if (i>0) continue;
-					t(0,length-1+(length-1)*length) = t(length-1+(length-1)*length,0) = txpy;
-					t(0+(length-1)*length,length-1) = t(length-1,0+(length-1)*length) = txmy;
+					t(0,lengthx-1+(leg-1)*lengthx) = t(lengthx-1+(leg-1)*lengthx,0) = txpy;
+					t(0+(leg-1)*lengthx,lengthx-1) = t(lengthx-1,0+(leg-1)*lengthx) = txmy;
 				}
 				
 			}
@@ -253,21 +254,21 @@ namespace FreeFermions {
 			}
 			
 			template<typename MatrixComplexType>
-			void getFourierMatrix(MatrixComplexType& B) const
+			void getFourierMatrix(MatrixComplexType& B,size_t leg) const
 			{
 				typedef typename MatrixComplexType::value_type ComplexType;
 				if (geometryType_!=FEAS) throw std::runtime_error("getFourierMatrix: unsupported\n");
 				size_t n = B.n_row();
-				size_t length = size_t(sqrt(n));
-				if ((length*length) !=n) throw std::runtime_error("Only square lattices supported for FEAS\n");
+				size_t lengthx = n/leg;
+				if (n%leg !=0) throw std::runtime_error("Leg must divide number of sites for FEAS\n");
 				for (size_t i=0;i<n;i++) {
-					size_t rx = i % length;
-					size_t ry = i/length;
+					size_t rx = i % lengthx;
+					size_t ry = i/lengthx;
 					for (size_t k=0;k<n;k++) {
-						size_t kx = k % length;
-						size_t ky = k / length;
-						FieldType tmpx = rx*kx*2.0*M_PI/length;
-						FieldType tmpy = ry*ky*2.0*M_PI/length;
+						size_t kx = k % lengthx;
+						size_t ky = k / lengthx;
+						FieldType tmpx = rx*kx*2.0*M_PI/lengthx;
+						FieldType tmpy = ry*ky*2.0*M_PI/leg;
 						FieldType tmp1 = cos(tmpx+tmpy);
 						FieldType tmp2 = sin(tmpx+tmpy);
 						B(i,k) = ComplexType(tmp1,tmp2);

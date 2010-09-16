@@ -108,6 +108,8 @@ namespace FreeFermions {
 				(*tt)[0] = t;
 				t_ = tt;
 				diagonalize();
+				//MatrixType tmp = eigenvectors_;
+				//eigenvectors_ = transposeConjugate(tmp);
 				if (verbose_) {
 					std::cerr<<"#Created core "<<eigenvectors_.n_row();
 					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";

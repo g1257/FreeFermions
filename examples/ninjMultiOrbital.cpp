@@ -7,14 +7,15 @@
 
 int main(int argc,char* argv[])
 {
-	if (argc!=3) throw std::runtime_error("Needs 2 argument(s)\n");
+	if (argc!=4) throw std::runtime_error("Needs 3 argument(s)\n");
         size_t n = atoi(argv[1]); 
 
 	size_t dof = 2; // spin up and down
 	std::vector<MatrixType> t;
 	GeometryLibraryType geometry(n,GeometryLibraryType::FEAS);
 	//geometry.setGeometry(t,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t,"feasHoppings.inp",GeometryLibraryType::OPTION_PERIODIC);
+	size_t leg = atoi(argv[3]);
+	geometry.setGeometry(t,"feasHoppings.inp",leg,GeometryLibraryType::OPTION_PERIODIC);
 	
 	EngineType engine(t,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // argv[2] up and argv[2] down
@@ -36,6 +37,7 @@ int main(int argc,char* argv[])
 					library.applyNiAllFlavors(phi2,gs,site2+orb2*n); // phi2 = operator2 |phi>
 					FieldType x = scalarProduct(phi2,phi);
 					std::cout<<x<<" ";
+					std::cout.flush();
 					m(site,site2) += x;
 					sum2 += y*y;
 				}
@@ -44,7 +46,7 @@ int main(int argc,char* argv[])
 		}
 	}
 	std::vector<std::complex<FieldType> > fm(n);
-	geometry.fourierTransform(fm,m);
+	geometry.fourierTransform(fm,m,leg);
 	std::cout<<"Fourier transform:\n";
 	std::cout<<fm;
 }
