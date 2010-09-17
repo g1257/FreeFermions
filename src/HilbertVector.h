@@ -356,6 +356,7 @@ namespace FreeFermions {
 		
 		os<<"size="<<v.size_<<"\n";
 		os<<"dof="<<v.dof_<<"\n";
+		os<<"dataSize="<<v.data_.size()<<"\n";
 		for (size_t i=0;i<v.data_.size();i++) {
 			typename HilbertVector<T,V,U>::HilbertTermType term(v.data_[i],v.values_[i]);
 			os<<term;

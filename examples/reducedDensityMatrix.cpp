@@ -11,7 +11,16 @@ int main(int argc,char* argv[])
 	size_t nup =  atoi(argv[2]); 
 	typedef FreeFermions::ReducedDensityMatrix<double,double> ReducedDensityMatrixType;
 	
-	ReducedDensityMatrixType reducedDensityMatrix(n,nup);
+	MatrixType t(n,n);
+	//GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
+	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
+	geometry.setGeometry(t); //,GeometryLibraryType::OPTION_PERIODIC);
+	std::cerr<<t;	
+	
+	size_t dof = 1;
+	EngineType engine(t,dof,false);
+	
+	ReducedDensityMatrixType reducedDensityMatrix(engine,n,nup);
 	
 	std::vector<double> e(reducedDensityMatrix.rank());
 	reducedDensityMatrix.diagonalize(e);

@@ -102,10 +102,10 @@ namespace FreeFermions {
 		
 		public:
 			// note: right and left blocks are assumed equal and of size n
-			ReducedDensityMatrix(size_t n,size_t ne,size_t dof=1)
-			: n_(n),ne_(ne),hoppings_(n,n),geometry_(n,GeometryLibraryType::CHAIN),
-				engine_(geometry_,GeometryLibraryType::OPTION_NONE,dof,true)
+			ReducedDensityMatrix(EngineType& engine,size_t n,size_t ne)
+			: engine_(engine),n_(n),ne_(ne)
 			{
+				assert(engine_.dof()==1);
 				calculatePsi(psi_);
 				calculateRdm(rho_,psi_);
 			}
@@ -125,32 +125,41 @@ namespace FreeFermions {
 				psi.resize(states,states);
 				
 				VectorUintType neV(engine_.dof(),ne_);
+				VectorUintType zeroV(engine_.dof(),0);
 				HilbertVectorType gs =  engine_.newGroundState(neV);
 				
+				std::cout<<"#psi of size"<<states<<"x"<<states<<"\n";
+				size_t each = states/10;
 				for (size_t i=0;i<states;i++) {
+					if (i%each ==0) {
+						std::cerr<<"Done "<<(i*10/each)<<"%\n";
+						std::cerr.flush();
+					}
 					VectorUintType v;
 					aux.getSites(v,i);
-					HilbertVectorType phi =   engine_.newState();
+					HilbertVectorType phi =  engine_.newGroundState(zeroV);
 					psiOneBlock(phi,v);
+					//std::cout<<phi;
 					for (size_t j=0;j<states;j++) {
 						VectorUintType w;
 						aux.getSites(w,j);
-						if (v.size()+w.size()!=ne_) {
+						/*if (v.size()+w.size()!=ne_) {
 							psi(i,j) = 0;
 							continue;
-						}
+						}*/
 						
 						HilbertVectorType phi2 = phi;
 						psiOneBlock(phi2,w);
 						psi(i,j) = scalarProduct(phi2,gs);
+						//std::cout<<psi(i,j)<<" ";
 					}
+					//std::cout<<"\n";
 				}
 			}
 			
 			void psiOneBlock(HilbertVectorType& phi,const VectorUintType& v)
 			{
 				size_t sigma = 0; 
-				assert(engine_.dof()==1);
 				for (size_t i=0;i<v.size();i++) {
 					size_t site = v[i];
 					FreeOperatorType myOp = engine_.newSimpleOperator("creation",site,sigma);
@@ -158,27 +167,35 @@ namespace FreeFermions {
 					myOp.apply(phi2,phi,FreeOperatorType::SIMPLIFY);
 					phi = phi2;
 				}
+				//phi.simplify();
 			}
 			
 			void calculateRdm(MatrixType& rho,const MatrixType& psi)
 			{
 				size_t states=psi.n_row();
 				rho.resize(states,states);
+				std::cout<<"#rho of size "<<states<<"x"<<states<<"\n";
+				size_t each = states/10;
 				for (size_t i1=0;i1<states;i1++) {
+					if (i1%each ==0) {
+						std::cerr<<"Done "<<(i1*10/each)<<"%\n";
+						std::cerr.flush();
+					}
 					for (size_t i2=0;i2<states;i2++) {
 						rho(i1,i2) = 0;
 						for (size_t j=0;j<states;j++) {
 							rho(i1,i2) += psi(i1,j) * std::conj(psi(i2,j));
 						}
+						//std::cout<<rho(i1,i2)<<" ";
 					}
+					//std::cout<<"\n";
 				}
+				if (!isHermitian(rho)) throw std::runtime_error("DensityMatrix not Hermitian\n");
 			}
 			
+			EngineType& engine_;
 			size_t n_; // number of sites for one block only (both blocks are assumed equal)
 			size_t ne_; // number of electrons in the combined lattice (right+left)
-			MatrixType hoppings_;
-			GeometryLibraryType geometry_;
-			EngineType engine_;
 			MatrixType psi_; // the overlap of the g.s. with the product state
 			MatrixType rho_; // the reduced density matrix (reduced over right block)
 	}; // ReducedDensityMatrix

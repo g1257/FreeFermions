@@ -100,7 +100,7 @@ namespace FreeFermions {
 			typedef FreeOperator<HilbertVectorType> FreeOperatorType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
 
-			template<typename SomeGeometryType>
+			/*template<typename SomeGeometryType>
 					Engine(SomeGeometryType& g,size_t geometryOption,size_t dof,bool verbose=false) 
 			: sites_(g.sites()),edof_(1),dof_(dof),verbose_(verbose),eigenvectors_(sites_,sites_),
 				eigenvalues_(sites_)
@@ -116,7 +116,7 @@ namespace FreeFermions {
 					std::cerr<<"#Created core "<<eigenvectors_.n_row();
 					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
 				}
-			}
+			}*/
 			
 			Engine(const MatrixType& t,size_t dof,bool verbose=false) :
 				sites_(t.n_row()),edof_(1),dof_(dof),verbose_(verbose),eigenvectors_(sites_,sites_),

@@ -91,12 +91,14 @@ namespace FreeFermions {
 		
 		public:
 			// note: handles all (real space) states
-			// on a block of size n with ne electrons
+			// on a block of size n with up to and including ne electrons
 			CanonicalStates(size_t n,size_t ne,size_t dof=1)
 			{
-				size_t total = (1<<ne);
-				for (size_t i=0;i<total;i++)
+				BinaryNumberType total = (1<<n);
+				for (BinaryNumberType i=0;i<total;i++) {
+					if (electronsOf(i)>ne) continue;
 					states_.push_back(i);
+				}
 			}
 			
 			size_t states() const { return states_.size(); }
@@ -104,6 +106,21 @@ namespace FreeFermions {
 			void getSites(VectorUintType& v,size_t i) const
 			{
 				BinaryNumberType x = states_[i];
+				getSitesInternal(v,x);
+			}
+			
+
+		private:
+			
+			size_t electronsOf(BinaryNumberType x) const
+			{
+				VectorUintType v;
+				getSitesInternal(v,x);
+				return v.size();
+			}
+			
+			void getSitesInternal(VectorUintType& v,BinaryNumberType x) const
+			{
 				v.clear();
 				size_t counter = 0;
 				while(x>0) {
@@ -113,8 +130,6 @@ namespace FreeFermions {
 				}
 			}
 			
-
-		private:
 			std::vector<BinaryNumberType> states_;
 	}; // CanonicalStates
 } // FreeFermions namespace
