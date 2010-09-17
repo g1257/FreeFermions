@@ -1,7 +1,7 @@
 
 
 // SAmple of how to use FreeFermions core engine to calculate
-// < n_i n_j >
+// < \delta_{i,\gamma} \delta^\dagger_{j,\gamma'} >
 
 #include "Includes.h"
 
@@ -27,27 +27,24 @@ int main(int argc,char* argv[])
 	size_t effectiveN  = n;
 	for (size_t site = 0; site<effectiveN ; site++) {
 		FieldType y = 0;
-		for (size_t orb1 = 0;orb1<2; orb1++) {
+		size_t orb1 = 0;
+		//for (size_t orb1 = 0;orb1<2; orb1++) {
 			HilbertVectorType phi = engine.newState();
-			library.applyNiAllFlavors(phi,gs,site+orb1*n); // phi = operator |gs>
+			library.applyDelta(phi,gs,site+orb1*n);  // phi = operator |gs>
 			y += scalarProduct(phi,gs);
+			size_t orb2 = orb1;
 			for (size_t site2=0; site2<effectiveN; site2++) {
-				for (size_t orb2=0;orb2<2;orb2++) {
+				//for (size_t orb2=0;orb2<2;orb2++) {
 					HilbertVectorType phi2 = engine.newState();
-					library.applyNiAllFlavors(phi2,gs,site2+orb2*n); // phi2 = operator2 |phi>
+					library.applyDelta(phi2,gs,site2+orb2*n); // phi2 = operator2 |phi>
 					FieldType x = scalarProduct(phi2,phi);
 					std::cout<<x<<" ";
 					std::cout.flush();
 					m(site,site2) += x;
 					sum2 += y*y;
-				}
+				//}
 			}
 			std::cout<<"\n";
-		}
+		//}
 	}
-	std::cout<<m;
-	std::vector<std::complex<FieldType> > fm(n);
-	geometry.fourierTransform(fm,m,leg);
-	std::cout<<"Fourier transform:\n";
-	std::cout<<fm;
 }

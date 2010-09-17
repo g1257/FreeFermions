@@ -1,6 +1,6 @@
 // BEGIN LICENSE BLOCK
 /*
-Copyright © 2009 , UT-Battelle, LLC
+Copyright (c) 2009 , UT-Battelle, LLC
 All rights reserved
 
 [DMRG++, Version 2.0.0]
@@ -137,6 +137,18 @@ namespace FreeFermions {
 				dest.simplify();
 			}
 			
+			void applyDelta(
+					HilbertVectorType& dest,
+					const HilbertVectorType& src,
+					size_t siteorb) const
+			{
+				FreeOperatorType myOp = engine_.newSimpleOperator("destruction",siteorb,0);
+				HilbertVectorType intermediate = engine_.newState();
+				myOp.apply(intermediate,src,FreeOperatorType::DO_NOT_SIMPLIFY);
+				
+				FreeOperatorType myOp2 = engine_.newSimpleOperator("destruction",siteorb,1);
+				myOp2.apply(dest,intermediate,FreeOperatorType::DO_NOT_SIMPLIFY);
+			}
 			
 
 			
