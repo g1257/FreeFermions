@@ -3,7 +3,7 @@
 Copyright (c) 2009 , UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -100,6 +100,23 @@ namespace FreeFermions {
 			typedef FreeOperator<HilbertVectorType> FreeOperatorType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
 
+			template<typename SomeGeometryType>
+					Engine(SomeGeometryType& g,size_t geometryOption,size_t dof,bool verbose=false) 
+			: sites_(g.sites()),edof_(1),dof_(dof),verbose_(verbose),eigenvectors_(sites_,sites_),
+				eigenvalues_(sites_)
+			{
+				std::vector<MatrixType>* tt = new std::vector<MatrixType>(1);
+				g.setGeometry((*tt)[0],geometryOption);
+				t_ = tt;
+				diagonalize();
+				//MatrixType tmp = eigenvectors_;
+				//eigenvectors_ = transposeConjugate(tmp);
+				if (verbose_) {
+					std::cerr<<"#Created core "<<eigenvectors_.n_row();
+					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
+				}
+			}
+			
 			Engine(const MatrixType& t,size_t dof,bool verbose=false) :
 				sites_(t.n_row()),edof_(1),dof_(dof),verbose_(verbose),eigenvectors_(sites_,sites_),
 				       eigenvalues_(sites_)
@@ -194,7 +211,7 @@ namespace FreeFermions {
 			psimag::Matrix<FieldType> eigenvectors_;
 			std::vector<RealType> eigenvalues_;
 	}; // Engine
-} // namespace Dmrg 
+} // namespace FreeFermions 
 
 /*@}*/
 #endif

@@ -1,6 +1,6 @@
 // BEGIN LICENSE BLOCK
 /*
-Copyright © 2009 , UT-Battelle, LLC
+Copyright  2009 , UT-Battelle, LLC
 All rights reserved
 
 [FreeFermions, Version 1.0.0]
@@ -145,6 +145,8 @@ namespace FreeFermions {
 				}
 				 
 			}
+			
+			size_t sites() const { return sites_; }
 			
 		private:
 			void setGeometryChain(MatrixType& t,size_t geometryOption)
