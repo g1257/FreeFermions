@@ -15,5 +15,6 @@ int main(int argc,char* argv[])
 	
 	std::vector<double> e(reducedDensityMatrix.rank());
 	reducedDensityMatrix.diagonalize(e);
+	std::cout<<"DensityMatrixEigenvalues:\n";
 	std::cout<<e;
 }

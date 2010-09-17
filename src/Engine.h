@@ -106,6 +106,7 @@ namespace FreeFermions {
 				eigenvalues_(sites_)
 			{
 				std::vector<MatrixType>* tt = new std::vector<MatrixType>(1);
+				(*tt)[0].resize(sites_,sites_);
 				g.setGeometry((*tt)[0],geometryOption);
 				t_ = tt;
 				diagonalize();
