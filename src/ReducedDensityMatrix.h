@@ -149,7 +149,7 @@ namespace FreeFermions {
 						}*/
 						
 						HilbertVectorType phi2 = phi;
-						psiOneBlock(phi2,w);
+						psiOneBlock(phi2,w,n_);
 						psi(i,j) = scalarProduct(phi2,gs);
 						//std::cout<<psi(i,j)<<" ";
 					}
@@ -157,11 +157,11 @@ namespace FreeFermions {
 				}
 			}
 			
-			void psiOneBlock(HilbertVectorType& phi,const VectorUintType& v)
+			void psiOneBlock(HilbertVectorType& phi,const VectorUintType& v,size_t offset = 0)
 			{
 				size_t sigma = 0; 
 				for (size_t i=0;i<v.size();i++) {
-					size_t site = v[i];
+					size_t site = v[i] + offset;
 					FreeOperatorType myOp = engine_.newSimpleOperator("creation",site,sigma);
 					HilbertVectorType phi2 = engine_.newState();
 					myOp.apply(phi2,phi,FreeOperatorType::SIMPLIFY);
