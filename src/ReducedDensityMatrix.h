@@ -87,26 +87,26 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "CanonicalStates.h"
 
 namespace FreeFermions {
-	template<typename RealType,typename FieldType>
+	template<typename EngineType>
 	class ReducedDensityMatrix {
 		
 		typedef std::vector<size_t> VectorUintType;
+		typedef typename EngineType::FieldType FieldType;
+		typedef typename EngineType::RealType RealType;
 		typedef std::vector<FieldType> VectorType;
-		typedef std::vector<bool> LevelsType;
 		typedef psimag::Matrix<FieldType> MatrixType;
-		typedef FreeFermions::Engine<RealType,FieldType,LevelsType> EngineType;
 		typedef typename EngineType::HilbertVectorType HilbertVectorType;
 		typedef typename EngineType::FreeOperatorType FreeOperatorType;
-		typedef GeometryLibrary<MatrixType> GeometryLibraryType;
-		typedef ObservableLibrary<EngineType> ObservableLibraryType;
-		
+		typedef typename EngineType::ConcurrencyType ConcurrencyType;
+
 		public:
 			// note: right and left blocks are assumed equal and of size n
 			ReducedDensityMatrix(EngineType& engine,size_t n,size_t ne)
-			: engine_(engine),n_(n),ne_(ne)
+			: engine_(engine),concurrency_(engine.concurrency()),n_(n),ne_(ne)
 			{
 				assert(engine_.dof()==1);
 				calculatePsi(psi_);
+				if (!concurrency_.root()) return;
 				calculateRdm(rho_,psi_);
 			}
 			
@@ -114,6 +114,7 @@ namespace FreeFermions {
 			
 			void diagonalize(std::vector<RealType>& e)
 			{
+				if (!concurrency_.root()) return;
 				utils::diag(rho_,e,'N');
 			}
 
@@ -130,8 +131,13 @@ namespace FreeFermions {
 				
 				std::cout<<"#psi of size"<<states<<"x"<<states<<"\n";
 				size_t each = states/10;
-				for (size_t i=0;i<states;i++) {
-					if (i%each ==0) {
+				concurrency_.loopCreate(states);
+				//for (size_t i=0;i<states;i++) {
+				size_t i=0;
+				VectorType psiV(states);
+				std::vector<VectorType> psiVv(states);
+				while(concurrency_.loop(i)) {
+					if (i%each ==0 && concurrency_.isSerial()) {
 						std::cerr<<"Done "<<(i*10/each)<<"%\n";
 						std::cerr.flush();
 					}
@@ -144,17 +150,22 @@ namespace FreeFermions {
 						VectorUintType w;
 						aux.getSites(w,j);
 						if (v.size()+w.size()!=ne_) {
-							psi(i,j) = 0;
+							psiV[j] = 0;
 							continue;
 						}
 						
 						HilbertVectorType phi2 = gs;
 						psiOneBlock(phi2,w,"destruction",n_);
-						psi(i,j) = scalarProduct(phi2,phi);
+						psiV[j] = scalarProduct(phi2,phi);
 						//std::cout<<psi(i,j)<<" ";
 					}
+					psiVv[i]=psiV;
 					//std::cout<<"\n";
-				}
+				}	
+				concurrency_.gather(psiVv);
+				for (size_t i=0;i<psiVv.size();i++) 
+					for (size_t j=0;j<psiVv[i].size();j++) 
+						psi(i,j) = psiVv[i][j];
 			}
 			
 			void psiOneBlock(HilbertVectorType& phi,const VectorUintType& v,
@@ -195,6 +206,7 @@ namespace FreeFermions {
 			}
 			
 			EngineType& engine_;
+			ConcurrencyType& concurrency_;
 			size_t n_; // number of sites for one block only (both blocks are assumed equal)
 			size_t ne_; // number of electrons in the combined lattice (right+left)
 			MatrixType psi_; // the overlap of the g.s. with the product state

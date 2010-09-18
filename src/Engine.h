@@ -88,12 +88,13 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename RealType_,typename FieldType_,typename LevelsType>
+	template<typename RealType_,typename FieldType_,typename LevelsType,typename ConcurrencyType_>
 	class Engine {
 			
 			typedef psimag::Matrix<FieldType_> MatrixType;
 	
 		public:
+			typedef ConcurrencyType_ ConcurrencyType;
 			typedef RealType_ RealType;
 			typedef FieldType_ FieldType;
 			typedef HilbertVector<RealType,FieldType,LevelsType> HilbertVectorType;
@@ -118,8 +119,8 @@ namespace FreeFermions {
 				}
 			}*/
 			
-			Engine(const MatrixType& t,size_t dof,bool verbose=false) :
-				sites_(t.n_row()),edof_(1),dof_(dof),verbose_(verbose),eigenvectors_(sites_,sites_),
+			Engine(const MatrixType& t,ConcurrencyType& concurrency,size_t dof,bool verbose=false) :
+					concurrency_(concurrency),sites_(t.n_row()),edof_(1),dof_(dof),verbose_(verbose),eigenvectors_(sites_,sites_),
 				       eigenvalues_(sites_)
 			{
 				std::vector<MatrixType>* tt = new std::vector<MatrixType>(1);
@@ -174,7 +175,9 @@ namespace FreeFermions {
 			RealType eigenvalue(size_t i) const { return eigenvalues_[i]; }
 
 			size_t dof() const { return dof_; }
-
+		
+			ConcurrencyType& concurrency() { return concurrency_; }
+			
 		private:
 		
 			void diagonalize()
@@ -202,7 +205,8 @@ namespace FreeFermions {
 					for (size_t j=0;j<sites_;j++)
 						eigenvectors_(i+orb1*sites_,j+orb2*sites_) += (*t_)[orbitalPair](i,j);
 			}
-
+			
+			ConcurrencyType& concurrency_;
 			const std::vector<MatrixType>* t_;
 			size_t sites_;
 			size_t edof_; // degrees of freedom that are coupled (feas : = 2 , orbitals)
