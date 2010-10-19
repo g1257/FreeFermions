@@ -60,7 +60,7 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 			}
 		}
 	}
-	sum += 2*real(savedValue);
+	sum += 2*std::real(savedValue);
 	std::cerr<<"#sum2="<<scalarProduct(tmpV,tmpV)<<"\n";
 	return sum;
 }
@@ -69,8 +69,8 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 int main(int argc,char *argv[])
 {
 	if (argc!=7) throw std::runtime_error("Needs 7 arguments\n");
-	size_t n = 12; 
-	size_t electronsUp = 6;
+	size_t n = 8; 
+	size_t electronsUp = 4;
 	size_t dof = 2; // spin up and down
 	
 	MatrixType t(n,n);
@@ -79,7 +79,7 @@ int main(int argc,char *argv[])
 	//geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	std::cerr<<t;
 	
-	bool verbose = false;
+	bool verbose = true;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,false);
 	ObservableLibraryType library(engine);
@@ -90,7 +90,7 @@ int main(int argc,char *argv[])
 	size_t site = atoi(argv[1]);
 	size_t site2 = atoi(argv[2]);
 	size_t site3 = atoi(argv[3]);
-	size_t sigma3 = 0;
+	//size_t sigma3 = 0;
 	size_t DO_NOT_SIMPLIFY = FreeOperatorType::DO_NOT_SIMPLIFY;
 	
 	FieldType superdensity = calcSuperDensity(site,site2,gs,engine,library);
@@ -127,24 +127,30 @@ int main(int argc,char *argv[])
 				eihOp.apply(phi5,phi4);
 				phi4.clear();
 				
-				if (verbose) std::cerr<<"Applying c_p\n";
-				FreeOperatorType myOp6 = engine.newSimpleOperator("destruction",site3,sigma3);
+				if (verbose) std::cerr<<"Applying c_{p down}\n";
+				FreeOperatorType myOp6 = engine.newSimpleOperator("destruction",site3,1);
 				HilbertVectorType phi6 = engine.newState(verbose);
 				myOp6.apply(phi6,phi5,DO_NOT_SIMPLIFY);
 				phi5.clear();
 				
+				if (verbose) std::cerr<<"Applying c_{p up}\n";
+				FreeOperatorType myOp7 = engine.newSimpleOperator("destruction",site3,0);
+				HilbertVectorType phi7 = engine.newState(verbose);
+				myOp6.apply(phi7,phi6,DO_NOT_SIMPLIFY);
+				phi6.clear();
+				
 				if (verbose) std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
-				sum += scalarProduct(phi6,phi6);
+				sum += scalarProduct(phi7,phi7);
 				if (verbose) std::cerr<<"Done with scalar product\n";
-				if (sigma ==0 && sigma2 ==0) savedVector = phi6;
+				if (sigma ==0 && sigma2 ==0) savedVector = phi7;
 				if (sigma ==1 && sigma2 ==1) {
-					savedValue = scalarProduct(phi6,savedVector);
+					savedValue = scalarProduct(phi7,savedVector);
 					savedVector.clear();
 				}
 				//timeVector.add(phi6);
 			}
 		}
-		sum += 2*real(savedValue);
+		sum += 2*std::real(savedValue);
 		std::cout<<time<<" "<<sum<<"\n";
 	}
 }
