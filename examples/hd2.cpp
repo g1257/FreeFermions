@@ -69,8 +69,8 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 int main(int argc,char *argv[])
 {
 	if (argc!=7) throw std::runtime_error("Needs 7 arguments\n");
-	size_t n = 8; 
-	size_t electronsUp = 4;
+	size_t n = 12; 
+	size_t electronsUp = 6;
 	size_t dof = 2; // spin up and down
 	
 	MatrixType t(n,n);
@@ -79,7 +79,7 @@ int main(int argc,char *argv[])
 	//geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	std::cerr<<t;
 	
-	bool verbose = true;
+	bool verbose = false;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,false);
 	ObservableLibraryType library(engine);
@@ -100,10 +100,10 @@ int main(int argc,char *argv[])
 		RealType time = it * atof(argv[5]) + atof(argv[6]);
 		EtoTheIhTimeType eih(time,engine);
 		DiagonalOperatorType eihOp(eih);
-				
-		HilbertVectorType savedVector = engine.newState(verbose);
+
+		std::vector<HilbertVectorType> savedVector(4,engine.newState(verbose));
 		FieldType savedValue = 0;
-		FieldType sum = 0;
+		
 		for (size_t sigma = 0;sigma<2;sigma++) {
 			HilbertVectorType phi = engine.newState();
 			library.applyNiOneFlavor(phi,gs,site,1-sigma);
@@ -140,17 +140,16 @@ int main(int argc,char *argv[])
 				phi6.clear();
 				
 				if (verbose) std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
-				sum += scalarProduct(phi7,phi7);
+				//sum += scalarProduct(phi7,phi7);
 				if (verbose) std::cerr<<"Done with scalar product\n";
-				if (sigma ==0 && sigma2 ==0) savedVector = phi7;
-				if (sigma ==1 && sigma2 ==1) {
-					savedValue = scalarProduct(phi7,savedVector);
-					savedVector.clear();
-				}
+				savedVector[sigma+sigma2*2] = phi7;
 				//timeVector.add(phi6);
 			}
 		}
-		sum += 2*std::real(savedValue);
+		FieldType sum = 0;
+		for (size_t sigma=0;sigma<4;sigma++)
+			for (size_t sigma2=0;sigma2<4;sigma2++)
+				sum += scalarProduct(savedVector[sigma],savedVector[sigma2]);
 		std::cout<<time<<" "<<sum<<"\n";
 	}
 }
