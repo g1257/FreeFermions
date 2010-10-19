@@ -90,7 +90,7 @@ namespace FreeFermions {
 			typedef typename EngineType::HilbertVectorType HilbertVectorType;
 			typedef typename EngineType::FreeOperatorType FreeOperatorType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
-			
+
 		public:
 			
 			ObservableLibrary(const EngineType& engine) :
@@ -117,11 +117,12 @@ namespace FreeFermions {
 					size_t site,
 					size_t flavor) const
 			{
+				size_t DO_NOT_SIMPLIFY = FreeOperatorType::DO_NOT_SIMPLIFY;
 				FreeOperatorType myOp = engine_.newSimpleOperator("creation",site,flavor);
 				HilbertVectorType intermediate = engine_.newState();
-				myOp.apply(intermediate,src);
+				myOp.apply(intermediate,src,DO_NOT_SIMPLIFY);
 				FreeOperatorType myOp2 = engine_.newSimpleOperator("destruction",site,flavor);
-				myOp2.apply(dest,intermediate);
+				myOp2.apply(dest,intermediate,DO_NOT_SIMPLIFY);
 			}
 			
 			void applyNiAllFlavors(

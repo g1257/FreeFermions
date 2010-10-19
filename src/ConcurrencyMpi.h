@@ -123,6 +123,8 @@ namespace Dmrg {
 			return false;
 		}
 
+		bool isSerial() { return false; }
+
 		void loopCreate(size_t total,std::vector<size_t> const &weights,MPI_Comm mpiComm=MPI_COMM_WORLD)
 		{
 			nprocs_=nprocs(mpiComm);
