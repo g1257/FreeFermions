@@ -27,10 +27,11 @@ typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const EngineType& engine,const ObservableLibraryType& library)
 {
 	size_t DO_NOT_SIMPLIFY = FreeOperatorType::DO_NOT_SIMPLIFY;
-	HilbertVectorType savedVector = engine.newState();
 	FieldType savedValue = 0;
-	FieldType sum = 0;
+	
 	HilbertVectorType tmpV = engine.newState();
+	bool verbose = false;
+	std::vector<HilbertVectorType> savedVector(4,engine.newState(verbose));
 	
 	for (size_t sigma = 0;sigma<2;sigma++) {
 		HilbertVectorType phi = engine.newState();
@@ -48,19 +49,15 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 			library.applyNiBarOneFlavor(phi3,phi2,site2,1-sigma2);
 			
 			FreeOperatorType myOp4 = engine.newSimpleOperator("destruction",site2,sigma2);
-			HilbertVectorType phi4 = engine.newState();
-			myOp4.apply(phi4,phi3,DO_NOT_SIMPLIFY);
+			myOp4.apply(savedVector[sigma+sigma2*2],phi3,DO_NOT_SIMPLIFY);
 			phi3.clear();
 			
-			sum += scalarProduct(phi4,phi4);
-			if (sigma ==0 && sigma2 ==0) savedVector = phi4;
-			if (sigma ==1 && sigma2 ==1) {
-				savedValue = scalarProduct(phi4,savedVector);
-				savedVector.clear();
-			}
 		}
 	}
-	sum += 2*std::real(savedValue);
+	FieldType sum = 0;
+	for (size_t sigma=0;sigma<4;sigma++)
+		for (size_t sigma2=0;sigma2<4;sigma2++)
+			sum += scalarProduct(savedVector[sigma],savedVector[sigma2]);
 	std::cerr<<"#sum2="<<scalarProduct(tmpV,tmpV)<<"\n";
 	return sum;
 }
@@ -79,7 +76,7 @@ int main(int argc,char *argv[])
 	//geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	std::cerr<<t;
 	
-	bool verbose = false;
+	bool verbose = true;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,false);
 	ObservableLibraryType library(engine);
@@ -95,7 +92,8 @@ int main(int argc,char *argv[])
 	
 	FieldType superdensity = calcSuperDensity(site,site2,gs,engine,library);
 	std::cout<<"#superdensity="<<superdensity<<"\n";
-	std::cout<<"#site="<<site<<" site2="<<site2<<"\n";	
+	std::cout<<"#site="<<site<<" site2="<<site2<<"\n";
+	
 	for (size_t it=0;it<size_t(atoi(argv[4]));it++) {
 		RealType time = it * atof(argv[5]) + atof(argv[6]);
 		EtoTheIhTimeType eih(time,engine);
@@ -135,21 +133,15 @@ int main(int argc,char *argv[])
 				
 				if (verbose) std::cerr<<"Applying c_{p up}\n";
 				FreeOperatorType myOp7 = engine.newSimpleOperator("destruction",site3,0);
-				HilbertVectorType phi7 = engine.newState(verbose);
-				myOp6.apply(phi7,phi6,DO_NOT_SIMPLIFY);
+				myOp7.apply(savedVector[sigma+sigma2*2],phi6,DO_NOT_SIMPLIFY);
 				phi6.clear();
-				
-				if (verbose) std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
-				//sum += scalarProduct(phi7,phi7);
-				if (verbose) std::cerr<<"Done with scalar product\n";
-				savedVector[sigma+sigma2*2] = phi7;
-				//timeVector.add(phi6);
 			}
 		}
 		FieldType sum = 0;
 		for (size_t sigma=0;sigma<4;sigma++)
 			for (size_t sigma2=0;sigma2<4;sigma2++)
 				sum += scalarProduct(savedVector[sigma],savedVector[sigma2]);
+			
 		std::cout<<time<<" "<<sum<<"\n";
 	}
 }
