@@ -223,8 +223,10 @@ namespace Dmrg {
 
 				In(std::string const &fn) : filename_(fn), fin_(fn.c_str())
 				{
-					if (!fin_ || !fin_.good() || fin_.bad()) 
-						throw std::runtime_error("IoSimple::ctor(...): Can't open file\n");
+					if (!fin_ || !fin_.good() || fin_.bad()) {
+						std::string s = "IoSimple::ctor(): Can't open file "+fn+"\n";
+						throw std::runtime_error(s.c_str());
+					}
 				}
 
 				void open(std::string const &fn)
@@ -232,7 +234,8 @@ namespace Dmrg {
 					filename_=fn;
 					fin_.open(fn.c_str());
 					if (!fin_ || !fin_.good() || fin_.bad()) {
-						throw std::runtime_error("IoSimpleIn::open(...) failed\n");
+						std::string s = "IoSimple::open(): Can't open file "+fn+"\n";
+						throw std::runtime_error(s.c_str());
 					}
 				}
 

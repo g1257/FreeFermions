@@ -3,7 +3,25 @@
 // SAmple of how to use FreeFermions core engine to calculate
 // < \delta_{i,\gamma} \delta^\dagger_{j,\gamma'} >
 
-#include "Includes.h"
+#include "Engine.h"
+#include "ObservableLibrary.h"
+#include "GeometryLibrary.h"
+#include "ConcurrencySerial.h"
+//#include "EtoTheIhTime.h"
+//#include "DiagonalOperator.h"
+
+typedef double RealType;
+typedef std::complex<double> FieldType;
+typedef std::vector<bool> LevelsType;
+typedef Dmrg::ConcurrencySerial<FieldType> ConcurrencyType;
+typedef psimag::Matrix<FieldType> MatrixType;
+typedef FreeFermions::Engine<RealType,FieldType,LevelsType,ConcurrencyType> EngineType;
+typedef EngineType::HilbertVectorType HilbertVectorType;
+typedef EngineType::FreeOperatorType FreeOperatorType;
+typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
+typedef FreeFermions::ObservableLibrary<EngineType> ObservableLibraryType;
+//typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
+//typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 
 int main(int argc,char* argv[])
 {
@@ -17,7 +35,8 @@ int main(int argc,char* argv[])
 	size_t leg = atoi(argv[3]);
 	geometry.setGeometry(t,"feasHoppings.inp",leg); //,GeometryLibraryType::OPTION_PERIODIC);
 	
-	EngineType engine(t,dof,true);
+	ConcurrencyType concurrency(argc,argv);
+	EngineType engine(t,concurrency,dof,false);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // argv[2] up and argv[2] down
 	HilbertVectorType gs = engine.newGroundState(ne);
 	
