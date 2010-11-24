@@ -188,7 +188,9 @@ namespace FreeFermions {
 					sumHoppings(i);
 
 				if (!isHermitian(eigenvectors_,true)) throw std::runtime_error("Matrix not hermitian\n");
-				
+				if (verbose_) {
+					std::cerr<<eigenvectors_;
+				}	
 				utils::diag(eigenvectors_,eigenvalues_,'V');
 					
 				if (verbose_) {
