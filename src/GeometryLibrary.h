@@ -121,6 +121,7 @@ namespace FreeFermions {
 				for (size_t i=0;i<edof*edof;i++) { // 4 cases: aa ab ba and bb
 					MatrixType oneT(sites_,sites_);
 					setGeometryFeAs(oneT,i,oneSiteHoppings,leg,geometryOption);
+					reorderLadderX(oneT,leg);
 					if (!isHermitian(oneT,true)) throw std::runtime_error("Hopping matrix not hermitian\n");
 					t.push_back(oneT);
 				}
@@ -252,6 +253,34 @@ namespace FreeFermions {
 					t(0+(leg-1)*lengthx,lengthx-1) = t(lengthx-1,0+(leg-1)*lengthx) = txmy;
 				}
 				
+			}
+
+			// from 0--1--2--...
+			//      N-N+1-N+2--..
+			// into:
+			//      0--2--4--
+			//      1--3--5--
+			//
+			void reorderLadderX(MatrixType& told,size_t leg)
+			{
+				MatrixType tnew(told.n_row(),told.n_col());
+				for (size_t i=0;i<sites_;i++) {
+					for (size_t j=0;j<sites_;j++) {
+						size_t i2 = reorderLadderX(i,leg);
+						size_t j2 = reorderLadderX(j,leg);
+						tnew(i2,j2) = told(i,j); 
+					}
+				}
+				told = tnew;
+			}
+
+			size_t reorderLadderX(size_t i,size_t leg)
+			{
+				size_t lengthx  = sites_/leg;
+				// i = x + y*lengthx;
+				size_t x = i%lengthx;
+				size_t y = i/lengthx;
+				return y + x*leg;
 			}
 			
 			void readOneSiteHoppings(std::vector<FieldType>& v,

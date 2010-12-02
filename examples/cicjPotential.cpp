@@ -35,7 +35,7 @@ int main(int argc,char* argv[])
 	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
 	geometry.setGeometry(t,GeometryLibraryType::OPTION_NONE);
 	std::vector<RealType> potential(t.n_row(),0);
-	potential[0] = -2.0;
+	//potential[0] = -2.0;
 	geometry.addPotential(t,potential);
 	size_t nOfOrbitals = 1;
 	bool verbose = false;
