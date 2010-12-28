@@ -122,7 +122,7 @@ namespace FreeFermions {
 			Engine(const MatrixType& t,ConcurrencyType& concurrency,size_t dof,bool verbose=false) :
 					concurrency_(concurrency),sites_(t.n_row()),edof_(1),dof_(dof),
 					verbose_(verbose),eigenvectors_(sites_,sites_),
-				       eigenvalues_(sites_)
+				       eigenvalues_(sites_),needsDelete_(true)
 			{
 				std::vector<MatrixType>* tt = new std::vector<MatrixType>(1);
 				(*tt)[0] = t;
@@ -139,7 +139,7 @@ namespace FreeFermions {
 			Engine(const std::vector<MatrixType>& t,ConcurrencyType& concurrency,size_t dof,bool verbose=false) :
 				concurrency_(concurrency),t_(&t),sites_(t[0].n_row()),edof_(size_t(sqrt(t.size()))),
 				dof_(dof),verbose_(verbose),
-				    eigenvectors_(sites_*edof_,sites_*edof_),eigenvalues_(sites_*edof_)
+				    eigenvectors_(sites_*edof_,sites_*edof_),eigenvalues_(sites_*edof_),needsDelete_(false)
 			{
 				if ((edof_) * (edof_) != t.size()) 
 					throw std::runtime_error("t.size must be a perfect square\n");
@@ -148,6 +148,11 @@ namespace FreeFermions {
 					std::cerr<<"#Created core "<<eigenvectors_.n_row();
 					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
 				}
+			}
+
+			~Engine()
+			{
+				if (needsDelete_) delete  t_;
 			}
 
 			HilbertVectorType newState(bool verbose=false) const
@@ -219,6 +224,7 @@ namespace FreeFermions {
 			bool verbose_;
 			psimag::Matrix<FieldType> eigenvectors_;
 			std::vector<RealType> eigenvalues_;
+			bool needsDelete_;
 	}; // Engine
 } // namespace FreeFermions 
 
