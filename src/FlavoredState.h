@@ -126,7 +126,6 @@ namespace FreeFermions {
 				
 				for (size_t counter=0;counter<data_[flavor].size();counter++) {
 					ns[counter] = (data_[flavor][counter]) ? 1 : 0;
-					counter++;
 				}
 			}
 			

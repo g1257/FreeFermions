@@ -22,6 +22,27 @@ typedef FreeFermions::ObservableLibrary<EngineType> ObservableLibraryType;
 typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 
+void manualChange(MatrixType& t)
+{
+	std::vector<FieldType> tx(2),ty(2),tb(4);
+	tx[0] = tx[1] = 1.0;
+	ty[0] = ty[1] = 0.8;
+	tb[0] = tb[2] = 0.3;
+	tb[1] = tb[3] = 0.3;
+	size_t n = t.n_row();
+	if (n!=8) throw std::runtime_error("Manual change not possible\n");
+	MatrixType tt(n,n);
+	tt(0,2) = ty[0];
+	tt(1,3) = ty[1];
+	tt(0,1) = tx[0];
+	tt(2,3) = tx[1];
+	tt(0,4) = tb[0];
+	tt(2,6) = tb[1];
+	tt(1,5) = tb[2];
+	tt(3,7) = tb[3];
+	for (size_t i=0;i<n;i++) for (size_t j=i+1;j<n;j++) tt(j,i) = tt(i,j);
+	t =tt;
+}
 
 int main(int argc,char *argv[])
 {
@@ -33,32 +54,39 @@ int main(int argc,char *argv[])
 	size_t dof = 2; // spin up and down
 	MatrixType t(n,n);
 	
-	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
-	geometry.setGeometry(t,2);
-	size_t nb = 2; // basis sites per site
+	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN); //LADDER);
+	geometry.setGeometry(t); //,2);
+	/*size_t nb = 1; // basis sites per site
 	RealType tb = 0.5; // hopping for basis sites
 	geometry.bathify(t,nb,tb);
-	//geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
+	manualChange(t);*/
 	std::cerr<<t;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
-	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
+	std::vector<size_t> ne(dof,electronsUp); // 
 	HilbertVectorType gs = engine.newGroundState(ne);
 	std::cout<<ne;
+	
+	RealType sum = 0;
+	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
+	std::cerr<<"Energy="<<dof*sum<<"\n";
 
-	size_t flavor =0;
+	ObservableLibraryType library(engine);
+	size_t flavor =1;
 
 	size_t site = atoi(argv[3]);
 	FreeOperatorType myOp = engine.newSimpleOperator("destruction",site,flavor);
 	HilbertVectorType phi = engine.newState();
 	myOp.apply(phi,gs,FreeOperatorType::DO_NOT_SIMPLIFY);
-	
+	//library.applyNiOneFlavor(phi,gs,site,flavor);
+
 	size_t site2=atoi(argv[4]);
 	FieldType density = scalarProduct(phi,phi);
 	std::cerr<<"density="<<density<<"\n";
 	FreeOperatorType myOp2 = engine.newSimpleOperator("destruction",site2,flavor);
-	HilbertVectorType phi2 = engine.newState();
-	myOp.apply(phi2,gs,FreeOperatorType::DO_NOT_SIMPLIFY);
+	//HilbertVectorType phi2 = engine.newState();
+	//myOp2.apply(phi2,gs,FreeOperatorType::DO_NOT_SIMPLIFY);
+	//library.applyNiOneFlavor(phi2,gs,site2,flavor);
 	
 	std::cout<<"#site="<<site<<"\n";
 	std::cout<<"#site2="<<site2<<"\n";
@@ -68,6 +96,10 @@ int main(int argc,char *argv[])
 		DiagonalOperatorType eihOp(eih);
 		HilbertVectorType phi3 = engine.newState();
 		eihOp.apply(phi3,phi);
-		std::cout<<time<<" "<<real(scalarProduct(phi2,phi3))<<"\n";
+		HilbertVectorType phi5 = engine.newState();
+		myOp2.apply(phi5,phi3,FreeOperatorType::DO_NOT_SIMPLIFY);
+		
+		std::cout<<time<<" "<<scalarProduct(phi5,phi5)<<"\n";
 	}
 }
+

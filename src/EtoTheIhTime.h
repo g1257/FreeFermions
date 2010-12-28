@@ -108,6 +108,7 @@ namespace FreeFermions {
 					energy += energyInternal(ns);
 				}
 				RealType exponent = -time_*energy;
+
 				return src.value * FieldType(cos(exponent),sin(exponent));
 			}
 			
@@ -122,7 +123,7 @@ namespace FreeFermions {
 				return sum;
 			}
 			
-			const RealType& time_;
+			RealType time_;
 			const EngineType& engine_;
 	}; // EToTheIhTime
 } // namespace Dmrg 

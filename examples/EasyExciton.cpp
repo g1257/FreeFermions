@@ -2,7 +2,25 @@
 // Calculates
 // <c^dagger_i exp(iHt) n_j exp(-iHt) c_i>
 
-#include "IncludesTime.h"
+#include "Engine.h"
+#include "ObservableLibrary.h"
+#include "GeometryLibrary.h"
+#include "ConcurrencySerial.h"
+#include "EtoTheIhTime.h"
+#include "DiagonalOperator.h"
+
+typedef double RealType;
+typedef std::complex<double> FieldType;
+typedef std::vector<bool> LevelsType;
+typedef Dmrg::ConcurrencySerial<FieldType> ConcurrencyType;
+typedef psimag::Matrix<FieldType> MatrixType;
+typedef FreeFermions::Engine<RealType,FieldType,LevelsType,ConcurrencyType> EngineType;
+typedef EngineType::HilbertVectorType HilbertVectorType;
+typedef EngineType::FreeOperatorType FreeOperatorType;
+typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
+typedef FreeFermions::ObservableLibrary<EngineType> ObservableLibraryType;
+typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
+typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 
 int main(int argc,char *argv[])
 {
@@ -16,7 +34,10 @@ int main(int argc,char *argv[])
 	geometry.setGeometry(t);
 	//geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
 	std::cerr<<t;
-	EngineType engine(t,dof,false);
+	
+	ConcurrencyType concurrency(argc,argv);
+	EngineType engine(t,concurrency,dof,true);
+
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	HilbertVectorType gs = engine.newGroundState(ne);
 	std::cout<<ne;
@@ -24,7 +45,7 @@ int main(int argc,char *argv[])
 	size_t site = atoi(argv[1]);
 	FreeOperatorType myOp = engine.newSimpleOperator("destruction",site,flavor);
 	HilbertVectorType phi = engine.newState();
-	myOp.apply(phi,gs);
+	myOp.apply(phi,gs,FreeOperatorType::DO_NOT_SIMPLIFY);
 	
 	FieldType density = scalarProduct(phi,phi);
 	std::cerr<<"density="<<density<<"\n";	
@@ -40,7 +61,7 @@ int main(int argc,char *argv[])
 		eihOp.apply(phi2,phi);
 		FreeOperatorType myOp2 = engine.newSimpleOperator("destruction",site2,flavor);
 		HilbertVectorType phi3 = engine.newState();
-		myOp2.apply(phi3,phi2);
+		myOp2.apply(phi3,phi2,FreeOperatorType::DO_NOT_SIMPLIFY);
 		phi2.clear();
 		std::cout<<time<<" "<<real(scalarProduct(phi3,phi3))<<"\n";
 	}
