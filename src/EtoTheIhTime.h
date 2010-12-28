@@ -94,14 +94,14 @@ namespace FreeFermions {
 			typedef typename EngineType::FieldType FieldType;
 			typedef typename EngineType::HilbertTermType HilbertTermType;
 		public:
-			EToTheIhTime(RealType time,const EngineType& engine) :
-				time_(time),engine_(engine)
+			EToTheIhTime(RealType time,const EngineType& engine,RealType energyOffset) :
+				time_(time),engine_(engine),energyOffset_(energyOffset)
 			{
 			}
 			
 			FieldType operator()(const HilbertTermType& src) const
 			{
-				RealType energy = 0;
+				RealType energy = -energyOffset_;
 				for (size_t i = 0;i<src.state.flavors();i++) {
 					std::vector<size_t> ns;
 					src.state.occupations(ns,i);
@@ -125,6 +125,7 @@ namespace FreeFermions {
 			
 			RealType time_;
 			const EngineType& engine_;
+			RealType energyOffset_;
 	}; // EToTheIhTime
 } // namespace Dmrg 
 

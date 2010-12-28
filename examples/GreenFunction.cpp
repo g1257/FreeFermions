@@ -69,34 +69,36 @@ int main(int argc,char *argv[])
 	
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
-	std::cerr<<"Energy="<<dof*sum<<"\n";
+	RealType energy = dof*sum;
+	std::cerr<<"Energy="<<energy<<"\n";
 
 	ObservableLibraryType library(engine);
 	size_t flavor =1;
 
 	size_t site = atoi(argv[3]);
-	//FreeOperatorType myOp = engine.newSimpleOperator("destruction",site,flavor);
+	FreeOperatorType myOp = engine.newSimpleOperator("destruction",site,flavor);
 	HilbertVectorType phi = engine.newState();
-	//myOp.apply(phi,gs,FreeOperatorType::DO_NOT_SIMPLIFY);
-	library.applyNiOneFlavor(phi,gs,site,flavor);
+	myOp.apply(phi,gs,FreeOperatorType::DO_NOT_SIMPLIFY);
+	//library.applyNiOneFlavor(phi,gs,site,flavor);
 
 	size_t site2=atoi(argv[4]);
 	FieldType density = scalarProduct(phi,phi);
 	std::cerr<<"density="<<density<<"\n";
 	FreeOperatorType myOp2 = engine.newSimpleOperator("destruction",site2,flavor);
 	HilbertVectorType phi2 = engine.newState();
-	//myOp2.apply(phi2,gs,FreeOperatorType::DO_NOT_SIMPLIFY);
-	library.applyNiOneFlavor(phi2,gs,site2,flavor);
+	myOp2.apply(phi2,gs,FreeOperatorType::DO_NOT_SIMPLIFY);
+	//library.applyNiOneFlavor(phi2,gs,site2,flavor);
 	
 	std::cout<<"#site="<<site<<"\n";
 	std::cout<<"#site2="<<site2<<"\n";
 	for (size_t it = 0; it<size_t(atoi(argv[5])); it++) {
 		RealType time = it * atof(argv[6]);
-		EtoTheIhTimeType eih(time,engine);
+		EtoTheIhTimeType eih(time,engine,energy);
 		DiagonalOperatorType eihOp(eih);
 		HilbertVectorType phi3 = engine.newState();
 		eihOp.apply(phi3,phi);
-		
+		//HilbertVectorType phi2 = engine.newState();
+		//myOp2.apply(phi2,phi3,FreeOperatorType::DO_NOT_SIMPLIFY);
 		std::cout<<time<<" "<<scalarProduct(phi2,phi3)<<"\n";
 	}
 }
