@@ -12,7 +12,7 @@
 typedef double RealType;
 typedef std::complex<double> FieldType;
 typedef std::vector<bool> LevelsType;
-typedef Dmrg::ConcurrencySerial<FieldType> ConcurrencyType;
+typedef PsimagLite::ConcurrencySerial<FieldType> ConcurrencyType;
 typedef psimag::Matrix<FieldType> MatrixType;
 typedef FreeFermions::Engine<RealType,FieldType,LevelsType,ConcurrencyType> EngineType;
 typedef EngineType::HilbertVectorType HilbertVectorType;
@@ -41,6 +41,7 @@ void manualChange(MatrixType& t)
 	tt(1,5) = tb[2];
 	tt(3,7) = tb[3];
 	for (size_t i=0;i<n;i++) for (size_t j=i+1;j<n;j++) tt(j,i) = tt(i,j);
+	//for (size_t i=0;i<n;i++) tt(i,i) = 0.1;
 	t =tt;
 }
 
@@ -56,10 +57,10 @@ int main(int argc,char *argv[])
 	
 	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
 	geometry.setGeometry(t,2);
-	/*size_t nb = 1; // basis sites per site
+	size_t nb = 2; // basis sites per site
 	RealType tb = 0.5; // hopping for basis sites
 	geometry.bathify(t,nb,tb);
-	manualChange(t);*/
+	//manualChange(t);
 	std::cerr<<t;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);

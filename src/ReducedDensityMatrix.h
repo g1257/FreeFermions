@@ -137,7 +137,7 @@ namespace FreeFermions {
 				VectorType psiV(states);
 				std::vector<VectorType> psiVv(states);
 				while(concurrency_.loop(i)) {
-					if (i%each ==0 && concurrency_.isSerial()) {
+					if (i%each ==0 && concurrency_.name()=="serial") {
 						std::cerr<<"Done "<<(i*10/each)<<"%\n";
 						std::cerr.flush();
 					}

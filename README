@@ -1,3 +1,6 @@
+
+
+
 Let the Hamiltonian H be:
 
 H = \sum_{i,j,s} t_{i,j} c^\dagger_{i s } c_{j s}
@@ -8,16 +11,16 @@ We'd like to calculate things like
 <psi_{gs}| c1 c2 c3 .. |psi_{gs}>
 where c1, c2, c3 are real-space creation or destruction operators.
 
- 
-git pull http://github.com/g1257/FreeFermions
-cd FreeFermions
-make
-./executable
+git clone https://github.com/g1257/PsimagLite.git 
+git clone https://github.com/g1257/FreeFermions.git
+cd FreeFermions/examples
+make ninj
+./ninj 4 2
 
 PLEASE NOTE: THIS PROJECT IS WORK IN PROGRESS.
 But the the basic concepts already work.
 
-Below I explain the sample driver (main.cpp file):
+Below I explain the sample driver (cicj.cpp or ninj.cpp, etc):
 
 int main() 
 {

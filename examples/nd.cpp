@@ -12,7 +12,7 @@
 typedef double RealType;
 typedef double FieldType;
 typedef std::vector<bool> LevelsType;
-typedef Dmrg::ConcurrencySerial<FieldType> ConcurrencyType;
+typedef PsimagLite::ConcurrencySerial<FieldType> ConcurrencyType;
 typedef psimag::Matrix<FieldType> MatrixType;
 typedef FreeFermions::Engine<RealType,FieldType,LevelsType,ConcurrencyType> EngineType;
 typedef EngineType::HilbertVectorType HilbertVectorType;

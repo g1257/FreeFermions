@@ -32,7 +32,7 @@ print FILE<<EOF;
 # MPI: 0
 
 LDFLAGS =      -llapack    -lm  -lpthread 
-CPPFLAGS = -Werror -Wall -I../PartialPsimag  -I../src
+CPPFLAGS = -Werror -Wall -I../PartialPsimag  -I../../PsimagLite/src -I../src
 CXX = g++ -O2 -pg -DNDEBUG
 
 
