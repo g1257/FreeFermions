@@ -69,14 +69,18 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 int main(int argc,char *argv[])
 {
 	if (argc!=7) throw std::runtime_error("Needs 7 arguments\n");
-	size_t n = 6; 
-	size_t electronsUp = 3;
+	size_t n = 16; 
+	size_t electronsUp = 8;
 	size_t dof = 2; // spin up and down
 	
 	MatrixType t(n,n);
-	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t);
+	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
+	geometry.setGeometry(t,2);
 	//geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
+	//
+	for (size_t ii=0;ii<n;ii+=2)
+		t(ii,ii+1) = t(ii+1,ii) = 0.5;
+
 	std::cerr<<t;
 	
 	bool verbose = false;
@@ -98,7 +102,7 @@ int main(int argc,char *argv[])
 	std::cout<<"#site="<<site<<" site2="<<site2<<"\n";	
 	for (size_t it=0;it<size_t(atoi(argv[4]));it++) {
 		RealType time = it * atof(argv[5]) + atof(argv[6]);
-		EtoTheIhTimeType eih(time,engine);
+		EtoTheIhTimeType eih(time,engine,0);
 		DiagonalOperatorType eihOp(eih);
 				
 		HilbertVectorType savedVector = engine.newState(verbose);
@@ -119,7 +123,7 @@ int main(int argc,char *argv[])
 				
 				FreeOperatorType myOp4 = engine.newSimpleOperator("destruction",site2,sigma2);
 				HilbertVectorType phi4 = engine.newState(verbose);
-				myOp4.apply(phi4,phi3,DO_NOT_SIMPLIFY);
+				myOp4.apply(phi4,phi3,FreeOperatorType::SIMPLIFY);
 				phi3.clear();
 				
 				if (verbose) std::cerr<<"Applying exp(iHt)\n";
@@ -145,6 +149,6 @@ int main(int argc,char *argv[])
 			}
 		}
 		sum += 2*real(savedValue);
-		std::cout<<time<<" "<<sum<<"\n";
+		std::cout<<time<<" "<<real(sum)<<"\n";
 	}
 }

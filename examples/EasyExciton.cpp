@@ -30,9 +30,12 @@ int main(int argc,char *argv[])
 	size_t dof = 2; // spin up and down
 	MatrixType t(n,n);
 	
-	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t);
-	//geometry.setGeometry(t,GeometryLibraryType::LADDER,2);
+	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
+	//geometry.setGeometry(t);
+	geometry.setGeometry(t,2);
+	for (size_t ii=0;ii<n;ii+=2) 
+		t(ii,ii+1) = t(ii+1,ii) = 0.5;
+	
 	std::cerr<<t;
 	
 	ConcurrencyType concurrency(argc,argv);
@@ -55,7 +58,7 @@ int main(int argc,char *argv[])
 	std::cout<<"#site2="<<site2<<"\n";
 	for (size_t it = 0; it<size_t(atoi(argv[3])); it++) {
 		RealType time = it * atof(argv[4]);
-		EtoTheIhTimeType eih(time,engine);
+		EtoTheIhTimeType eih(time,engine,0);
 		DiagonalOperatorType eihOp(eih);
 		HilbertVectorType phi2 = engine.newState();
 		eihOp.apply(phi2,phi);

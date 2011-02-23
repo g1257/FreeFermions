@@ -23,10 +23,12 @@ int main(int argc,char* argv[])
 
 	size_t dof = 2; // spin up and down
 	MatrixType t(n,n);
-	//GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
-	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t); //,GeometryLibraryType::OPTION_PERIODIC);
-	
+	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
+	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
+	geometry.setGeometry(t,2); //,GeometryLibraryType::OPTION_PERIODIC);
+	t(3,5) = t(5,3) = 0;
+	t(2,4) = t(4,2) = 2.0;
+
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
