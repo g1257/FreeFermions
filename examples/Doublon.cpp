@@ -34,7 +34,7 @@ int main(int argc,char *argv[])
 	size_t n = 16; // 16 sites
 	size_t dof = 2; // spin up and down
 	bool isPeriodic = false; 
-	psimag::Matrix<FieldType> t(n,n);
+	PsimagLite::Matrix<FieldType> t(n,n);
 	for (size_t i=0;i<n;i++) {
 		for (size_t j=0;j<n;j++) {
 			if (i-j==1 || j-i==1) t(i,j) = 1.0;

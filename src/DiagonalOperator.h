@@ -82,7 +82,6 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #ifndef DIAGONAL_OPERATOR_H
 #define DIAGONAL_OPERATOR_H
 
-#include "Utils.h"
 
 namespace FreeFermions {
 	// All interactions == 0

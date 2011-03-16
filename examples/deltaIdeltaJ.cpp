@@ -14,7 +14,7 @@ typedef double RealType;
 typedef std::complex<double> FieldType;
 typedef std::vector<bool> LevelsType;
 typedef Dmrg::ConcurrencySerial<FieldType> ConcurrencyType;
-typedef psimag::Matrix<FieldType> MatrixType;
+typedef PsimagLite::Matrix<FieldType> MatrixType;
 typedef FreeFermions::Engine<RealType,FieldType,LevelsType,ConcurrencyType> EngineType;
 typedef EngineType::HilbertVectorType HilbertVectorType;
 typedef EngineType::FreeOperatorType FreeOperatorType;

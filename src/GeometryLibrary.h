@@ -81,7 +81,8 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
  */
 #ifndef GEOMETRY_LIB_H
 #define GEOMETRY_LIB_H
-#include "IoSimple.h"
+#include "IoSimple.h" // in psimaglite
+#include "Matrix.h" // in psimaglite
 
 namespace FreeFermions {
 	template<typename MatrixType>
@@ -158,7 +159,7 @@ namespace FreeFermions {
 				
 				size_t n = src.n_row();
 				if (n!=sites_) throw std::runtime_error("src must have the same number of sites as lattice\n");
-				psimag::Matrix<ComplexFieldType> B(n,n);
+				PsimagLite::Matrix<ComplexFieldType> B(n,n);
 				getFourierMatrix(B,leg);
 				for (size_t k=0;k<n;k++) {
 					ComplexFieldType sum = 0.0;
@@ -305,7 +306,7 @@ namespace FreeFermions {
 			void readOneSiteHoppings(std::vector<FieldType>& v,
 							const std::string& filename)
 			{
-				typename Dmrg::IoSimple::In io(filename);
+				typename PsimagLite::IoSimple::In io(filename);
 				io.read(v,"hoppings");
 			}
 			

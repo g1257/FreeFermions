@@ -82,16 +82,16 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "Utils.h"
 #include "HilbertVector.h"
 #include "FreeOperator.h"
+#include "Vector.h"
 
 namespace FreeFermions {
 	// All interactions == 0
 	template<typename RealType_,typename FieldType_,typename LevelsType,typename ConcurrencyType_>
 	class Engine {
 			
-			typedef psimag::Matrix<FieldType_> MatrixType;
+			typedef PsimagLite::Matrix<FieldType_> MatrixType;
 	
 		public:
 			typedef ConcurrencyType_ ConcurrencyType;
@@ -174,15 +174,22 @@ namespace FreeFermions {
 				return tmp;
 			}
 
-			RealType energy(const HilbertTermType& term) const
+			FieldType energy(const HilbertTermType& term) const
 			{
 				return HilbertVectorType::energy(eigenvalues_,term);
 			}
 
-			RealType eigenvalue(size_t i) const { return eigenvalues_[i]; }
+			const RealType& eigenvalue(size_t i) const { return eigenvalues_[i]; }
+
+			const RealType& eigenvector(size_t i,size_t j) const
+			{
+				return eigenvectors_(i,j);
+			}
 
 			size_t dof() const { return dof_; }
-		
+	
+			size_t size() const { return eigenvalues_.size(); }
+
 			ConcurrencyType& concurrency() { return concurrency_; }
 			
 		private:
@@ -196,10 +203,11 @@ namespace FreeFermions {
 				if (verbose_) {
 					std::cerr<<eigenvectors_;
 				}	
-				utils::diag(eigenvectors_,eigenvalues_,'V');
+				diag(eigenvectors_,eigenvalues_,'V');
 					
 				if (verbose_) {
-					utils::vectorPrint(eigenvalues_,"eigenvalues",std::cerr);
+					std::cerr<<"eigenvalues\n";
+					std::cerr<<eigenvalues_;
 					std::cerr<<"*************\n";
 					std::cerr<<"Eigenvectors:\n";
 					std::cerr<<eigenvectors_;
@@ -222,7 +230,7 @@ namespace FreeFermions {
 			size_t dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
 					// feas =2 spin
 			bool verbose_;
-			psimag::Matrix<FieldType> eigenvectors_;
+			PsimagLite::Matrix<FieldType> eigenvectors_;
 			std::vector<RealType> eigenvalues_;
 			bool needsDelete_;
 	}; // Engine

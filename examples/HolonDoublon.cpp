@@ -15,7 +15,7 @@ typedef double RealType;
 typedef std::complex<double> FieldType;
 typedef std::vector<bool> LevelsType;
 typedef PsimagLite::ConcurrencySerial<FieldType> ConcurrencyType;
-typedef psimag::Matrix<FieldType> MatrixType;
+typedef PsimagLite::Matrix<FieldType> MatrixType;
 typedef FreeFermions::Engine<RealType,FieldType,LevelsType,ConcurrencyType> EngineType;
 typedef EngineType::HilbertVectorType HilbertVectorType;
 typedef EngineType::FreeOperatorType FreeOperatorType;
@@ -69,8 +69,8 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 int main(int argc,char *argv[])
 {
 	if (argc!=7) throw std::runtime_error("Needs 7 arguments\n");
-	size_t n = 16; 
-	size_t electronsUp = 8;
+	size_t n = 8; 
+	size_t electronsUp = 4;
 	size_t dof = 2; // spin up and down
 	
 	MatrixType t(n,n);

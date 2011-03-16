@@ -81,8 +81,10 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
  */
 #ifndef FLAVORED_STATE_H
 #define FLAVORED_STATE_H
-
-#include "Utils.h"
+#include <vector>
+#include <string>
+#include <stdexcept>
+#include <iostream>
 
 namespace FreeFermions {
 	// All interactions == 0

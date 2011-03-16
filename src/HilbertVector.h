@@ -82,8 +82,9 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #ifndef HILBERT_VECTOR_H
 #define HILBERT_VECTOR_H
 
-#include "Utils.h"
 #include "FlavoredState.h"
+#include "Complex.h" // in PsimagLite
+#include "Sort.h" // in PsimagLite
 
 namespace FreeFermions {
 	// All interactions == 0
@@ -284,7 +285,8 @@ namespace FreeFermions {
 				if (data_.size()==0) return;
 				std::vector<size_t> iperm(data_.size());
 				if (verbose_) std::cerr<<"Tring to sort "<<data_.size()<<" items.\n";
-				utils::sort(data_,iperm);
+				Sort<std::vector<FlavoredStateType> > sortObject;
+				sortObject.sort(data_,iperm);
 				//throw std::runtime_error("Don't forget to reorder values\n");
 				std::vector<FieldType> valuesNew;
 				std::vector<FlavoredStateType> dataNew;
@@ -318,7 +320,8 @@ namespace FreeFermions {
 				if (data_.size()<2 || sorted_) return;
 				std::vector<size_t> iperm(data_.size());
 				if (verbose_) std::cerr<<"Sorting "<<data_.size()<<" items.\n";
-				utils::sort(data_,iperm);
+				Sort<std::vector<FlavoredStateType> > sortObject;
+				sortObject.sort(data_,iperm);
 				std::vector<FieldType> valuesNew(values_.size());
 				for (size_t i=0;i<values_.size();i++) valuesNew[i]=values_[iperm[i]];
 				/*std::cerr<<values_;

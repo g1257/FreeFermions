@@ -82,7 +82,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #ifndef FREE_OPERATOR_H
 #define FREE_OPERATOR_H
 
-#include "Utils.h"
+#include "Matrix.h" // in PsimagLite
 
 namespace FreeFermions {
 	// All interactions == 0
@@ -92,7 +92,7 @@ namespace FreeFermions {
 			typedef typename HilbertVectorType::RealType RealType;
    			typedef typename HilbertVectorType::FieldType FieldType;
 			typedef typename HilbertVectorType::FlavoredStateType FlavoredStateType;
-			typedef psimag::Matrix<FieldType> MatrixType;
+			typedef PsimagLite::Matrix<FieldType> MatrixType;
 			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
 		public:
 			

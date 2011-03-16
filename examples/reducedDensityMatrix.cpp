@@ -7,7 +7,7 @@
 typedef double RealType;
 typedef double FieldType;
 typedef std::vector<bool> LevelsType;
-typedef psimag::Matrix<FieldType> MatrixType;
+typedef PsimagLite::Matrix<FieldType> MatrixType;
 //typedef PsimagLite::ConcurrencyMpi<double> ConcurrencyType;
 typedef PsimagLite::ConcurrencySerial<FieldType> ConcurrencyType;
 typedef FreeFermions::Engine<RealType,FieldType,LevelsType,ConcurrencyType> EngineType;

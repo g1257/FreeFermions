@@ -82,7 +82,6 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #ifndef E_TO_THE_I_H_TIME_H
 #define E_TO_THE_I_H_TIME_H
 
-#include "Utils.h"
 
 namespace FreeFermions {
 	// All interactions == 0
