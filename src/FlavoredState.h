@@ -111,6 +111,11 @@ namespace FreeFermions {
 					fillInternal(data_[i],ne[i]);
 				}
 			}
+
+			void fill(size_t flavor,size_t level)
+			{
+				data_[flavor][level] = true;
+			}
 			
 			int apply(const std::string& label,size_t flavor,size_t lambda)
 			{

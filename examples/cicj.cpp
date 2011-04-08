@@ -28,15 +28,15 @@ int main(int argc,char* argv[])
 	if (argc!=5) throw std::runtime_error("Needs 5 argument(s)\n");
 	size_t n = atoi(argv[1]); // 16 sites
 	size_t dof = 2; // spin up and down
-	//MatrixType t(n,n);
-	std::vector<MatrixType> t;
+	MatrixType t(n,n);
+	//std::vector<MatrixType> t;
 	//GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
-	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
+	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
 	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
 	
-	GeometryLibraryType geometry(n,GeometryLibraryType::FEAS);
-	size_t leg = atoi(argv[3]);
-	geometry.setGeometry(t,argv[4],leg); //,GeometryLibraryType::OPTION_PERIODIC);
+	//GeometryLibraryType geometry(n,GeometryLibraryType::FEAS);
+	//size_t leg = atoi(argv[3]);
+	geometry.setGeometry(t); //,argv[4],leg); //,GeometryLibraryType::OPTION_PERIODIC);
 	
 	//std::cerr<<t;
 	ConcurrencyType concurrency(argc,argv);
