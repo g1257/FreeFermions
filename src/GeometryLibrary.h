@@ -128,10 +128,11 @@ namespace FreeFermions {
 				}
 			}
 
-			void bathify(MatrixType& t,size_t nb,const FieldType& tb)
+			void bathify(MatrixType& t,const std::vector<FieldType>& tb)
 			{
 				if (sites_!=t.n_row() || sites_!=t.n_col())
 					throw std::runtime_error("GeometryLibrary::bathify(...)\n");
+				size_t nb = tb.size();
 				size_t nnew = sites_*(1+nb);
 				MatrixType tnew(nnew,nnew);
 				for (size_t i=0;i<t.n_row();i++)
@@ -140,7 +141,7 @@ namespace FreeFermions {
 						tnew(i,j) = t(i,j);
 					for (size_t j=0;j<nb;j++) {
 						size_t k = sites_ + j + nb*i;
-						tnew(i,k) = tnew(k,i) = tb;
+						tnew(i,k) = tnew(k,i) = tb[j];
 					}
 				}
 				t = tnew;
@@ -150,7 +151,7 @@ namespace FreeFermions {
 			template<typename SomeRealType>
 			void addPotential(MatrixType &t,const std::vector<SomeRealType>& p)
 			{
-				for (size_t i=0;i<p.size();i++) t(i,i) += p[i];
+				for (size_t i=0;i<p.size();i++) t(i,i) = p[i];
 			}	
 			
 			template<typename ComplexFieldType>
