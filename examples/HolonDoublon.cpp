@@ -69,8 +69,8 @@ FieldType calcSuperDensity(size_t site, size_t site2,HilbertVectorType gs,const 
 int main(int argc,char *argv[])
 {
 	if (argc!=7) throw std::runtime_error("Needs 7 arguments\n");
-	size_t n = 8; 
-	size_t electronsUp = 4;
+	size_t n = 50; 
+	size_t electronsUp = 5;
 	size_t dof = 2; // spin up and down
 	
 	MatrixType t(n,n);

@@ -25,8 +25,8 @@ typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 int main(int argc,char *argv[])
 {
 	if (argc!=5) throw std::runtime_error("Needs 5 arguments\n");
-	size_t n = 16; 
-	size_t electronsUp = 8;
+	size_t n = 50; 
+	size_t electronsUp = 25;
 	size_t dof = 2; // spin up and down
 	MatrixType t(n,n);
 	

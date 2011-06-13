@@ -29,28 +29,28 @@ int main(int argc,char* argv[])
 	int argce = 3;
 	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
 	if (argc!=argce) throw std::runtime_error(s.c_str());
-	size_t n = atoi(argv[1]); // 16 sites
+	size_t n = atoi(argv[1]); // n. of  sites
 	size_t dof = 2; // spin up and down
 	MatrixType t(n,n);
 	//std::vector<MatrixType> t;
-	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
-	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
+	//GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
+	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
 	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
 	
 	//GeometryLibraryType geometry(n,GeometryLibraryType::FEAS);
 	//size_t leg = atoi(argv[3]);
-	geometry.setGeometry(t,2); //,argv[4],leg); //,GeometryLibraryType::OPTION_PERIODIC);
-	std::vector<RealType> tb(2);
-	tb[0] = -0.672705035; tb[1] = -0.672705035;	
-	geometry.bathify(t,tb);
-	std::vector<RealType> pot(t.n_row(),0);
-	for (size_t i=0;i<4;i++) pot[i] = -4;
-	for (size_t i=4;i<pot.size();i++) pot[i] = (i&1) ? 1.84716619 : -1.84716619;
-	geometry.addPotential(t,pot);
-	//std::cerr<<t;
+	geometry.setGeometry(t); //,argv[4],leg); //,GeometryLibraryType::OPTION_PERIODIC);
+	//std::vector<RealType> tb(2);
+	//tb[0] = -0.672705035; tb[1] = -0.672705035;	
+	//geometry.bathify(t,tb);
+	//std::vector<RealType> pot(t.n_row(),0);
+	//for (size_t i=0;i<4;i++) pot[i] = -4;
+	//for (size_t i=4;i<pot.size();i++) pot[i] = (i&1) ? 1.84716619 : -1.84716619;
+	//geometry.addPotential(t,pot);
+	std::cerr<<t;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
-	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
+	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
 	HilbertVectorType gs = engine.newGroundState(ne);
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
@@ -58,12 +58,14 @@ int main(int argc,char* argv[])
 	//ObservableLibraryType library(engine);
 	size_t sigma = 0;
 	MatrixType cicj(n,n);
-	for (size_t orbital=0; orbital<2; orbital++) {
+	size_t norb = 1;
+	for (size_t orbital=0; orbital<norb; orbital++) {
 		for (size_t site = 0; site<n ; site++) {
 			HilbertVectorType phi = engine.newState();
 			FreeOperatorType myOp = engine.newSimpleOperator("destruction",site+orbital*n,sigma);
 			myOp.apply(phi,gs,FreeOperatorType::SIMPLIFY);
 			for (size_t site2=0; site2<n; site2++) {
+				if (site != site2) continue;
 				HilbertVectorType phi2 = engine.newState();
 				FreeOperatorType myOp2 = engine.newSimpleOperator("creation",site2+orbital*n,sigma);
 				myOp2.apply(phi2,phi,FreeOperatorType::SIMPLIFY);
