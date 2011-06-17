@@ -93,6 +93,7 @@ namespace FreeFermions {
 			typedef typename EngineType::FieldType FieldType;
 			typedef typename EngineType::HilbertTermType HilbertTermType;
 			typedef typename HilbertTermType::FlavorFactoryType FlavorFactoryType;
+			typedef typename HilbertTermType::StateType StateType;
 
 		public:
 			EToTheIhTime(RealType time,const EngineType& engine,RealType energyOffset) :
@@ -102,12 +103,15 @@ namespace FreeFermions {
 			
 			FieldType operator()(const HilbertTermType& src) const
 			{
-				FlavorFactoryType flavorFactory(engine_.sites()*engine_.dof());
+				// throw away const:
+				StateType& state = (StateType&) src.state;
+				FlavorFactoryType flavorFactory(state,
+				                                engine_.sites()*engine_.edof());
 
 				RealType energy = -energyOffset_;
 				for (size_t i = 0;i<src.state.size();i++) {
 					std::vector<size_t> ns;
-					flavorFactory.occupations(src.state,ns,i);
+					flavorFactory.occupations(ns,i);
 					energy += energyInternal(ns);
 				}
 				RealType exponent = -time_*energy;

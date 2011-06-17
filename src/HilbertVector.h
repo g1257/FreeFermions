@@ -123,7 +123,7 @@ namespace FreeFermions {
 				sorted_ = false;
 			}
 			
-			HilbertTermType term(size_t i) const
+			const HilbertTermType& term(size_t i) const
 			{
 				return terms_[i];
 			}
@@ -135,9 +135,9 @@ namespace FreeFermions {
 				if (ne.size()!=dof_)
 					throw std::runtime_error("HilbertVector::fill()\n");
 				
-				FlavorFactoryType flavorFactory(size_);
 				StateType fstate(dof_);
-				flavorFactory.fill(fstate,ne);
+				FlavorFactoryType flavorFactory(fstate,size_);
+				flavorFactory.fill(ne);
 				clear();
 				HilbertTermType term(fstate,1.0);
 				terms_.push_back(term);
@@ -160,9 +160,9 @@ namespace FreeFermions {
 				size_t j=0;
 				for (size_t i=0;i<v.terms_.size();i++) {
 					
-					while (j<terms_.size() && terms_[j]<v.terms_[i]) j++;
+					while (j<terms_.size() && terms_[j].state<v.terms_[i].state) j++;
 					size_t k = j;
-					while(k<terms_.size() && terms_[k]==v.terms_[i]) {
+					while(k<terms_.size() && terms_[k].state==v.terms_[i].state) {
 						sum += std::conj(terms_[k].value) * v.terms_[i].value;
 						k++;
 					}
@@ -184,14 +184,14 @@ namespace FreeFermions {
 				std::vector<HilbertTermType> termsNew;
 
 				size_t prevIndex=0;
-				HilbertTermType prev = terms_[0];
+				StateType prev = terms_[0].state;
 
 				if (verbose_) std::cerr<<"Will now simplify...\n";
 				for (size_t i=0;i<terms_.size();i++) {
-					if (i==0 || !(terms_[i]==prev)) {
+					if (i==0 || !(terms_[i].state==prev)) {
 						termsNew.push_back(terms_[i]);
 						prevIndex = termsNew.size()-1;
-						prev = terms_[i];
+						prev = terms_[i].state;
 					} else {
 						termsNew[prevIndex].value += termsOld[iperm[i]].value;
 					}

@@ -150,8 +150,8 @@ namespace FreeFermions {
 					size_t lambda) const
 			{
 				dest = src;
-				FlavorFactoryType flavorFactory(size_);
-				RealType sign = flavorFactory.apply(dest.state,label_,flavor_,lambda);
+				FlavorFactoryType flavorFactory(dest.state,size_);
+				RealType sign = flavorFactory.apply(label_,flavor_,lambda);
 				dest.value *= sign;
 			}
 			

@@ -95,17 +95,17 @@ namespace FreeFermions {
 
 			static int const FERMION_SIGN = -1;
 		public:
-			FlavorFactory(size_t size) :
-				size_(size) // FIXME: keep a reference to data here
+			FlavorFactory(StateType& state,size_t size) :
+				state_(state),size_(size)
 			{
 			}
 			
-			void fill(StateType& data,const std::vector<size_t>& ne)
+			void fill(const std::vector<size_t>& ne)
 			{
-				if (ne.size()!=data.size())
+				if (ne.size()!=state_.size())
 					throw std::runtime_error("FlavorFactory::fill()\n");
 				for (size_t i=0;i<ne.size();i++) { // sum over spins
-					fillInternal(data[i],ne[i]);
+					fillInternal(state_[i],ne[i]);
 				}
 			}
 
@@ -114,23 +114,22 @@ namespace FreeFermions {
 //				data[flavor][level] = true;
 //			}
 //
-			int apply(StateType& data,const std::string& label,size_t flavor,size_t lambda)
+			int apply(const std::string& label,size_t flavor,size_t lambda)
 			{
-				if (flavor>=data.size())
+				if (flavor>=state_.size())
 					throw std::runtime_error("FlavorFactory::create()\n");
 				if (lambda>=size_) throw std::runtime_error("FlavorFactory::create()\n");
-				int interSign = (calcInterElectrons(data,flavor) %2) ? 1 : FERMION_SIGN;
-				return applyInternal(label,data[flavor],lambda)*interSign;
+				int interSign = (calcInterElectrons(flavor) %2) ? 1 : FERMION_SIGN;
+				return applyInternal(label,state_[flavor],lambda)*interSign;
 			}
-//
-//
-			void occupations(const StateType& data,std::vector<size_t>& ns,size_t flavor)
+
+			void occupations(std::vector<size_t>& ns,size_t flavor)
 			{
 				ns.resize(size_);
 				for (size_t i = 0; i < size_; i++) ns[i] = 0;
 
-				for (size_t counter=0;counter<data[flavor].size();counter++) {
-					ns[counter] = (data[flavor][counter]) ? 1 : 0;
+				for (size_t counter=0;counter<state_[flavor].size();counter++) {
+					ns[counter] = (state_[flavor][counter]) ? 1 : 0;
 				}
 			}
 //
@@ -156,6 +155,7 @@ namespace FreeFermions {
 			void fillInternal(LevelsType& x,size_t ne)
 			{
 				if (ne>size_) throw std::runtime_error("FlavorFactory::fillInternal\n");
+				x.resize(size_);
 				for (size_t i=0;i<x.size();i++) x[i] = (i<ne) ? true : false;
 			}
 
@@ -185,11 +185,11 @@ namespace FreeFermions {
 				return sum;
 			}
 
-			size_t calcInterElectrons(const StateType& data,size_t flavor)
+			size_t calcInterElectrons(size_t flavor)
 			{
 				size_t sum = 0;
 				for (size_t flavor2 = 0; flavor2 < flavor; flavor2++) {
-					sum += numberOfDigits(data[flavor2]);
+					sum += numberOfDigits(state_[flavor2]);
 				}
 				return sum;
 			}
@@ -203,6 +203,7 @@ namespace FreeFermions {
 				return sum;
 			}
 
+			StateType& state_;
 			size_t size_;
 	}; // FlavorFactory
 	

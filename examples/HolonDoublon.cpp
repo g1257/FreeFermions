@@ -18,7 +18,7 @@
 
 typedef PsimagLite::MemoryUsage MemoryUsageType;
 
-typedef float RealType;
+typedef double RealType;
 typedef std::complex<RealType> FieldType;
 typedef std::vector<bool> LevelsType;
 #ifdef USE_MPI
@@ -88,8 +88,8 @@ FieldType calcSuperDensity(size_t site, size_t site2,const HilbertVectorType& gs
 int main(int argc,char *argv[])
 {
 	if (argc!=7) throw std::runtime_error("Needs 7 arguments\n");
-	size_t n = 32; 
-	size_t electronsUp = 16;
+	size_t n = 8; 
+	size_t electronsUp = 4;
 	size_t dof = 2; // spin up and down
 	
 	MatrixType t(n,n);
@@ -131,6 +131,8 @@ int main(int argc,char *argv[])
 		FieldType savedValue = 0;
 		FieldType sum = 0;
 		MemoryUsageType myUsage;
+
+		size_t simplifyOrNot = FreeOperatorType::DO_NOT_SIMPLIFY; 
 		for (size_t sigma = 0;sigma<2;sigma++) {
 			HilbertVectorType phi = engine.newState();
 			library.applyNiOneFlavor(phi,gs,site,1-sigma);
@@ -139,10 +141,9 @@ int main(int argc,char *argv[])
 			HilbertVectorType phi2 = engine.newState();
 			myOp2.apply(phi2,phi,FreeOperatorType::SIMPLIFY);
 			phi.clear();
-			std::cerr<<"time="<<time<<" sigma= "<<sigma<<" phi2.terms="<<phi2.terms()<<"\n";
-			std::cerr<<"memory="<<myUsage.vmSize()<<"\n";
+			//std::cerr<<"time="<<time<<" sigma= "<<sigma<<" phi2.terms="<<phi2.terms()<<"\n";
+			//std::cerr<<"memory="<<myUsage.vmSize()<<"\n";
 			std::cerr.flush();
-			size_t simplifyOrNot = FreeOperatorType::SIMPLIFY; 
 			for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
 				HilbertVectorType phi3 = engine.newState();
 				library.applyNiBarOneFlavor(phi3,phi2,site2,1-sigma2);
@@ -151,26 +152,26 @@ int main(int argc,char *argv[])
 				HilbertVectorType phi4 = engine.newState(verbose);
 				myOp4.apply(phi4,phi3,simplifyOrNot);
 				phi3.clear();
-				std::cerr<<"time="<<time<<" sigma= "<<sigma<<" sigma2="<<sigma2<<" phi4.terms="<<phi4.terms()<<"\n";
-				std::cerr<<"memory="<<myUsage.vmSize()<<"\n";
-				std::cerr.flush();
+				//std::cerr<<"time="<<time<<" sigma= "<<sigma<<" sigma2="<<sigma2<<" phi4.terms="<<phi4.terms()<<"\n";
+				//std::cerr<<"memory="<<myUsage.vmSize()<<"\n";
+				//std::cerr.flush();
 
 				if (verbose) std::cerr<<"Applying exp(iHt)\n";
 				HilbertVectorType phi5 = engine.newState(verbose);
 				eihOp.apply(phi5,phi4);
 				phi4.clear();
-				std::cerr<<"time="<<time<<" sigma= "<<sigma<<" sigma2="<<sigma2<<" phi5.terms="<<phi5.terms()<<"\n";
-				std::cerr<<"memory="<<myUsage.vmSize()<<"\n";
-				std::cerr.flush();
+				//std::cerr<<"time="<<time<<" sigma= "<<sigma<<" sigma2="<<sigma2<<" phi5.terms="<<phi5.terms()<<"\n";
+				//std::cerr<<"memory="<<myUsage.vmSize()<<"\n";
+				//std::cerr.flush();
 
 				if (verbose) std::cerr<<"Applying c_p\n";
 				FreeOperatorType myOp6 = engine.newSimpleOperator("destruction",site3,sigma3);
 				HilbertVectorType phi6 = engine.newState(verbose);
 				myOp6.apply(phi6,phi5,simplifyOrNot);
 				phi5.clear();
-				std::cerr<<"time="<<time<<" sigma= "<<sigma<<" sigma2="<<sigma2<<" phi6.terms="<<phi6.terms()<<"\n";
-				std::cerr<<"memory="<<myUsage.vmSize()<<"\n";
-				std::cerr.flush();
+				//std::cerr<<"time="<<time<<" sigma= "<<sigma<<" sigma2="<<sigma2<<" phi6.terms="<<phi6.terms()<<"\n";
+				//std::cerr<<"memory="<<myUsage.vmSize()<<"\n";
+				//std::cerr.flush();
 
 				if (verbose) std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
 				sum += scalarProduct(phi6,phi6);
@@ -180,9 +181,9 @@ int main(int argc,char *argv[])
 					savedValue = scalarProduct(phi6,savedVector);
 					savedVector.clear();
 				}
-				std::cerr<<"time="<<time<<" sigma= "<<sigma<<" sigma2="<<sigma2<<" saved.terms="<<savedVector.terms()<<"\n";
-				std::cerr<<"memory="<<myUsage.vmSize()<<"\n";
-				std::cerr.flush();
+				//std::cerr<<"time="<<time<<" sigma= "<<sigma<<" sigma2="<<sigma2<<" saved.terms="<<savedVector.terms()<<"\n";
+				//std::cerr<<"memory="<<myUsage.vmSize()<<"\n";
+				//std::cerr.flush();
 				phi6.clear();
 				//timeVector.add(phi6);
 			}

@@ -172,6 +172,8 @@ namespace FreeFermions {
 			}
 
 			size_t dof() const { return dof_; }
+
+			size_t edof() const { return edof_; }
 	
 			size_t size() const { return eigenvalues_.size(); }
 

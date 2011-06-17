@@ -83,7 +83,6 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define HILBERT_TERM_H
 
 #include "Complex.h" // in PsimagLite
-#include "Sort.h" // in PsimagLite
 #include "FlavorFactory.h"
 
 namespace FreeFermions {
@@ -118,25 +117,23 @@ namespace FreeFermions {
 	bool operator==(HilbertTerm<FieldType,LevelsType>& term1,
 	                HilbertTerm<FieldType,LevelsType>& term2)
 	{
-		return (term1.state == term2.state);
+		for (size_t i=0;i<term1.state.size();i++)
+			if (term1.state[i]!=term2.state[i]) return false;
+		return true;
 	}
 
 	template<typename FieldType,typename LevelsType>
 	bool operator<(const HilbertTerm<FieldType,LevelsType>& term1,
 	               const HilbertTerm<FieldType,LevelsType>& term2)
 	{
-		return (term1.state < term2.state);
-	}
-
-	bool operator<(const std::vector<bool>& state1,
-			const std::vector<bool>& state2)
-	{
-		for (size_t i=0;i<state1.size();i++) {
-			if (state1[i]<state2[i]) return true;
-			if (state1[i]>state2[i]) return false;
+		for (size_t i=0;i<term1.state.size();i++) {
+			if (term1.state[i]>term2.state[i]) return false;
+			if (term1.state[i]<term2.state[i]) return true;
 		}
 		return false;
 	}
+
+
 } // namespace Dmrg 
 
 /*@}*/
