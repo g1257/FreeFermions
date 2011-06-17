@@ -74,107 +74,94 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file FlavoredState.h
+/*! \file FlavorFactory.h
  *
  * 
  *
  */
-#ifndef FLAVORED_STATE_H
-#define FLAVORED_STATE_H
+#ifndef FLAVOR_FACTORY_H
+#define FLAVOR_FACTORY_H
 #include <vector>
 #include <string>
 #include <stdexcept>
 #include <iostream>
 
 namespace FreeFermions {
-	// All interactions == 0
-	template<typename LevelsType>
-	class FlavoredState {
-			//static size_t const SPIN_UP=0,SPIN_DOWN=1;
-			typedef FlavoredState<LevelsType> ThisType;
+
+	template<typename FieldType,typename StateType>
+	class FlavorFactory {
+
+			typedef typename StateType::value_type LevelsType;
+
 			static int const FERMION_SIGN = -1;
 		public:
-			FlavoredState(size_t dof,size_t size) :
-				size_(size)
+			FlavorFactory(size_t size) :
+				size_(size) // FIXME: keep a reference to data here
 			{
-				
-				for (size_t i=0;i<dof;i++) {
-					LevelsType tmpV(size_,false);
-					data_.push_back(tmpV);
-				}
 			}
 			
-			void fill(const std::vector<size_t>& ne)
+			void fill(StateType& data,const std::vector<size_t>& ne)
 			{
-				if (ne.size()!=data_.size()) throw std::runtime_error("FlavoredState::fill()\n");
+				if (ne.size()!=data.size())
+					throw std::runtime_error("FlavorFactory::fill()\n");
 				for (size_t i=0;i<ne.size();i++) { // sum over spins
-					fillInternal(data_[i],ne[i]);
+					fillInternal(data[i],ne[i]);
 				}
 			}
 
-			void fill(size_t flavor,size_t level)
+//			void fill(StateType& data,size_t flavor,size_t level)
+//			{
+//				data[flavor][level] = true;
+//			}
+//
+			int apply(StateType& data,const std::string& label,size_t flavor,size_t lambda)
 			{
-				data_[flavor][level] = true;
+				if (flavor>=data.size())
+					throw std::runtime_error("FlavorFactory::create()\n");
+				if (lambda>=size_) throw std::runtime_error("FlavorFactory::create()\n");
+				int interSign = (calcInterElectrons(data,flavor) %2) ? 1 : FERMION_SIGN;
+				return applyInternal(label,data[flavor],lambda)*interSign;
 			}
-			
-			int apply(const std::string& label,size_t flavor,size_t lambda)
-			{
-				if (flavor>=data_.size()) throw std::runtime_error("FlavoredState::create()\n");
-				if (lambda>=size_) throw std::runtime_error("FlavoredState::create()\n");
-				int interSign = (calcInterElectrons(flavor) %2) ? 1 : FERMION_SIGN;
-				return applyInternal(label,data_[flavor],lambda)*interSign;
-			}
-			
-			
-			void occupations(std::vector<size_t>& ns,size_t flavor) const
+//
+//
+			void occupations(const StateType& data,std::vector<size_t>& ns,size_t flavor)
 			{
 				ns.resize(size_);
 				for (size_t i = 0; i < size_; i++) ns[i] = 0;
-				
-				for (size_t counter=0;counter<data_[flavor].size();counter++) {
-					ns[counter] = (data_[flavor][counter]) ? 1 : 0;
+
+				for (size_t counter=0;counter<data[flavor].size();counter++) {
+					ns[counter] = (data[flavor][counter]) ? 1 : 0;
 				}
 			}
+//
+//			size_t flavors() const { return data_.size(); }
 			
-			size_t flavors() const { return data_.size(); }
-			
-// 			bool operator==(const ThisType& b) const
-// 			{
-// 				// eliminated due to performance reasons:
-// 				//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
-// 				
-// 				for (size_t i=0;i<data_.size();i++) 
-// 					if (data_[i]!=b.data_[i]) return false;
-// 				
-// 				
-// 				return true;
-// 			}
-			
+			/*template<typename T>
+			friend std::ostream& operator<<(std::ostream& os,const FlavorFactory<T>& v);
 			
 			template<typename T>
-			friend std::ostream& operator<<(std::ostream& os,const FlavoredState<T>& v);
+			friend bool operator==(const FlavorFactory<T>& v1,const FlavorFactory<T>& v2);
 			
 			template<typename T>
-			friend bool operator==(const FlavoredState<T>& v1,const FlavoredState<T>& v2);
-			
-			template<typename T>
-			friend bool operator<(const FlavoredState<T>& v1,const FlavoredState<T>& v2);
+			friend bool operator<(const FlavorFactory<T>& v1,const FlavorFactory<T>& v2);
 					
 			template<typename T>
-			friend bool operator>(const FlavoredState<T>& v1,const FlavoredState<T>& v2);
+			friend bool operator>(const FlavorFactory<T>& v1,const FlavorFactory<T>& v2);
 					
 			template<typename T>
-			friend bool operator<=(const FlavoredState<T>& v1,const FlavoredState<T>& v2);
-			
+			friend bool operator<=(const FlavorFactory<T>& v1,const FlavorFactory<T>& v2);
+			*/
 		private:
 			
 			void fillInternal(LevelsType& x,size_t ne)
 			{
-				if (ne>size_) throw std::runtime_error("FlavoredState::fillInternal\n");
+				if (ne>size_) throw std::runtime_error("FlavorFactory::fillInternal\n");
 				for (size_t i=0;i<x.size();i++) x[i] = (i<ne) ? true : false;
 			}
-			
-			int applyInternal(const std::string& label,LevelsType& x,size_t lambda)
+
+			int applyInternal(const std::string& label,
+			                    LevelsType& x,
+			                    size_t lambda)
 			{
 				size_t nflips = statesBetween(x,lambda);
 				if (label == "creation") {
@@ -184,12 +171,12 @@ namespace FreeFermions {
 					if (!x[lambda]) return 0; // can't destroy, there's nothing
 					x[lambda] =false;
 				} else {
-					throw std::runtime_error("FlavoredState::applyInternal()\n");
+					throw std::runtime_error("FlavorFactory::applyInternal()\n");
 				}
 				if (nflips ==0 || nflips % 2 ==0) return 1;
 				return FERMION_SIGN;
 			}
-			
+
 			size_t statesBetween(LevelsType x,size_t lambda) const
 			{
 				size_t sum = 0;
@@ -197,16 +184,16 @@ namespace FreeFermions {
 					if (x[counter]) sum ++;
 				return sum;
 			}
-			
-			size_t calcInterElectrons(size_t flavor)
+
+			size_t calcInterElectrons(const StateType& data,size_t flavor)
 			{
 				size_t sum = 0;
 				for (size_t flavor2 = 0; flavor2 < flavor; flavor2++) {
-					sum += numberOfDigits(data_[flavor2]);
+					sum += numberOfDigits(data[flavor2]);
 				}
 				return sum;
 			}
-			
+
 			size_t numberOfDigits(const LevelsType& x)
 			{
 				size_t sum = 0;
@@ -217,11 +204,10 @@ namespace FreeFermions {
 			}
 
 			size_t size_;
-			std::vector<LevelsType> data_;
-	}; // FlavoredState
+	}; // FlavorFactory
 	
-	template<typename T>
-	std::ostream& operator<<(std::ostream& os,const FlavoredState<T>& v)
+	/*template<typename T>
+	std::ostream& operator<<(std::ostream& os,const FlavorFactory<T>& v)
 	{
 		os<<"size="<<v.data_.size()<<"\n";
 		for (size_t i=0;i<v.data_.size();i++) {
@@ -231,7 +217,7 @@ namespace FreeFermions {
 	}
 	
 	template<typename T>
-	inline bool operator==(const FlavoredState<T>& v1,const FlavoredState<T>& v2)
+	inline bool operator==(const FlavorFactory<T>& v1,const FlavorFactory<T>& v2)
 	{
 		// eliminated due to performance reasons:
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
@@ -242,7 +228,7 @@ namespace FreeFermions {
 	}
 	
 	template<typename T>
-	inline bool operator<(const FlavoredState<T>& v1,const FlavoredState<T>& v2)
+	inline bool operator<(const FlavorFactory<T>& v1,const FlavorFactory<T>& v2)
 	{
 		// eliminated due to performance reasons:
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
@@ -255,7 +241,7 @@ namespace FreeFermions {
 	}
 	
 	template<typename T>
-	inline bool operator>(const FlavoredState<T>& v1,const FlavoredState<T>& v2)
+	inline bool operator>(const FlavorFactory<T>& v1,const FlavorFactory<T>& v2)
 	{
 		// eliminated due to performance reasons:
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
@@ -268,7 +254,7 @@ namespace FreeFermions {
 	}
 	
 	template<typename T>
-	inline bool operator<=(const FlavoredState<T>& v1,const FlavoredState<T>& v2)
+	inline bool operator<=(const FlavorFactory<T>& v1,const FlavorFactory<T>& v2)
 	{
 		// eliminated due to performance reasons:
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
@@ -278,8 +264,8 @@ namespace FreeFermions {
 			if (v1.data_[i]<v2.data_[i]) return true;
 		}
 		return true;
-	}
+	}*/
 } // namespace Dmrg 
 
 /*@}*/
-#endif
+#endif // FLAVOR_FACTORY_H

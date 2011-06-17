@@ -30,12 +30,12 @@ int main(int argc,char *argv[])
 	size_t dof = 2; // spin up and down
 	MatrixType t(n,n);
 	
-	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN); //LADDER);
-	geometry.setGeometry(t);
-	//geometry.setGeometry(t,2);
-	/*for (size_t ii=0;ii<n;ii+=2) 
+	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
+	//geometry.setGeometry(t);
+	geometry.setGeometry(t,2);
+	for (size_t ii=0;ii<n;ii+=2) 
 		t(ii,ii+1) = t(ii+1,ii) = 0.5;
-	*/
+	
 	std::cerr<<t;
 	
 	ConcurrencyType concurrency(argc,argv);

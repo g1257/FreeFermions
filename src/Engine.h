@@ -82,6 +82,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include "HilbertTerm.h"
 #include "HilbertVector.h"
 #include "FreeOperator.h"
 #include "Vector.h"
@@ -97,27 +98,9 @@ namespace FreeFermions {
 			typedef ConcurrencyType_ ConcurrencyType;
 			typedef RealType_ RealType;
 			typedef FieldType_ FieldType;
-			typedef HilbertVector<RealType,FieldType,LevelsType> HilbertVectorType;
+			typedef HilbertTerm<FieldType,LevelsType> HilbertTermType;
+			typedef HilbertVector<RealType,HilbertTermType> HilbertVectorType;
 			typedef FreeOperator<HilbertVectorType> FreeOperatorType;
-			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
-
-			/*template<typename SomeGeometryType>
-					Engine(SomeGeometryType& g,size_t geometryOption,size_t dof,bool verbose=false) 
-			: sites_(g.sites()),edof_(1),dof_(dof),verbose_(verbose),eigenvectors_(sites_,sites_),
-				eigenvalues_(sites_)
-			{
-				std::vector<MatrixType>* tt = new std::vector<MatrixType>(1);
-				(*tt)[0].resize(sites_,sites_);
-				g.setGeometry((*tt)[0],geometryOption);
-				t_ = tt;
-				diagonalize();
-				//MatrixType tmp = eigenvectors_;
-				//eigenvectors_ = transposeConjugate(tmp);
-				if (verbose_) {
-					std::cerr<<"#Created core "<<eigenvectors_.n_row();
-					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
-				}
-			}*/
 			
 			Engine(const MatrixType& t,ConcurrencyType& concurrency,size_t dof,bool verbose=false) :
 					concurrency_(concurrency),sites_(t.n_row()),edof_(1),dof_(dof),
@@ -168,9 +151,11 @@ namespace FreeFermions {
 				return tmp;
 			}
 
-			FreeOperatorType newSimpleOperator(const std::string& label,size_t site,size_t flavor) const
+			FreeOperatorType newSimpleOperator(const std::string& label,
+			                                     size_t site,
+			                                     size_t flavor) const
 			{
-				FreeOperatorType tmp(eigenvectors_,label,site,flavor,dof_);
+				FreeOperatorType tmp(eigenvectors_,label,site,flavor,dof_,sites_*edof_);
 				return tmp;
 			}
 
@@ -189,6 +174,8 @@ namespace FreeFermions {
 			size_t dof() const { return dof_; }
 	
 			size_t size() const { return eigenvalues_.size(); }
+
+			size_t sites() const { return sites_; }
 
 			ConcurrencyType& concurrency() { return concurrency_; }
 			

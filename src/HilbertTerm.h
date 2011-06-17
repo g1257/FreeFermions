@@ -74,95 +74,70 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file FreeOperator.h
+/*! \file HilbertTerm
  *
- * 
+ * Raw computations for a free Hubbard model
  *
  */
-#ifndef FREE_OPERATOR_H
-#define FREE_OPERATOR_H
+#ifndef HILBERT_TERM_H
+#define HILBERT_TERM_H
 
-#include "Matrix.h" // in PsimagLite
+#include "Complex.h" // in PsimagLite
+#include "Sort.h" // in PsimagLite
+#include "FlavorFactory.h"
 
 namespace FreeFermions {
-	// All interactions == 0
-	template<typename HilbertVectorType>
-	class FreeOperator {
-			
-			typedef typename HilbertVectorType::RealType RealType;
-   			typedef typename HilbertVectorType::FieldType FieldType;
-			typedef PsimagLite::Matrix<FieldType> MatrixType;
-			typedef typename HilbertVectorType::HilbertTermType HilbertTermType;
-			typedef typename HilbertTermType::FlavorFactoryType FlavorFactoryType;
-		public:
-			
-			enum {SIMPLIFY,DO_NOT_SIMPLIFY};
-			
-			FreeOperator(const MatrixType& U,
-			               const std::string& label,
-			               size_t site,
-			               size_t flavor,
-			               size_t dof,
-			               size_t size) :
-				U_(U),label_(label),site_(site),flavor_(flavor),dof_(dof),
-				size_(size)
-			{
-			}
-			
-			void apply(
-				
-				HilbertVectorType& dest,
-				const HilbertVectorType& src,
-				size_t simplifyOrNot) const
-			{
-				dest.clear();
-				for (size_t i=0;i<src.terms();i++) {
-					apply(dest,src.term(i));
-				}
-				if (simplifyOrNot==SIMPLIFY) dest.simplify();
-			}
-			
-		private:	
-			void apply(
-					HilbertVectorType& dest,
-					const HilbertTermType& src) const
-			{
-				
-				
-				if (src.value ==static_cast<FieldType>(0.0)) return;
-				typename HilbertVectorType::HilbertTermType term = src;
-				
-				for (size_t lambda = 0;lambda < U_.n_col();lambda++) {
-					
-					applyInternal(term,src,lambda); // term.value contains sign
-					FieldType factor = U_(site_,lambda);
-					term.value *= factor;
-					if  (term.value == static_cast<FieldType>(0.0)) continue;
-					dest.add(term);
-				}
-			}
 
-		
-			template<typename HilbertTermType>
-			void applyInternal(
-					HilbertTermType& dest,
-					const HilbertTermType& src,
-					size_t lambda) const
-			{
-				dest = src;
-				FlavorFactoryType flavorFactory(size_);
-				RealType sign = flavorFactory.apply(dest.state,label_,flavor_,lambda);
-				dest.value *= sign;
-			}
-			
-			const MatrixType& U_;
-			std::string label_;
-			size_t site_;
-			size_t flavor_;
-			size_t dof_;
-			size_t size_;
-	}; // FreeOperator
+	//! Don't add member functions, this is a struct:
+	template<typename FieldType_,typename LevelsType>
+	struct HilbertTerm {
+		typedef FieldType_ FieldType;
+		typedef std::vector<LevelsType> StateType;
+		typedef FlavorFactory<FieldType,StateType> FlavorFactoryType;
+		HilbertTerm(const StateType& state1,const FieldType& value1) :
+				state(state1),value(value1) { }
+		StateType state;
+		FieldType value;
+	};
+	
+	template<typename T,typename V>
+	std::ostream& operator<<(std::ostream& os,const HilbertTerm<T,V>& v)
+	{
+		os<<v.state<<"\n";
+		os<<"value="<<v.value<<"\n";
+		return os;	
+	}
+
+	template<typename RealType,typename HilbertTermType>
+	RealType energy(const std::vector<RealType>& eigs,HilbertTermType& term)
+	{
+		return term.value*energy(eigs,term.state);
+	}
+	
+	template<typename FieldType,typename LevelsType>
+	bool operator==(HilbertTerm<FieldType,LevelsType>& term1,
+	                HilbertTerm<FieldType,LevelsType>& term2)
+	{
+		return (term1.state == term2.state);
+	}
+
+	template<typename FieldType,typename LevelsType>
+	bool operator<(const HilbertTerm<FieldType,LevelsType>& term1,
+	               const HilbertTerm<FieldType,LevelsType>& term2)
+	{
+		return (term1.state < term2.state);
+	}
+
+	bool operator<(const std::vector<bool>& state1,
+			const std::vector<bool>& state2)
+	{
+		for (size_t i=0;i<state1.size();i++) {
+			if (state1[i]<state2[i]) return true;
+			if (state1[i]>state2[i]) return false;
+		}
+		return false;
+	}
 } // namespace Dmrg 
 
 /*@}*/
-#endif
+#endif // HILBERT_TERM_H
