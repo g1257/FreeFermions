@@ -74,61 +74,36 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file HilbertTerm
+/*! \file CreationOrDestructionOp.h
  *
  * Raw computations for a free Hubbard model
  *
  */
-#ifndef HILBERT_TERM_H
-#define HILBERT_TERM_H
+#ifndef CREATION_OR_DEST_H_H
+#define CREATION_OR_DEST_H_H
 
 #include "Complex.h" // in PsimagLite
-#include "FlavorFactory.h"
+
 
 namespace FreeFermions {
-
-	//! Don't add member functions, this is a struct:
-	template<typename FieldType_,typename LevelsType>
-	struct HilbertTerm {
-		typedef FieldType_ FieldType;
-		typedef std::vector<LevelsType> StateType;
-		typedef FlavorFactory<FieldType,StateType> FlavorFactoryType;
-		HilbertTerm(const StateType& state1,const FieldType& value1) :
-				state(state1),value(value1) { }
-		StateType state;
-		FieldType value;
-	};
 	
-	template<typename T,typename V>
-	std::ostream& operator<<(std::ostream& os,const HilbertTerm<T,V>& v)
-	{
-		os<<v.state<<"\n";
-		os<<"value="<<v.value<<"\n";
-		return os;	
-	}
+	template<typename RealType,typename FieldType>
+	class CreationOrDestructionOp {
+	public:
+		enum {CREATION,DESTRUCTION};
+
+		CreationOrDestructionOp(size_t type,size_t ind,size_t sigma)
+		: type_(type),ind_(ind),sigma_(sigma)
+		{}
+
+		size_t site() const { return ind_; }
+
+	private:
+		size_t type_,ind_,sigma_;
+	}; // CreationOrDestructionOp
 	
-	template<typename FieldType,typename LevelsType>
-	bool operator==(HilbertTerm<FieldType,LevelsType>& term1,
-	                HilbertTerm<FieldType,LevelsType>& term2)
-	{
-		for (size_t i=0;i<term1.state.size();i++)
-			if (term1.state[i]!=term2.state[i]) return false;
-		return true;
-	}
-
-	template<typename FieldType,typename LevelsType>
-	bool operator<(const HilbertTerm<FieldType,LevelsType>& term1,
-	               const HilbertTerm<FieldType,LevelsType>& term2)
-	{
-		for (size_t i=0;i<term1.state.size();i++) {
-			if (term1.state[i]>term2.state[i]) return false;
-			if (term1.state[i]<term2.state[i]) return true;
-		}
-		return false;
-	}
-
 
 } // namespace Dmrg 
 
 /*@}*/
-#endif // HILBERT_TERM_H
+#endif // CREATION_OR_DEST_H_H

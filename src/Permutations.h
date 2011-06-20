@@ -74,61 +74,55 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file HilbertTerm
+/*! \file Permutations.h
  *
  * Raw computations for a free Hubbard model
  *
  */
-#ifndef HILBERT_TERM_H
-#define HILBERT_TERM_H
+#ifndef PERMUTATIONS_H_H
+#define PERMUTATIONS_H_H
 
 #include "Complex.h" // in PsimagLite
-#include "FlavorFactory.h"
+
 
 namespace FreeFermions {
-
-	//! Don't add member functions, this is a struct:
-	template<typename FieldType_,typename LevelsType>
-	struct HilbertTerm {
-		typedef FieldType_ FieldType;
-		typedef std::vector<LevelsType> StateType;
-		typedef FlavorFactory<FieldType,StateType> FlavorFactoryType;
-		HilbertTerm(const StateType& state1,const FieldType& value1) :
-				state(state1),value(value1) { }
-		StateType state;
-		FieldType value;
-	};
 	
-	template<typename T,typename V>
-	std::ostream& operator<<(std::ostream& os,const HilbertTerm<T,V>& v)
-	{
-		os<<v.state<<"\n";
-		os<<"value="<<v.value<<"\n";
-		return os;	
-	}
-	
-	template<typename FieldType,typename LevelsType>
-	bool operator==(HilbertTerm<FieldType,LevelsType>& term1,
-	                HilbertTerm<FieldType,LevelsType>& term2)
-	{
-		for (size_t i=0;i<term1.state.size();i++)
-			if (term1.state[i]!=term2.state[i]) return false;
-		return true;
-	}
+	class Permutations {
+	public:
+		Permutations(size_t n,size_t ne) : data_(n,0),ne_(ne) {}
 
-	template<typename FieldType,typename LevelsType>
-	bool operator<(const HilbertTerm<FieldType,LevelsType>& term1,
-	               const HilbertTerm<FieldType,LevelsType>& term2)
-	{
-		for (size_t i=0;i<term1.state.size();i++) {
-			if (term1.state[i]>term2.state[i]) return false;
-			if (term1.state[i]<term2.state[i]) return true;
+		bool increase()
+		{
+			size_t c = 0;
+			while(true) {
+				data_[c]++;
+				if (data_[c]==ne_) {
+					if (c==data_.size()-1) return false;
+					data_[c] = 0;
+					c++;
+				} else {
+					break;
+				}
+			}
+			return true;
 		}
-		return false;
-	}
 
+		size_t operator[](size_t i) const
+		{
+			return data_[i];
+		}
+
+		size_t size() const { return data_.size(); }
+
+		size_t max() const { return ne_; }
+
+	private:
+		std::vector<size_t> data_;
+		size_t ne_;
+	}; // Permutations
+	
 
 } // namespace Dmrg 
 
 /*@}*/
-#endif // HILBERT_TERM_H
+#endif // PERMUTATIONS_H_H

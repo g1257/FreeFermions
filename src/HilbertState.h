@@ -74,61 +74,87 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file HilbertTerm
+/*! \file HilbertState.h
  *
  * Raw computations for a free Hubbard model
  *
  */
-#ifndef HILBERT_TERM_H
-#define HILBERT_TERM_H
+#ifndef HILBERT_STATE_H
+#define HILBERT_STATE_H
 
 #include "Complex.h" // in PsimagLite
-#include "FlavorFactory.h"
+#include "Permutations.h"
 
 namespace FreeFermions {
-
-	//! Don't add member functions, this is a struct:
-	template<typename FieldType_,typename LevelsType>
-	struct HilbertTerm {
-		typedef FieldType_ FieldType;
-		typedef std::vector<LevelsType> StateType;
-		typedef FlavorFactory<FieldType,StateType> FlavorFactoryType;
-		HilbertTerm(const StateType& state1,const FieldType& value1) :
-				state(state1),value(value1) { }
-		StateType state;
-		FieldType value;
-	};
 	
-	template<typename T,typename V>
-	std::ostream& operator<<(std::ostream& os,const HilbertTerm<T,V>& v)
-	{
-		os<<v.state<<"\n";
-		os<<"value="<<v.value<<"\n";
-		return os;	
-	}
-	
-	template<typename FieldType,typename LevelsType>
-	bool operator==(HilbertTerm<FieldType,LevelsType>& term1,
-	                HilbertTerm<FieldType,LevelsType>& term2)
-	{
-		for (size_t i=0;i<term1.state.size();i++)
-			if (term1.state[i]!=term2.state[i]) return false;
-		return true;
-	}
+	template<typename EngineType,typename OperatorType>
+	class HilbertState {
+		typedef typename EngineType::RealType RealType;
+		typedef typename EngineType::FieldType FieldType;
+		typedef Permutations PermutationsType;
 
-	template<typename FieldType,typename LevelsType>
-	bool operator<(const HilbertTerm<FieldType,LevelsType>& term1,
-	               const HilbertTerm<FieldType,LevelsType>& term2)
-	{
-		for (size_t i=0;i<term1.state.size();i++) {
-			if (term1.state[i]>term2.state[i]) return false;
-			if (term1.state[i]<term2.state[i]) return true;
+	public:
+		// it's the g.s. for now, FIXME change it later to allow more flex.
+		HilbertState(const EngineType& engine,size_t ne)
+		: engine_(engine), ne_(ne) {}
+
+		void applyOperator(const OperatorType& op)
+		{
+			operators_.push_back(op);
 		}
-		return false;
-	}
 
+		FieldType close()
+		{
+			size_t n = operators_.size();
+			if (n&1) throw std::runtime_error(
+				"HilbertState::close(): n. of operators is odd\n");
+			size_t m = n/2;
+			//orderOperators(); // so that operators appear
+			                  // dagger and non dagger
+			PermutationsType perm(m,m);
+			FieldType sum = 0;
+			do  {
+				sum += compute(perm);
+			} while (perm.increase());
+			return sum;
+		}
+
+	private:
+
+		FieldType compute(const PermutationsType& perm)
+		{
+			PermutationsType lambda(perm.size(),ne_);
+			FieldType sum = 0;
+			do  {
+				FieldType prod = 1;
+				for (size_t i=0;i<lambda.size();i++) {
+					prod *=
+					  std::conj(engine_.eigenvector(operators_[i].site(),lambda[i]));
+				}
+				for (size_t i=0;i<lambda.size();i++) {
+					prod *=
+					  engine_.eigenvector(operators_[perm[i]].site(),lambda[perm[i]]);
+				}
+				sum += prod;
+			} while (lambda.increase());
+			return sum;
+		}
+
+		const EngineType& engine_;
+		size_t ne_;
+		std::vector<OperatorType> operators_;
+
+	}; // HilbertState
+	
+	template<typename EngineType,typename OperatorType>
+	typename EngineType::FieldType scalarProduct(HilbertState<EngineType,OperatorType>& s1,
+	                           HilbertState<EngineType,OperatorType>& s2)
+	{
+		// s2.pour(s1); // s1 --> s2
+		return s2.close();
+	}
 
 } // namespace Dmrg 
 
 /*@}*/
-#endif // HILBERT_TERM_H
+#endif //HILBERT_STATE_H

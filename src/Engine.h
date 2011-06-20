@@ -81,15 +81,12 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
  */
 #ifndef ENGINE_H
 #define ENGINE_H
-
-#include "HilbertTerm.h"
-#include "HilbertVector.h"
-#include "FreeOperator.h"
+#include "Matrix.h"
 #include "Vector.h"
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename RealType_,typename FieldType_,typename LevelsType,typename ConcurrencyType_>
+	template<typename RealType_,typename FieldType_,typename ConcurrencyType_>
 	class Engine {
 			
 			typedef PsimagLite::Matrix<FieldType_> MatrixType;
@@ -98,9 +95,6 @@ namespace FreeFermions {
 			typedef ConcurrencyType_ ConcurrencyType;
 			typedef RealType_ RealType;
 			typedef FieldType_ FieldType;
-			typedef HilbertTerm<FieldType,LevelsType> HilbertTermType;
-			typedef HilbertVector<RealType,HilbertTermType> HilbertVectorType;
-			typedef FreeOperator<HilbertVectorType> FreeOperatorType;
 			
 			Engine(const MatrixType& t,ConcurrencyType& concurrency,size_t dof,bool verbose=false) :
 					concurrency_(concurrency),sites_(t.n_row()),edof_(1),dof_(dof),
@@ -138,30 +132,11 @@ namespace FreeFermions {
 				if (needsDelete_) delete  t_;
 			}
 
-			HilbertVectorType newState(bool verbose=false) const
+			FieldType energy(size_t ne) const
 			{
-				HilbertVectorType tmp(sites_*edof_,dof_,verbose);
-				return tmp;	
-			}
-
-			HilbertVectorType newGroundState(const std::vector<size_t>& ne) const
-			{
-				HilbertVectorType tmp(sites_*edof_,dof_);
-				tmp.fill(ne);
-				return tmp;
-			}
-
-			FreeOperatorType newSimpleOperator(const std::string& label,
-			                                     size_t site,
-			                                     size_t flavor) const
-			{
-				FreeOperatorType tmp(eigenvectors_,label,site,flavor,dof_,sites_*edof_);
-				return tmp;
-			}
-
-			FieldType energy(const HilbertTermType& term) const
-			{
-				return HilbertVectorType::energy(eigenvalues_,term);
+				RealType sum = 0;
+				for (size_t i=0;i<ne;i++) sum += eigenvalues_[i];
+				return sum;
 			}
 
 			const RealType& eigenvalue(size_t i) const { return eigenvalues_[i]; }
