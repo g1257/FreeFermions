@@ -89,23 +89,38 @@ namespace FreeFermions {
 	
 	class Permutations {
 	public:
-		Permutations(size_t n,size_t ne) : data_(n,0),ne_(ne) {}
+		Permutations(size_t n) : data_(n)
+		{
+			for (size_t i=0;i<n;i++) data_[i] = i;
+		}
 
+
+		/*1. Find the largest index k such that a[k] < a[k + 1].
+		 * If no such index exists, the permutation is the last permutation.
+		 *
+		   2. Find the largest index l such that a[k] < a[l]. Since k + 1
+		   is such an index, l is well defined and satisfies k < l.
+
+		   3. Swap a[k] with a[l].
+
+		   4. Reverse the sequence from a[k + 1] up to and including the
+		   final element a[n-1].
+		   */
 		bool increase()
 		{
-			size_t c = 0;
-			while(true) {
-				data_[c]++;
-				if (data_[c]==ne_) {
-					if (c==data_.size()-1) return false;
-					data_[c] = 0;
-					c++;
-				} else {
-					break;
-				}
-			}
+			int k = largestk();
+			if (k<0) return false;
+
+			int l = largestl(k);
+			std::swap(data_[k],data_[l]);
+			size_t c = data_.size()-1;
+			if (size_t(k)+1>=data_.size()-1) return true;
+			std::vector<size_t> tmp = data_;
+			for (size_t i=k+1;i<data_.size();i++)
+				data_[c--] = tmp[i];
 			return true;
 		}
+
 
 		size_t operator[](size_t i) const
 		{
@@ -114,11 +129,29 @@ namespace FreeFermions {
 
 		size_t size() const { return data_.size(); }
 
-		size_t max() const { return ne_; }
 
 	private:
+
+		int largestk() const
+		{
+			int saved = -1;
+			size_t tot = data_.size()-1;
+			for (size_t i=0;i<tot;i++) {
+				if (data_[i]<data_[i+1]) saved = i;
+			}
+			return saved;
+		}
+
+		size_t largestl(size_t k) const
+		{
+			size_t saved = 0;
+			for (size_t i=0;i<data_.size();i++) {
+				if (data_[k]<data_[i]) saved = i;
+			}
+			return saved;
+		}
 		std::vector<size_t> data_;
-		size_t ne_;
+
 	}; // Permutations
 	
 

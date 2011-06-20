@@ -74,89 +74,55 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file HilbertState.h
+/*! \file IndexGenerator.h
  *
  * Raw computations for a free Hubbard model
  *
  */
-#ifndef HILBERT_STATE_H
-#define HILBERT_STATE_H
+#ifndef INDEX_GENERATOR_H
+#define INDEX_GENERATOR_H
 
 #include "Complex.h" // in PsimagLite
-#include "Permutations.h"
-#include "IndexGenerator.h"
+
 
 namespace FreeFermions {
 	
-	template<typename EngineType,typename OperatorType>
-	class HilbertState {
-		typedef typename EngineType::RealType RealType;
-		typedef typename EngineType::FieldType FieldType;
-		typedef Permutations PermutationsType;
-		typedef IndexGenerator IndexGeneratorType;
-
+	class IndexGenerator {
 	public:
-		// it's the g.s. for now, FIXME change it later to allow more flex.
-		HilbertState(const EngineType& engine,size_t ne)
-		: engine_(engine), ne_(ne) {}
+		IndexGenerator(size_t n,size_t ne) : data_(n,0),ne_(ne) {}
 
-		void applyOperator(const OperatorType& op)
+		bool increase()
 		{
-			operators_.push_back(op);
+			size_t c = 0;
+			while(true) {
+				data_[c]++;
+				if (data_[c]==ne_) {
+					if (c==data_.size()-1) return false;
+					data_[c] = 0;
+					c++;
+				} else {
+					break;
+				}
+			}
+			return true;
 		}
 
-		FieldType close()
+		size_t operator[](size_t i) const
 		{
-			size_t n = operators_.size();
-			if (n&1) throw std::runtime_error(
-				"HilbertState::close(): n. of operators is odd\n");
-			size_t m = n/2;
-			//orderOperators(); // so that operators appear
-			                  // dagger and non dagger
-			PermutationsType perm(m);
-			FieldType sum = 0;
-			do  {
-				sum += compute(perm);
-			} while (perm.increase());
-			return sum;
+			return data_[i];
 		}
+
+		size_t size() const { return data_.size(); }
+
+		size_t max() const { return ne_; }
 
 	private:
-
-		FieldType compute(const PermutationsType& perm)
-		{
-			IndexGeneratorType lambda(perm.size(),ne_);
-			FieldType sum = 0;
-			do  {
-				FieldType prod = 1;
-				for (size_t i=0;i<lambda.size();i++) {
-					prod *=
-					  std::conj(engine_.eigenvector(operators_[i].site(),lambda[i]));
-				}
-				for (size_t i=0;i<lambda.size();i++) {
-					prod *=
-					  engine_.eigenvector(operators_[perm[i]+perm.size()].site(),lambda[perm[i]]);
-				}
-				sum += prod;
-			} while (lambda.increase());
-			return sum;
-		}
-
-		const EngineType& engine_;
+		std::vector<size_t> data_;
 		size_t ne_;
-		std::vector<OperatorType> operators_;
-
-	}; // HilbertState
+	}; // IndexGenerator
 	
-	template<typename EngineType,typename OperatorType>
-	typename EngineType::FieldType scalarProduct(HilbertState<EngineType,OperatorType>& s1,
-	                           HilbertState<EngineType,OperatorType>& s2)
-	{
-		// s2.pour(s1); // s1 --> s2
-		return s2.close();
-	}
 
 } // namespace Dmrg 
 
 /*@}*/
-#endif //HILBERT_STATE_H
+#endif // INDEX_GENERATOR_H
