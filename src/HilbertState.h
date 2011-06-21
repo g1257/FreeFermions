@@ -88,14 +88,18 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "FermionFactor.h"
 
 namespace FreeFermions {
-	
+	struct OperatorPointer {
+		OperatorPointer(size_t t,size_t i) : type(t),index(i) {}
+		size_t type;
+		size_t index;
+	};
 	template<typename OperatorType>
 	class HilbertState {
 		typedef typename OperatorType::RealType RealType;
 		typedef typename OperatorType::FieldType FieldType;
 		typedef Permutations PermutationsType;
 		typedef IndexGenerator IndexGeneratorType;
-		typedef FermionFactor<OperatorType> FermionFactorType;
+		typedef FermionFactor<OperatorType,OperatorPointer> FermionFactorType;
 
 		enum {CREATION = OperatorType::CREATION,
 		       DESTRUCTION = OperatorType::DESTRUCTION
@@ -104,16 +108,18 @@ namespace FreeFermions {
 	public:
 		// it's the g.s. for now, FIXME change it later to allow more flex.
 		HilbertState(size_t ne)
-		:  ne_(ne),fermionSign_(1) {}
+		:  ne_(ne) {}
 
 		void pushInto(const OperatorType& op)
 		{
 			if (op.type()==CREATION) {
+				OperatorPointer opPointer(op.type(),operatorsCreation_.size());
 				operatorsCreation_.push_back(&op);
-				int f = (operatorsDestruction_.size() & 1) ? -1 : 1;
-				fermionSign_ *= f;
+				opPointers_.push_back(opPointer);
 			} else {
+				OperatorPointer opPointer(op.type(),operatorsDestruction_.size());
 				operatorsDestruction_.push_back(&op);
+				opPointers_.push_back(opPointer);
 			}
 		}
 
@@ -138,15 +144,14 @@ namespace FreeFermions {
 			FieldType sum = 0;
 			do  {
 				FieldType prod = 1;
-				FermionFactorType fermionFactor(perm.size());
+
 				for (size_t i=0;i<lambda.size();i++) {
 					prod *= operatorsCreation_[i]->operator()(lambda[i]);
-					fermionFactor.push(CREATION,lambda[i]);
 				}
 				for (size_t i=0;i<lambda.size();i++) {
-					prod *= operatorsDestruction_[perm[i]]->operator()(lambda[perm[i]]);
-					fermionFactor.push(DESTRUCTION,lambda[perm[i]]);
+					prod *= operatorsDestruction_[i]->operator()(lambda[perm[i]]);
 				}
+				FermionFactorType fermionFactor(opPointers_,lambda,perm);
 				sum += prod*fermionFactor();
 			} while (lambda.increase());
 			return sum;
@@ -154,7 +159,7 @@ namespace FreeFermions {
 
 		size_t ne_;
 		std::vector<const OperatorType*> operatorsCreation_,operatorsDestruction_;
-
+		std::vector<OperatorPointer> opPointers_;
 	}; // HilbertState
 	
 	template<typename OperatorType>
