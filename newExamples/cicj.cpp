@@ -16,8 +16,8 @@ typedef RealType FieldType;
 typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
-typedef FreeFermions::CreationOrDestructionOp<RealType,FieldType> OperatorType;
-typedef FreeFermions::HilbertState<EngineType,OperatorType> HilbertStateType;
+typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
+typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 
 
@@ -40,7 +40,7 @@ int main(int argc,char* argv[])
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
-	HilbertStateType gs(engine,ne[0]);
+	HilbertStateType gs(ne[0]);
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
@@ -49,15 +49,12 @@ int main(int argc,char* argv[])
 	size_t norb = 1;
 	for (size_t orbital=0; orbital<norb; orbital++) {
 		for (size_t site = 0; site<n ; site++) {
-
-			OperatorType myOp(OperatorType::DESTRUCTION,site+orbital*n,sigma);
-
-
+			OperatorType myOp(engine,OperatorType::DESTRUCTION,site+orbital*n,sigma);
 			for (size_t site2=0; site2<n; site2++) {
 				//if (site != site2) continue;
 				HilbertStateType phi = gs;
 				phi.applyOperator(myOp);
-				OperatorType myOp2(OperatorType::CREATION,site2+orbital*n,sigma);
+				OperatorType myOp2(engine,OperatorType::CREATION,site2+orbital*n,sigma);
 				phi.applyOperator(myOp2);
 				std::cout<<scalarProduct(gs,phi)<<" ";
 				//cicj(site,site2) += scalarProduct(gs,phi);

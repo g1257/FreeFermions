@@ -87,18 +87,32 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	
-	template<typename RealType,typename FieldType>
+	template<typename EngineType>
 	class CreationOrDestructionOp {
 	public:
+		typedef typename EngineType::RealType RealType;
+		typedef typename EngineType::FieldType FieldType;
+		typedef CreationOrDestructionOp<EngineType> ThisType;
+
 		enum {CREATION,DESTRUCTION};
 
-		CreationOrDestructionOp(size_t type,size_t ind,size_t sigma)
-		: type_(type),ind_(ind),sigma_(sigma)
+		CreationOrDestructionOp(const EngineType& engine,
+		                           size_t type,
+		                           size_t ind,
+		                           size_t sigma)
+		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
 		{}
 
-		size_t site() const { return ind_; }
+		size_t type() const { return type_; }
+
+		FieldType const operator()(size_t j) const
+		{
+			if (type_==CREATION) return engine_.eigenvector(ind_,j);
+			return std::conj(engine_.eigenvector(ind_,j));
+		}
 
 	private:
+		const EngineType& engine_;
 		size_t type_,ind_,sigma_;
 	}; // CreationOrDestructionOp
 	

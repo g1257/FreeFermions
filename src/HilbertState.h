@@ -88,31 +88,29 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	
-	template<typename EngineType,typename OperatorType>
+	template<typename OperatorType>
 	class HilbertState {
-		typedef typename EngineType::RealType RealType;
-		typedef typename EngineType::FieldType FieldType;
+		typedef typename OperatorType::RealType RealType;
+		typedef typename OperatorType::FieldType FieldType;
 		typedef Permutations PermutationsType;
 		typedef IndexGenerator IndexGeneratorType;
+		const static size_t CREATION = OperatorType::CREATION;
 
 	public:
 		// it's the g.s. for now, FIXME change it later to allow more flex.
-		HilbertState(const EngineType& engine,size_t ne)
-		: engine_(engine), ne_(ne) {}
+		HilbertState(size_t ne)
+		:  ne_(ne) {}
 
 		void applyOperator(const OperatorType& op)
 		{
-			operators_.push_back(op);
+			if (op.type()==CREATION) operatorsCreation_.push_back(&op);
+			else  operatorsDestruction_.push_back(&op);
 		}
 
 		FieldType close()
 		{
-			size_t n = operators_.size();
-			if (n&1) throw std::runtime_error(
-				"HilbertState::close(): n. of operators is odd\n");
-			size_t m = n/2;
-			//orderOperators(); // so that operators appear
-			                  // dagger and non dagger
+			size_t m = operatorsCreation_.size();
+			if (operatorsDestruction_.size()!=m) return 0;
 			PermutationsType perm(m);
 			FieldType sum = 0;
 			do  {
@@ -130,27 +128,26 @@ namespace FreeFermions {
 			do  {
 				FieldType prod = 1;
 				for (size_t i=0;i<lambda.size();i++) {
-					prod *=
-					  std::conj(engine_.eigenvector(operators_[i].site(),lambda[i]));
+					prod *= operatorsCreation_[i]->operator()(lambda[i]);
+//std::conj(engine_.eigenvector(operators_[i].site(),lambda[i]));
 				}
 				for (size_t i=0;i<lambda.size();i++) {
-					prod *=
-					  engine_.eigenvector(operators_[perm[i]+perm.size()].site(),lambda[perm[i]]);
+					prod *= operatorsDestruction_[perm[i]]->operator()(lambda[perm[i]]);
+//engine_.eigenvector(operators_[perm[i]+perm.size()].site(),lambda[perm[i]]);
 				}
 				sum += prod;
 			} while (lambda.increase());
 			return sum;
 		}
 
-		const EngineType& engine_;
 		size_t ne_;
-		std::vector<OperatorType> operators_;
+		std::vector<const OperatorType*> operatorsCreation_,operatorsDestruction_;
 
 	}; // HilbertState
 	
-	template<typename EngineType,typename OperatorType>
-	typename EngineType::FieldType scalarProduct(HilbertState<EngineType,OperatorType>& s1,
-	                           HilbertState<EngineType,OperatorType>& s2)
+	template<typename OperatorType>
+	typename OperatorType::FieldType scalarProduct(HilbertState<OperatorType>& s1,
+	                           HilbertState<OperatorType>& s2)
 	{
 		// s2.pour(s1); // s1 --> s2
 		return s2.close();
