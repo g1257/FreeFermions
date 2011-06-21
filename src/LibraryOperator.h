@@ -74,98 +74,61 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file HilbertState.h
+/*! \file LibraryOperator.h
  *
  * Raw computations for a free Hubbard model
  *
  */
-#ifndef HILBERT_STATE_H
-#define HILBERT_STATE_H
+#ifndef LIBRARY_OPERATOR_H
+#define LIBRARY_OPERATOR_H
 
 #include "Complex.h" // in PsimagLite
-#include "Permutations.h"
-#include "IndexGenerator.h"
-#include "FermionFactor.h"
+
 
 namespace FreeFermions {
 	
 	template<typename OperatorType>
-	class HilbertState {
+	class LibraryOperator {
+	public:
+		typedef typename OperatorType::EngineType EngineType;
 		typedef typename OperatorType::RealType RealType;
 		typedef typename OperatorType::FieldType FieldType;
-		typedef Permutations PermutationsType;
-		typedef IndexGenerator IndexGeneratorType;
-		typedef FermionFactor<OperatorType> FermionFactorType;
 
 		enum {CREATION = OperatorType::CREATION,
-		       DESTRUCTION = OperatorType::DESTRUCTION
-		};
+		      DESTRUCTION = OperatorType::DESTRUCTION,
+		      N};
 
-	public:
-		// it's the g.s. for now, FIXME change it later to allow more flex.
-		HilbertState(size_t ne)
-		:  ne_(ne),fermionSign_(1) {}
+		LibraryOperator(const EngineType& engine,
+                          size_t type,
+                          size_t ind,
+                          size_t sigma)
+		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
+		{}
 
-		void pushInto(const OperatorType& op)
+		~LibraryOperator()
 		{
-			if (op.type()==CREATION) {
-				operatorsCreation_.push_back(&op);
-				int f = (operatorsDestruction_.size() & 1) ? -1 : 1;
-				fermionSign_ *= f;
-			} else {
-				operatorsDestruction_.push_back(&op);
-			}
+			for (size_t i=0;i<cOrDOps_.size();i++)
+				delete cOrDOps_[i];
 		}
 
-		FieldType close()
+		template<typename SomeStateType>
+		void applyTo(SomeStateType& state)
 		{
-			size_t m = operatorsCreation_.size();
-			if (operatorsDestruction_.size()!=m) return 0;
-			PermutationsType perm(m);
-			FieldType sum = 0;
-			do  {
-				sum += compute(perm);
-			} while (perm.increase());
-			return sum;
+			cOrDOps_.resize(2);
+			cOrDOps_[0] = new OperatorType(engine_,CREATION,ind_,sigma_);
+			state.pushInto(*cOrDOps_[0]);
+			cOrDOps_[1] = new OperatorType(engine_,DESTRUCTION,ind_,sigma_);
+			state.pushInto(*cOrDOps_[1]);
 		}
 
 	private:
-
-		FieldType compute(const PermutationsType& perm)
-		{
-			IndexGeneratorType lambda(perm.size(),ne_);
-
-			FieldType sum = 0;
-			do  {
-				FieldType prod = 1;
-				FermionFactorType fermionFactor(perm.size());
-				for (size_t i=0;i<lambda.size();i++) {
-					prod *= operatorsCreation_[i]->operator()(lambda[i]);
-					fermionFactor.push(CREATION,lambda[i]);
-				}
-				for (size_t i=0;i<lambda.size();i++) {
-					prod *= operatorsDestruction_[perm[i]]->operator()(lambda[perm[i]]);
-					fermionFactor.push(DESTRUCTION,lambda[perm[i]]);
-				}
-				sum += prod*fermionFactor();
-			} while (lambda.increase());
-			return sum;
-		}
-
-		size_t ne_;
-		std::vector<const OperatorType*> operatorsCreation_,operatorsDestruction_;
-
-	}; // HilbertState
+		const EngineType& engine_;
+		size_t type_,ind_,sigma_;
+		std::vector<OperatorType*> cOrDOps_;
+	}; // LibraryOperator
 	
-	template<typename OperatorType>
-	typename OperatorType::FieldType scalarProduct(HilbertState<OperatorType>& s1,
-	                           HilbertState<OperatorType>& s2)
-	{
-		// s2.pour(s1); // s1 --> s2
-		return s2.close();
-	}
 
 } // namespace Dmrg 
 
 /*@}*/
-#endif //HILBERT_STATE_H
+#endif // LIBRARY_OPERATOR_H

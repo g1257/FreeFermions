@@ -87,12 +87,12 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	
-	template<typename EngineType>
+	template<typename EngineType_>
 	class CreationOrDestructionOp {
 	public:
+		typedef EngineType_ EngineType;
 		typedef typename EngineType::RealType RealType;
 		typedef typename EngineType::FieldType FieldType;
-		typedef CreationOrDestructionOp<EngineType> ThisType;
 
 		enum {CREATION,DESTRUCTION};
 
@@ -109,6 +109,12 @@ namespace FreeFermions {
 		{
 			if (type_==CREATION) return engine_.eigenvector(ind_,j);
 			return std::conj(engine_.eigenvector(ind_,j));
+		}
+
+		template<typename SomeStateType>
+		void applyTo(SomeStateType& state)
+		{
+			state.pushInto(*this);
 		}
 
 	private:

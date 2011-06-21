@@ -53,9 +53,9 @@ int main(int argc,char* argv[])
 			for (size_t site2=0; site2<n; site2++) {
 				//if (site != site2) continue;
 				HilbertStateType phi = gs;
-				phi.applyOperator(myOp);
+				myOp.applyTo(phi);
 				OperatorType myOp2(engine,OperatorType::CREATION,site2+orbital*n,sigma);
-				phi.applyOperator(myOp2);
+				myOp2.applyTo(phi);
 				std::cout<<scalarProduct(gs,phi)<<" ";
 				//cicj(site,site2) += scalarProduct(gs,phi);
 			}
