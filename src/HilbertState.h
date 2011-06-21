@@ -107,8 +107,8 @@ namespace FreeFermions {
 
 	public:
 		// it's the g.s. for now, FIXME change it later to allow more flex.
-		HilbertState(size_t ne)
-		:  ne_(ne) {}
+		HilbertState(size_t hilbertSize,size_t ne)
+		:  hilbertSize_(hilbertSize),ne_(ne) {}
 
 		void pushInto(const OperatorType& op)
 		{
@@ -129,35 +129,41 @@ namespace FreeFermions {
 			if (operatorsDestruction_.size()!=m) return 0;
 			PermutationsType perm(m);
 			FieldType sum = 0;
+			size_t countFIXME = 0;
 			do  {
-				sum += compute(perm);
+				sum += compute(perm,countFIXME++);
+				//std::cerr<<"**********************\n";
 			} while (perm.increase());
 			return sum;
 		}
 
 	private:
 
-		FieldType compute(const PermutationsType& perm)
+		FieldType compute(const PermutationsType& perm,size_t countFIXME)
 		{
-			IndexGeneratorType lambda(perm.size(),ne_);
+			IndexGeneratorType lambda(perm.size(),hilbertSize_);
 
 			FieldType sum = 0;
 			do  {
 				FieldType prod = 1;
-
+				FermionFactorType fermionFactor(opPointers_,lambda,perm,ne_,countFIXME);
+				FieldType ff = fermionFactor();
+				if (ff==0) continue;
 				for (size_t i=0;i<lambda.size();i++) {
 					prod *= operatorsCreation_[i]->operator()(lambda[i]);
 				}
 				for (size_t i=0;i<lambda.size();i++) {
 					prod *= operatorsDestruction_[i]->operator()(lambda[perm[i]]);
 				}
-				FermionFactorType fermionFactor(opPointers_,lambda,perm);
-				sum += prod*fermionFactor();
+
+				sum += prod*ff;
+				//std::cerr<<"sum ="<<sum<<" prod="<<prod<<" ff="<<fermionFactor();
+				//std::cerr<<" l="<<lambda<<"\n";
 			} while (lambda.increase());
 			return sum;
 		}
 
-		size_t ne_;
+		size_t hilbertSize_,ne_;
 		std::vector<const OperatorType*> operatorsCreation_,operatorsDestruction_;
 		std::vector<OperatorPointer> opPointers_;
 	}; // HilbertState

@@ -40,7 +40,7 @@ int main(int argc,char* argv[])
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
-	HilbertStateType gs(ne[0]);
+	HilbertStateType gs(engine.size(),ne[0]);
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	

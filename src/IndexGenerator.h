@@ -121,6 +121,11 @@ namespace FreeFermions {
 		size_t ne_;
 	}; // IndexGenerator
 	
+	std::ostream& operator<<(std::ostream& os,const IndexGenerator& ig)
+	{
+		for (size_t i=0;i<ig.size();i++) os<<ig[i]<<" ";
+		return os;
+	}
 
 } // namespace Dmrg 
 
