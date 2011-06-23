@@ -87,11 +87,16 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	
+	template<typename ContainerType>
 	class Permutations {
+		typedef typename ContainerType::value_type FieldType;
 	public:
-		Permutations(size_t n) : data_(n)
+		Permutations(const ContainerType& orig) : data_(orig.size())
 		{
-			for (size_t i=0;i<n;i++) data_[i] = i;
+			for (size_t i=0;i<data_.size();i++) data_[i] = orig[i];
+			Sort<std::vector<size_t> > mysort;
+			std::vector<size_t> iperm(data_.size());
+			mysort.sort(data_,iperm);
 		}
 
 
@@ -154,7 +159,13 @@ namespace FreeFermions {
 
 	}; // Permutations
 	
-
+	template<typename T>
+	std::ostream& operator<<(std::ostream& os,
+	                          const Permutations<T>& ig)
+	{
+		for (size_t i=0;i<ig.size();i++) os<<ig[i]<<" ";
+		return os;
+	}
 } // namespace Dmrg 
 
 /*@}*/

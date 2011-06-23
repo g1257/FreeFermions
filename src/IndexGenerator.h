@@ -89,6 +89,7 @@ namespace FreeFermions {
 	
 	class IndexGenerator {
 	public:
+		typedef size_t value_type;
 		IndexGenerator(size_t n,size_t ne) : data_(n,0),ne_(ne) {}
 
 		bool increase()

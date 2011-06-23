@@ -37,15 +37,17 @@ int main(int argc,char* argv[])
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
-	HilbertStateType gs(engine.size(),ne[0]);
+	bool debug = false;
+	HilbertStateType gs(engine.size(),ne[0],debug);
 
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
 	size_t sigma = 0;
-	for (size_t site = 0; site<n ; site++) {
+	size_t tot = (debug) ? 1 : n;
+	for (size_t site = 0; site<tot ; site++) {
 		LibraryOperatorType myOp(engine,LibraryOperatorType::N,site,sigma);
-		for (size_t site2=0; site2<n; site2++) {
+		for (size_t site2=0; site2<tot; site2++) {
 			HilbertStateType phi = gs;
 			myOp.applyTo(phi);
 			LibraryOperatorType myOp2(engine,LibraryOperatorType::N,site2,sigma);

@@ -115,9 +115,9 @@ namespace FreeFermions {
 		void applyTo(SomeStateType& state)
 		{
 			cOrDOps_.resize(2);
-			cOrDOps_[0] = new OperatorType(engine_,CREATION,ind_,sigma_);
+			cOrDOps_[0] = new OperatorType(engine_,DESTRUCTION,ind_,sigma_);
 			state.pushInto(*cOrDOps_[0]);
-			cOrDOps_[1] = new OperatorType(engine_,DESTRUCTION,ind_,sigma_);
+			cOrDOps_[1] = new OperatorType(engine_,CREATION,ind_,sigma_);
 			state.pushInto(*cOrDOps_[1]);
 		}
 

@@ -83,8 +83,6 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define HILBERT_STATE_H
 
 #include "Complex.h" // in PsimagLite
-#include "Permutations.h"
-#include "IndexGenerator.h"
 #include "FermionFactor.h"
 
 namespace FreeFermions {
@@ -97,9 +95,10 @@ namespace FreeFermions {
 	class HilbertState {
 		typedef typename OperatorType::RealType RealType;
 		typedef typename OperatorType::FieldType FieldType;
-		typedef Permutations PermutationsType;
-		typedef IndexGenerator IndexGeneratorType;
 		typedef FermionFactor<OperatorType,OperatorPointer> FermionFactorType;
+		typedef typename FermionFactorType::PermutationsType PermutationsType;
+		typedef typename FermionFactorType::IndexGeneratorType IndexGeneratorType;
+
 		typedef HilbertState<OperatorType> ThisType;
 
 		enum {CREATION = OperatorType::CREATION,
@@ -131,20 +130,21 @@ namespace FreeFermions {
 			}
 		}
 
-		FieldType close()
-		{
-			size_t m = operatorsCreation_.size();
-			if (operatorsDestruction_.size()!=m) return 0;
-			PermutationsType perm(m);
-			FieldType sum = 0;
-			size_t countFIXME = 0;
-			do  {
-				sum += compute(perm,countFIXME++);
-				if (debug_) std::cerr<<"**********************\n";
-			} while (perm.increase());
-			return sum;
-		}
+//		FieldType close()
+//		{
+//			size_t m = operatorsCreation_.size();
+//			if (operatorsDestruction_.size()!=m) return 0;
+//			PermutationsType perm(m);
+//			FieldType sum = 0;
+//			size_t countFIXME = 0;
+//			do  {
+//				sum += compute(perm,countFIXME++);
+//				if (debug_) std::cerr<<"**********************\n";
+//			} while (perm.increase());
+//			return sum;
+//		}
 
+		// FIXME: invert before pouring
 		void pour(const ThisType& hs)
 		{
 			if (hs.hilbertSize_!=hilbertSize_ || hs.ne_!=ne_)
@@ -173,33 +173,45 @@ namespace FreeFermions {
 
 		}
 
+		FieldType close()
+		{
+			size_t m = operatorsCreation_.size();
+			IndexGeneratorType lambda(m,hilbertSize_);
+			FieldType sum  = 0;
+			do {
+				sum += compute(lambda);
+			} while (lambda.increase());
+			return sum;
+		}
+
 	private:
 
 
 
-		FieldType compute(const PermutationsType& perm,size_t countFIXME)
+		FieldType compute(const IndexGeneratorType& lambda)
 		{
-			IndexGeneratorType lambda(perm.size(),hilbertSize_);
 
+			PermutationsType lambda2(lambda);
 			FieldType sum = 0;
 			do  {
 				FieldType prod = 1;
-				FermionFactorType fermionFactor(opPointers_,lambda,perm,ne_,countFIXME);
+				FermionFactorType fermionFactor(opPointers_,lambda,lambda2,ne_);
 				FieldType ff = fermionFactor();
+				if (debug_) {
+					std::cerr<<"sum ="<<sum<<" prod="<<prod<<" ff="<<fermionFactor();
+					std::cerr<<" l="<<lambda<<" l2="<<lambda2<<"\n";
+				}
 				if (ff==0) continue;
 				for (size_t i=0;i<lambda.size();i++) {
 					prod *= operatorsCreation_[i]->operator()(lambda[i]);
 				}
-				for (size_t i=0;i<lambda.size();i++) {
-					prod *= operatorsDestruction_[i]->operator()(lambda[perm[i]]);
+				for (size_t i=0;i<lambda2.size();i++) {
+					prod *= operatorsDestruction_[i]->operator()(lambda2[i]);
 				}
 
 				sum += prod*ff;
-				if (debug_) {
-					std::cerr<<"sum ="<<sum<<" prod="<<prod<<" ff="<<fermionFactor();
-					std::cerr<<" l="<<lambda<<"\n";
-				}
-			} while (lambda.increase());
+
+			} while(lambda2.increase());
 			return sum;
 		}
 
