@@ -1,9 +1,9 @@
 // BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009 , UT-Battelle, LLC
+Copyright  2009 , UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 2.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -74,70 +74,46 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file LibraryOperator.h
+/*! \file OperatorFactory.h
  *
- * Raw computations for a free Hubbard model
+ * 
  *
  */
-#ifndef LIBRARY_OPERATOR_H
-#define LIBRARY_OPERATOR_H
-
-#include "Complex.h" // in PsimagLite
+#ifndef OPERATOR_FACTORY_H
+#define OPERATOR_FACTORY_H
 
 
 namespace FreeFermions {
-	
-	template<typename OperatorType>
-	class LibraryOperator {
+
+	template<typename OpType>
+	class OperatorFactory {
+
 	public:
-		typedef typename OperatorType::EngineType EngineType;
-		typedef typename OperatorType::RealType RealType;
-		typedef typename OperatorType::FieldType FieldType;
 
-		enum {CREATION = OperatorType::CREATION,
-		      DESTRUCTION = OperatorType::DESTRUCTION,
-		      N,
-		      NBAR};
-
-		LibraryOperator(const EngineType& engine,
-                          size_t type,
-                          size_t ind,
-                          size_t sigma)
-		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
-		{}
-
-		~LibraryOperator()
-		{
-			for (size_t i=0;i<garbage_.size();i++)
-				delete garbage_[i];
-		}
-
-		template<typename SomeStateType>
-		void applyTo(SomeStateType& state)
-		{
-			OperatorType* op = new OperatorType(engine_,DESTRUCTION,ind_,sigma_);
-			garbage_.push_back(op);
-			OperatorType* op2 = new OperatorType(engine_,CREATION,ind_,sigma_);
-			garbage_.push_back(op2);
-
-			if (type_==N) {
-				state.pushInto(*op);
-				state.pushInto(*op2);
-			} else if (type_==NBAR){
-				state.pushInto(*op2);
-				state.pushInto(*op);
+			OperatorFactory()
+			{
+			}
+			
+			~OperatorFactory()
+			{
+				for (size_t i=0;i<garbage_.size();i++)
+					delete garbage_[i];
 			}
 
-		}
+			template<typename EngineType>
+			OpType* operator()(EngineType& engine,size_t x,size_t site,size_t sigma)
+			{
+				OpType* op = new OpType(engine,x,site,sigma);
+				garbage_.push_back(op);
+				return op;
+			}
 
-	private:
-		const EngineType& engine_;
-		size_t type_,ind_,sigma_;
-		std::vector<OperatorType*> garbage_;
-	}; // LibraryOperator
-	
+		private:
+			
+			std::vector<OpType*> garbage_;
 
+	}; // OperatorFactory
 } // namespace Dmrg 
 
 /*@}*/
-#endif // LIBRARY_OPERATOR_H
+#endif // OPERATOR_FACTORY_H

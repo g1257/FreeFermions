@@ -1,51 +1,58 @@
-#include "Engine.h"
-#include "ObservableLibrary.h"
-#include "GeometryLibrary.h"
-#include "ConcurrencySerial.h"
-
 // SAmple of how to use FreeFermions core engine to calculate
 // < n_i n_j >
 
+#include <cstdlib>
+#include "Engine.h"
+#include "GeometryLibrary.h"
+#include "ConcurrencySerial.h"
+#include "TypeToString.h"
+#include "CreationOrDestructionOp.h"
+#include "HilbertState.h"
+#include "LibraryOperator.h"
+
 typedef double RealType;
-typedef std::complex<double> FieldType;
-typedef std::vector<bool> LevelsType;
-typedef PsimagLite::ConcurrencySerial<FieldType> ConcurrencyType;
-typedef PsimagLite::Matrix<FieldType> MatrixType;
-typedef FreeFermions::Engine<RealType,FieldType,LevelsType,ConcurrencyType> EngineType;
-typedef EngineType::HilbertVectorType HilbertVectorType;
-typedef EngineType::FreeOperatorType FreeOperatorType;
+typedef std::complex<double> ComplexType;
+typedef RealType FieldType;
+typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
+typedef PsimagLite::Matrix<RealType> MatrixType;
+typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
+typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
-typedef FreeFermions::ObservableLibrary<EngineType> ObservableLibraryType;
+typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
+
 int main(int argc,char* argv[])
 {
 	if (argc!=3) throw std::runtime_error("Needs 2 argument(s)\n");
         size_t n = atoi(argv[1]); 
 
-	size_t dof = 2; // spin up and down
+	size_t dof = 1; // spinless
 	MatrixType t(n,n);
-	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
-	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t,2); //,GeometryLibraryType::OPTION_PERIODIC);
-	t(3,5) = t(5,3) = 0;
-	t(2,4) = t(4,2) = 2.0;
+	//GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
+	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
+	geometry.setGeometry(t); //,2);
+	//t(3,5) = t(5,3) = 0;
+	//t(2,4) = t(4,2) = 2.0;
 
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
-	HilbertVectorType gs = engine.newGroundState(ne);
-	ObservableLibraryType library(engine);
+	bool debug = false;
+	HilbertStateType gs(engine.size(),ne,debug);
 
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
-	
-	for (size_t site = 0; site<n ; site++) {
-		HilbertVectorType phi = engine.newState();
-		library.applyNiAllFlavors(phi,gs,site);
-		for (size_t site2=0; site2<n; site2++) {
-			HilbertVectorType phi2 = engine.newState();
-			library.applyNiAllFlavors(phi2,phi,site2);
-			std::cout<<scalarProduct(phi2,gs)<<" ";
+	size_t sigma = 0;
+	size_t tot = (debug) ? 1 : n;
+	for (size_t site = 0; site<tot ; site++) {
+		LibraryOperatorType myOp(engine,LibraryOperatorType::N,site,sigma);
+		for (size_t site2=0; site2<tot; site2++) {
+			HilbertStateType phi = gs;
+			myOp.applyTo(phi);
+			LibraryOperatorType myOp2(engine,LibraryOperatorType::N,site2,sigma);
+			myOp2.applyTo(phi);
+			std::cout<<scalarProduct(gs,phi)<<" ";
 		}
 		std::cout<<"\n";
 	}
