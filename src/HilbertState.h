@@ -157,7 +157,7 @@ namespace FreeFermions {
 
 		void pushInto(const DiagonalOperatorType& op)
 		{
-				OperatorPointer opPointer(DIAGONAL,op.sigma(),
+				OperatorPointer opPointer(DIAGONAL,0,
 						operatorsDiagonal_.size());
 				operatorsDiagonal_.push_back(&op);
 				opPointers_.push_back(opPointer);

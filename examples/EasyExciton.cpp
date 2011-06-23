@@ -62,7 +62,7 @@ int main(int argc,char *argv[])
 	std::cout<<"#site2="<<site2<<"\n";
 	for (size_t it = 0; it<size_t(atoi(argv[3])); it++) {
 		RealType time = it * atof(argv[4]) + atof(argv[5]);
-		EtoTheIhTimeType eih(time,sigma,engine,0);
+		EtoTheIhTimeType eih(time,engine,0);
 		DiagonalOperatorType eihOp(eih);
 		HilbertStateType phi = gs;
 		myOp.applyTo(phi);

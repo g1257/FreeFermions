@@ -114,8 +114,6 @@ namespace FreeFermions {
 				state.pushInto(*this);
 			}
 
-			size_t sigma() const { return backend_.sigma(); }
-
 		private:
 			BackendType backend_;
 	}; // DiagonalOperator
