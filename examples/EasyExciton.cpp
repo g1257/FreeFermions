@@ -69,3 +69,4 @@ int main(int argc,char *argv[])
 		std::cout<<time<<" "<<real(scalarProduct(phi3,phi3))<<"\n";
 	}
 }
+

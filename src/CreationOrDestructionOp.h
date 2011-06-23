@@ -93,6 +93,7 @@ namespace FreeFermions {
 		typedef EngineType_ EngineType;
 		typedef typename EngineType::RealType RealType;
 		typedef typename EngineType::FieldType FieldType;
+		typedef CreationOrDestructionOp<EngineType_> ThisType;
 
 		enum {CREATION,DESTRUCTION};
 
@@ -102,6 +103,12 @@ namespace FreeFermions {
 		                           size_t sigma)
 		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
 		{}
+
+		CreationOrDestructionOp(const ThisType* op2)
+		: engine_(op2->engine_),
+		  type_(op2->type_),
+		  ind_(op2->ind_),
+		  sigma_(op2->sigma_) {}
 
 		size_t type() const { return type_; }
 
@@ -117,12 +124,19 @@ namespace FreeFermions {
 			state.pushInto(*this);
 		}
 
+		void transpose()
+		{
+			if (type_==CREATION) {
+				type_ = DESTRUCTION;
+				return;
+			}
+			type_ = CREATION;
+		}
+
 	private:
 		const EngineType& engine_;
 		size_t type_,ind_,sigma_;
 	}; // CreationOrDestructionOp
-	
-
 } // namespace Dmrg 
 
 /*@}*/

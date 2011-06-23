@@ -63,15 +63,5 @@ int main(int argc,char* argv[])
 		}
 		std::cout<<"-------------------------------------------\n";
 	}
-	/*RealType charge = 0;
-	for (size_t site = 0; site<n ; site++) {
-		for (size_t site2=0; site2<n; site2++) {
-			std::cout<<cicj(site,site2)<<" ";
-			if (site2==site) charge += cicj(site,site);
-		}
-		std::cout<<"\n";	
-	}
-	std::cout<<"Total charge for spin "<<sigma<<" = "<<charge<<"\n";
-	*/
 }
 

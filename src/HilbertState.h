@@ -100,6 +100,7 @@ namespace FreeFermions {
 		typedef Permutations PermutationsType;
 		typedef IndexGenerator IndexGeneratorType;
 		typedef FermionFactor<OperatorType,OperatorPointer> FermionFactorType;
+		typedef HilbertState<OperatorType> ThisType;
 
 		enum {CREATION = OperatorType::CREATION,
 		       DESTRUCTION = OperatorType::DESTRUCTION
@@ -107,8 +108,15 @@ namespace FreeFermions {
 
 	public:
 		// it's the g.s. for now, FIXME change it later to allow more flex.
-		HilbertState(size_t hilbertSize,size_t ne)
-		:  hilbertSize_(hilbertSize),ne_(ne) {}
+		HilbertState(size_t hilbertSize,size_t ne,bool debug = false)
+		:  hilbertSize_(hilbertSize),ne_(ne),debug_(debug) {}
+
+		~HilbertState()
+		{
+			// get out the garbage:
+			for (size_t i=0;i<garbage_.size();i++)
+				delete garbage_[i];
+		}
 
 		void pushInto(const OperatorType& op)
 		{
@@ -132,12 +140,42 @@ namespace FreeFermions {
 			size_t countFIXME = 0;
 			do  {
 				sum += compute(perm,countFIXME++);
-				//std::cerr<<"**********************\n";
+				if (debug_) std::cerr<<"**********************\n";
 			} while (perm.increase());
 			return sum;
 		}
 
+		void pour(const ThisType& hs)
+		{
+			if (hs.hilbertSize_!=hilbertSize_ || hs.ne_!=ne_)
+				throw std::runtime_error("HilbertState::pour(...)\n");
+
+			size_t counter = 0;
+			size_t counter2 = 0;
+			size_t test1 = hs.opPointers_.size();
+			for (size_t i=0;i<hs.opPointers_.size();i++) {
+				if (test1!=hs.opPointers_.size())
+					throw std::runtime_error("Changed\n");
+				if (hs.opPointers_[i].type==CREATION) {
+					const OperatorType* op = hs.operatorsCreation_[counter++];
+					OperatorType *opCopy = new OperatorType(op);
+					garbage_.push_back(opCopy);
+					opCopy->transpose();
+					pushInto(*opCopy);
+				} else {
+					const OperatorType* op = hs.operatorsDestruction_[counter2++];
+					OperatorType *opCopy = new OperatorType(op);
+					garbage_.push_back(opCopy);
+					opCopy->transpose();
+					pushInto(*opCopy);
+				}
+			}
+
+		}
+
 	private:
+
+
 
 		FieldType compute(const PermutationsType& perm,size_t countFIXME)
 		{
@@ -157,23 +195,29 @@ namespace FreeFermions {
 				}
 
 				sum += prod*ff;
-				//std::cerr<<"sum ="<<sum<<" prod="<<prod<<" ff="<<fermionFactor();
-				//std::cerr<<" l="<<lambda<<"\n";
+				if (debug_) {
+					std::cerr<<"sum ="<<sum<<" prod="<<prod<<" ff="<<fermionFactor();
+					std::cerr<<" l="<<lambda<<"\n";
+				}
 			} while (lambda.increase());
 			return sum;
 		}
 
 		size_t hilbertSize_,ne_;
+		bool debug_;
 		std::vector<const OperatorType*> operatorsCreation_,operatorsDestruction_;
 		std::vector<OperatorPointer> opPointers_;
+		std::vector<const OperatorType*> garbage_;
 	}; // HilbertState
 	
 	template<typename OperatorType>
-	typename OperatorType::FieldType scalarProduct(HilbertState<OperatorType>& s1,
-	                           HilbertState<OperatorType>& s2)
+	typename OperatorType::FieldType scalarProduct(
+	                                     const HilbertState<OperatorType>& s1,
+	                                     const HilbertState<OperatorType>& s2)
 	{
-		// s2.pour(s1); // s1 --> s2
-		return s2.close();
+		HilbertState<OperatorType> s3 = s2;
+		s3.pour(s1); // s1 --> s3
+		return s3.close();
 	}
 
 } // namespace Dmrg 
