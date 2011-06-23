@@ -118,11 +118,12 @@ namespace FreeFermions {
 			for (size_t i=0;i<opPointers.size();i++) {
 				FreeOperator fo;
 				fo.type = opPointers[i].type;
-				if (notCreationOrDestruction(fo.type)) continue;
 				if (fo.type==CREATION) {
 					fo.lambda = lambda[counter++];
-				} else {
+				} else if (fo.type==DESTRUCTION) {
 					fo.lambda = lambda2[counter2++];
+				} else {
+					fo.lambda = 0;
 				}
 				data_.push_back(fo);
 			}
@@ -132,6 +133,17 @@ namespace FreeFermions {
 				return;
 			}
 
+		}
+
+		void removeNonCsOrDs()
+		{
+			std::vector<FreeOperator> dataOld = data_;
+			data_.clear();
+			for (size_t i=0;i<dataOld.size();i++) {
+				size_t type1 = dataOld[i].type;
+				if (type1 == CREATION || type1 == DESTRUCTION)
+					data_.push_back(dataOld[i]);
+			}
 		}
 
 		size_t size() const { return data_.size(); }

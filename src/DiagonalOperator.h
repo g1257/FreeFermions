@@ -92,7 +92,7 @@ namespace FreeFermions {
 			typedef DiagonalOperator<BackendType> ThisType;
 
 		public:
-			DiagonalOperator(BackendType& backend) :
+			DiagonalOperator(BackendType backend) :
 				backend_(backend)
 			{
 			}
@@ -115,7 +115,7 @@ namespace FreeFermions {
 			}
 
 		private:
-			BackendType& backend_;
+			BackendType backend_;
 	}; // DiagonalOperator
 } // namespace Dmrg 
 
