@@ -88,47 +88,43 @@ namespace FreeFermions {
 	template<typename EngineType>
 	class EToTheIhTime {
 			//typedef unsigned int long long UnsignedIntegerType;
-			
+	public:
 			typedef typename EngineType::RealType RealType;
 			typedef typename EngineType::FieldType FieldType;
-			typedef typename EngineType::HilbertTermType HilbertTermType;
-			typedef typename HilbertTermType::FlavorFactoryType FlavorFactoryType;
-			typedef typename HilbertTermType::StateType StateType;
 
-		public:
 			EToTheIhTime(RealType time,const EngineType& engine,RealType energyOffset) :
 				time_(time),engine_(engine),energyOffset_(energyOffset)
 			{
 			}
 			
-			FieldType operator()(const HilbertTermType& src) const
-			{
-				// throw away const:
-				StateType& state = (StateType&) src.state;
-				FlavorFactoryType flavorFactory(state,
-				                                engine_.sites()*engine_.edof());
-
-				RealType energy = -energyOffset_;
-				for (size_t i = 0;i<src.state.size();i++) {
-					std::vector<size_t> ns;
-					flavorFactory.occupations(ns,i);
-					energy += energyInternal(ns);
-				}
-				RealType exponent = -time_*energy;
-
-				return src.value * FieldType(cos(exponent),sin(exponent));
-			}
+//			FieldType operator()(const HilbertTermType& src) const
+//			{
+//				// throw away const:
+//				StateType& state = (StateType&) src.state;
+//				FlavorFactoryType flavorFactory(state,
+//				                                engine_.sites()*engine_.edof());
+//
+//				RealType energy = -energyOffset_;
+//				for (size_t i = 0;i<src.state.size();i++) {
+//					std::vector<size_t> ns;
+//					flavorFactory.occupations(ns,i);
+//					energy += energyInternal(ns);
+//				}
+//				RealType exponent = -time_*energy;
+//
+//				return src.value * FieldType(cos(exponent),sin(exponent));
+//			}
 			
 		private:
 			
-			RealType energyInternal(const std::vector<size_t>& ns) const
-			{
-				RealType sum = 0;
-				for (size_t i=0;i<ns.size();i++) {
-					sum += ns[i] * engine_.eigenvalue(i);
-				}
-				return sum;
-			}
+//			RealType energyInternal(const std::vector<size_t>& ns) const
+//			{
+//				RealType sum = 0;
+//				for (size_t i=0;i<ns.size();i++) {
+//					sum += ns[i] * engine_.eigenvalue(i);
+//				}
+//				return sum;
+//			}
 			
 			RealType time_;
 			const EngineType& engine_;

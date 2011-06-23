@@ -91,18 +91,32 @@ namespace FreeFermions {
 		size_t type;
 		size_t index;
 	};
-	template<typename OperatorType>
+
+	template<typename FieldType>
+	class DummyOperator {
+	public:
+		DummyOperator(const DummyOperator* x) {}
+		template<typename T1,typename T2>
+		FieldType operator()(const T1& l1,const T2& l2) const { return 1; }
+		size_t type() const { return 0; }
+		void transpose() {}
+	};
+
+	template<typename CorDOperatorType,
+	          typename DiagonalOperatorType=
+	                    DummyOperator<typename CorDOperatorType::RealType> >
 	class HilbertState {
-		typedef typename OperatorType::RealType RealType;
-		typedef typename OperatorType::FieldType FieldType;
-		typedef FermionFactor<OperatorType,OperatorPointer> FermionFactorType;
+		typedef typename CorDOperatorType::RealType RealType;
+		typedef typename CorDOperatorType::FieldType FieldType;
+		typedef FermionFactor<CorDOperatorType,OperatorPointer> FermionFactorType;
 		typedef typename FermionFactorType::PermutationsType PermutationsType;
 		typedef typename FermionFactorType::IndexGeneratorType IndexGeneratorType;
 
-		typedef HilbertState<OperatorType> ThisType;
+		typedef HilbertState<CorDOperatorType,DiagonalOperatorType> ThisType;
 
-		enum {CREATION = OperatorType::CREATION,
-		       DESTRUCTION = OperatorType::DESTRUCTION
+		enum {CREATION = CorDOperatorType::CREATION,
+		       DESTRUCTION = CorDOperatorType::DESTRUCTION,
+		       DIAGONAL
 		};
 
 	public:
@@ -115,36 +129,30 @@ namespace FreeFermions {
 			// get out the garbage:
 			for (size_t i=0;i<garbage_.size();i++)
 				delete garbage_[i];
+			for (size_t i=0;i<garbage2_.size();i++)
+				delete garbage2_[i];
 		}
 
-		void pushInto(const OperatorType& op)
+		void pushInto(const CorDOperatorType& op)
 		{
 			if (op.type()==CREATION) {
 				OperatorPointer opPointer(op.type(),operatorsCreation_.size());
 				operatorsCreation_.push_back(&op);
 				opPointers_.push_back(opPointer);
-			} else {
+			} else if (op.type()==DESTRUCTION) {
 				OperatorPointer opPointer(op.type(),operatorsDestruction_.size());
 				operatorsDestruction_.push_back(&op);
 				opPointers_.push_back(opPointer);
 			}
 		}
 
-//		FieldType close()
-//		{
-//			size_t m = operatorsCreation_.size();
-//			if (operatorsDestruction_.size()!=m) return 0;
-//			PermutationsType perm(m);
-//			FieldType sum = 0;
-//			size_t countFIXME = 0;
-//			do  {
-//				sum += compute(perm,countFIXME++);
-//				if (debug_) std::cerr<<"**********************\n";
-//			} while (perm.increase());
-//			return sum;
-//		}
+		void pushInto(const DiagonalOperatorType& op)
+		{
+				OperatorPointer opPointer(op.type(),operatorsDiagonal_.size());
+				operatorsDiagonal_.push_back(&op);
+				opPointers_.push_back(opPointer);
+		}
 
-		// FIXME: invert before pouring
 		void pour(const ThisType& hs)
 		{
 			if (hs.hilbertSize_!=hilbertSize_ || hs.ne_!=ne_)
@@ -152,23 +160,32 @@ namespace FreeFermions {
 
 			size_t counter = 0;
 			size_t counter2 = 0;
+			size_t counter3 = 0;
 			size_t n1 = hs.opPointers_.size();
 			// pour them in reverse order:
 			for (size_t i=0;i<hs.opPointers_.size();i++) {
 				if (hs.opPointers_[n1-i-1].type==CREATION) {
 					size_t x1 = hs.operatorsCreation_.size() - 1 - counter;
-					const OperatorType* op = hs.operatorsCreation_[x1];
+					const CorDOperatorType* op = hs.operatorsCreation_[x1];
 					counter++;
-					OperatorType *opCopy = new OperatorType(op);
+					CorDOperatorType *opCopy = new CorDOperatorType(op);
+					garbage_.push_back(opCopy);
+					opCopy->transpose();
+					pushInto(*opCopy);
+				} else if (hs.opPointers_[n1-i-1].type==DESTRUCTION) {
+					size_t x2 = hs.operatorsDestruction_.size() - 1 - counter2;
+					const CorDOperatorType* op = hs.operatorsDestruction_[x2];
+					counter2++;
+					CorDOperatorType *opCopy = new CorDOperatorType(op);
 					garbage_.push_back(opCopy);
 					opCopy->transpose();
 					pushInto(*opCopy);
 				} else {
-					size_t x2 = hs.operatorsDestruction_.size() - 1 - counter2;
-					const OperatorType* op = hs.operatorsDestruction_[x2];
-					counter2++;
-					OperatorType *opCopy = new OperatorType(op);
-					garbage_.push_back(opCopy);
+					size_t x3 = hs.operatorsDiagonal_.size() - 1 - counter3;
+					const DiagonalOperatorType* op = hs.operatorsDiagonal_[x3];
+					counter3++;
+					DiagonalOperatorType *opCopy = new DiagonalOperatorType(op);
+					garbage2_.push_back(opCopy);
 					opCopy->transpose();
 					pushInto(*opCopy);
 				}
@@ -211,8 +228,11 @@ namespace FreeFermions {
 				for (size_t i=0;i<lambda2.size();i++) {
 					prod *= operatorsDestruction_[i]->operator()(lambda2[i]);
 				}
+				FieldType dd = 1.0;
+				for (size_t i=0;i<operatorsDiagonal_.size();i++)
+					dd *= operatorsDiagonal_[i]->operator()(lambda,lambda2);
 
-				sum += prod*ff;
+				sum += prod*ff*dd;
 
 			} while(lambda2.increase());
 			return sum;
@@ -220,17 +240,19 @@ namespace FreeFermions {
 
 		size_t hilbertSize_,ne_;
 		bool debug_;
-		std::vector<const OperatorType*> operatorsCreation_,operatorsDestruction_;
+		std::vector<const CorDOperatorType*> operatorsCreation_,operatorsDestruction_;
+		std::vector<const DiagonalOperatorType*> operatorsDiagonal_;
 		std::vector<OperatorPointer> opPointers_;
-		std::vector<const OperatorType*> garbage_;
+		std::vector<const CorDOperatorType*> garbage_;
+		std::vector<const DiagonalOperatorType*> garbage2_;
 	}; // HilbertState
 	
-	template<typename OperatorType>
-	typename OperatorType::FieldType scalarProduct(
-	                                     const HilbertState<OperatorType>& s1,
-	                                     const HilbertState<OperatorType>& s2)
+	template<typename CorDOperatorType,typename DiagonalOperatorType>
+	typename CorDOperatorType::FieldType scalarProduct(
+	      const HilbertState<CorDOperatorType,DiagonalOperatorType>& s1,
+	      const HilbertState<CorDOperatorType,DiagonalOperatorType>& s2)
 	{
-		HilbertState<OperatorType> s3 = s2;
+		HilbertState<CorDOperatorType,DiagonalOperatorType> s3 = s2;
 		s3.pour(s1); // s1 --> s3
 		return s3.close();
 	}
