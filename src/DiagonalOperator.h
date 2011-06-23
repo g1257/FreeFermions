@@ -92,26 +92,30 @@ namespace FreeFermions {
 			typedef DiagonalOperator<BackendType> ThisType;
 
 		public:
-			DiagonalOperator(const BackendType& backend) :
+			DiagonalOperator(BackendType& backend) :
 				backend_(backend)
 			{
 			}
 
 			DiagonalOperator(const ThisType* x) : backend_(x->backend_) {}
 
-			template<typename T1,typename T2>
-			FieldType operator()(const T1& lambda1,const T2& lambda2) const
+			template<typename FreeOperatorsType>
+			FieldType operator()(const FreeOperatorsType& freeOps,
+			                      size_t loc) const
 			{
-				return 1;
+				return backend_(freeOps,loc);
 			}
 
-			// deprecated:
-			size_t type() const { return 3; }
+			void transpose() { backend_.transpose(); }
 
-			void transpose() {}
+			template<typename SomeStateType>
+			void applyTo(SomeStateType& state) const
+			{
+				state.pushInto(*this);
+			}
 
 		private:
-			const BackendType& backend_;
+			BackendType& backend_;
 	}; // DiagonalOperator
 } // namespace Dmrg 
 

@@ -110,6 +110,7 @@ namespace FreeFermions {
 		FreeOperators(const OpPointersType& opPointers,
 		                const IndexGeneratorType& lambda,
 		                const PermutationsType& lambda2)
+		: value_(1)
 		{
 			size_t counter=0;
 			size_t counter2=0;
@@ -117,6 +118,7 @@ namespace FreeFermions {
 			for (size_t i=0;i<opPointers.size();i++) {
 				FreeOperator fo;
 				fo.type = opPointers[i].type;
+				if (notCreationOrDestruction(fo.type)) continue;
 				if (fo.type==CREATION) {
 					fo.lambda = lambda[counter++];
 				} else {
@@ -164,10 +166,17 @@ namespace FreeFermions {
 		                         size_t start) const
 		{
 			for (size_t i=start;i<data_.size();i++) {
+					if (notCreationOrDestruction(data_[i].type)) continue;
 					if (data_[i].lambda==thisLambda) return i;
 			}
 			throw std::runtime_error("FreeOperators::findOpGivenLambda()\n");
 		}
+
+		 bool notCreationOrDestruction(size_t type1) const
+		 {
+			 if (type1!=CREATION && type1!=DESTRUCTION) return true;
+			 return false;
+		 }
 
 	private:
 		std::vector<FreeOperator> data_;

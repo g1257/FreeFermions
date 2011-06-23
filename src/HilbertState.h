@@ -96,15 +96,15 @@ namespace FreeFermions {
 	class DummyOperator {
 	public:
 		DummyOperator(const DummyOperator* x) {}
-		template<typename T1,typename T2>
-		FieldType operator()(const T1& l1,const T2& l2) const { return 1; }
+		template<typename T1>
+		FieldType operator()(const T1& l1,size_t loc) const { return 1; }
 		size_t type() const { return 0; }
 		void transpose() {}
 	};
 
 	template<typename CorDOperatorType,
 	          typename DiagonalOperatorType=
-	                    DummyOperator<typename CorDOperatorType::RealType> >
+	                    DummyOperator<typename CorDOperatorType::FieldType> >
 	class HilbertState {
 		typedef typename CorDOperatorType::RealType RealType;
 		typedef typename CorDOperatorType::FieldType FieldType;
@@ -149,7 +149,7 @@ namespace FreeFermions {
 
 		void pushInto(const DiagonalOperatorType& op)
 		{
-				OperatorPointer opPointer(op.type(),operatorsDiagonal_.size());
+				OperatorPointer opPointer(DIAGONAL,operatorsDiagonal_.size());
 				operatorsDiagonal_.push_back(&op);
 				opPointers_.push_back(opPointer);
 		}
@@ -194,7 +194,7 @@ namespace FreeFermions {
 
 		}
 
-		FieldType close()
+		FieldType close() const
 		{
 			size_t m = operatorsCreation_.size();
 			IndexGeneratorType lambda(m,hilbertSize_);
@@ -209,7 +209,7 @@ namespace FreeFermions {
 
 
 
-		FieldType compute(const IndexGeneratorType& lambda)
+		FieldType compute(const IndexGeneratorType& lambda) const
 		{
 
 			PermutationsType lambda2(lambda);
@@ -217,12 +217,16 @@ namespace FreeFermions {
 			do  {
 				FieldType prod = 1;
 				FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2);
-				FermionFactorType fermionFactor(lambdaOperators,ne_);
-				FieldType ff = fermionFactor();
-				if (debug_) {
-					std::cerr<<"sum ="<<sum<<" prod="<<prod<<" ff="<<fermionFactor();
-					std::cerr<<" l="<<lambda<<" l2="<<lambda2<<"\n";
+				// diag. part need to be done here, because...
+				FieldType dd = 1.0;
+				for (size_t i=0;i<operatorsDiagonal_.size();i++) {
+					size_t loc = findLocOfDiagOp(i);
+					dd *= operatorsDiagonal_[i]->operator()(lambdaOperators,loc);
 				}
+				// ... fermionFactor ctor will modify lambdaOperators
+				FermionFactorType fermionFactor(lambdaOperators,ne_);
+				RealType ff = fermionFactor();
+
 				if (ff==0) continue;
 				for (size_t i=0;i<lambda.size();i++) {
 					prod *= operatorsCreation_[i]->operator()(lambda[i]);
@@ -230,14 +234,28 @@ namespace FreeFermions {
 				for (size_t i=0;i<lambda2.size();i++) {
 					prod *= operatorsDestruction_[i]->operator()(lambda2[i]);
 				}
-				FieldType dd = 1.0;
-				for (size_t i=0;i<operatorsDiagonal_.size();i++)
-					dd *= operatorsDiagonal_[i]->operator()(lambda,lambda2);
-
+				if (debug_) {
+					std::cerr<<" lambda="<<lambda;
+					std::cerr<<" lambda2="<<lambda2;
+					std::cerr<<" ff="<<ff<<" dd="<<dd<<" prod="<<prod;
+					std::cerr<<"sum ="<<sum<<"\n";
+				}
 				sum += prod*ff*dd;
 
 			} while(lambda2.increase());
 			return sum;
+		}
+
+		size_t findLocOfDiagOp(size_t ind) const
+		{
+			size_t counter = 0;
+			for (size_t i=0;i<opPointers_.size();i++) {
+				if (opPointers_[i].type == DIAGONAL) {
+					if (counter==ind) return i;
+					counter++;
+				}
+			}
+			throw std::runtime_error("findLocOfDiagOp\n");
 		}
 
 		size_t hilbertSize_,ne_;

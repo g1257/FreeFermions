@@ -87,7 +87,7 @@ namespace FreeFermions {
 	// All interactions == 0
 	template<typename EngineType>
 	class EToTheIhTime {
-			//typedef unsigned int long long UnsignedIntegerType;
+
 	public:
 			typedef typename EngineType::RealType RealType;
 			typedef typename EngineType::FieldType FieldType;
@@ -97,23 +97,28 @@ namespace FreeFermions {
 			{
 			}
 			
-//			FieldType operator()(const HilbertTermType& src) const
-//			{
-//				for (size_t i=0;i<opPointers.size();i++) {
-//
-//				}
-//			}
-			
+			template<typename FreeOperatorsType>
+			FieldType operator()(const FreeOperatorsType& freeOps,
+			                      size_t loc) const
+			{
+				RealType sum = 0;
+				for (size_t i=0;i<loc;i++) {
+					if (freeOps[i].type != FreeOperatorsType::CREATION &&
+						freeOps[i].type != FreeOperatorsType::DESTRUCTION)
+						   continue;
+					int sign =  (freeOps[i].type ==
+							       FreeOperatorsType::CREATION) ? -1 : 1;
+					sum += engine_.eigenvalue(freeOps[i].lambda)*sign;
+				}
+				//if (fabs(sum)>1e-6) std::cerr<<"ffffffffffffffffff\n";
+
+				RealType exponent = -time_*sum;
+				return FieldType(cos(exponent),sin(exponent));
+			}
+
+			void transpose() { time_ = -time_; }
+
 		private:
-			
-//			RealType energyInternal(const std::vector<size_t>& ns) const
-//			{
-//				RealType sum = 0;
-//				for (size_t i=0;i<ns.size();i++) {
-//					sum += ns[i] * engine_.eigenvalue(i);
-//				}
-//				return sum;
-//			}
 			
 			RealType time_;
 			const EngineType& engine_;

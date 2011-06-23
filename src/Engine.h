@@ -141,7 +141,7 @@ namespace FreeFermions {
 
 			const RealType& eigenvalue(size_t i) const { return eigenvalues_[i]; }
 
-			const RealType& eigenvector(size_t i,size_t j) const
+			const FieldType& eigenvector(size_t i,size_t j) const
 			{
 				return eigenvectors_(i,j);
 			}
