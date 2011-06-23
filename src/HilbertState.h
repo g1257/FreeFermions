@@ -152,18 +152,21 @@ namespace FreeFermions {
 
 			size_t counter = 0;
 			size_t counter2 = 0;
-			size_t test1 = hs.opPointers_.size();
+			size_t n1 = hs.opPointers_.size();
+			// pour them in reverse order:
 			for (size_t i=0;i<hs.opPointers_.size();i++) {
-				if (test1!=hs.opPointers_.size())
-					throw std::runtime_error("Changed\n");
-				if (hs.opPointers_[i].type==CREATION) {
-					const OperatorType* op = hs.operatorsCreation_[counter++];
+				if (hs.opPointers_[n1-i-1].type==CREATION) {
+					size_t x1 = hs.operatorsCreation_.size() - 1 - counter;
+					const OperatorType* op = hs.operatorsCreation_[x1];
+					counter++;
 					OperatorType *opCopy = new OperatorType(op);
 					garbage_.push_back(opCopy);
 					opCopy->transpose();
 					pushInto(*opCopy);
 				} else {
-					const OperatorType* op = hs.operatorsDestruction_[counter2++];
+					size_t x2 = hs.operatorsDestruction_.size() - 1 - counter2;
+					const OperatorType* op = hs.operatorsDestruction_[x2];
+					counter2++;
 					OperatorType *opCopy = new OperatorType(op);
 					garbage_.push_back(opCopy);
 					opCopy->transpose();
