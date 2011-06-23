@@ -109,8 +109,9 @@ namespace FreeFermions {
 		typedef typename CorDOperatorType::RealType RealType;
 		typedef typename CorDOperatorType::FieldType FieldType;
 		typedef FermionFactor<CorDOperatorType,OperatorPointer> FermionFactorType;
-		typedef typename FermionFactorType::PermutationsType PermutationsType;
-		typedef typename FermionFactorType::IndexGeneratorType IndexGeneratorType;
+		typedef typename FermionFactorType::FreeOperatorsType FreeOperatorsType;
+		typedef typename FreeOperatorsType::PermutationsType PermutationsType;
+		typedef typename FreeOperatorsType::IndexGeneratorType IndexGeneratorType;
 
 		typedef HilbertState<CorDOperatorType,DiagonalOperatorType> ThisType;
 
@@ -215,7 +216,8 @@ namespace FreeFermions {
 			FieldType sum = 0;
 			do  {
 				FieldType prod = 1;
-				FermionFactorType fermionFactor(opPointers_,lambda,lambda2,ne_);
+				FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2);
+				FermionFactorType fermionFactor(lambdaOperators,ne_);
 				FieldType ff = fermionFactor();
 				if (debug_) {
 					std::cerr<<"sum ="<<sum<<" prod="<<prod<<" ff="<<fermionFactor();

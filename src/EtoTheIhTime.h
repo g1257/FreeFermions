@@ -99,20 +99,9 @@ namespace FreeFermions {
 			
 //			FieldType operator()(const HilbertTermType& src) const
 //			{
-//				// throw away const:
-//				StateType& state = (StateType&) src.state;
-//				FlavorFactoryType flavorFactory(state,
-//				                                engine_.sites()*engine_.edof());
+//				for (size_t i=0;i<opPointers.size();i++) {
 //
-//				RealType energy = -energyOffset_;
-//				for (size_t i = 0;i<src.state.size();i++) {
-//					std::vector<size_t> ns;
-//					flavorFactory.occupations(ns,i);
-//					energy += energyInternal(ns);
 //				}
-//				RealType exponent = -time_*energy;
-//
-//				return src.value * FieldType(cos(exponent),sin(exponent));
 //			}
 			
 		private:

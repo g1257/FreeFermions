@@ -1,6 +1,6 @@
 // BEGIN LICENSE BLOCK
 /*
-Copyright � 2009 , UT-Battelle, LLC
+Copyright (c) 2009 , UT-Battelle, LLC
 All rights reserved
 
 [DMRG++, Version 2.0.0]
@@ -92,12 +92,12 @@ namespace FreeFermions {
 			typedef DiagonalOperator<BackendType> ThisType;
 
 		public:
-//			DiagonalOperator(const BackendType& backend) :
-//				backend_(backend)
-//			{
-//			}
+			DiagonalOperator(const BackendType& backend) :
+				backend_(backend)
+			{
+			}
 
-			DiagonalOperator(const ThisType* x)  {}
+			DiagonalOperator(const ThisType* x) : backend_(x->backend_) {}
 
 			template<typename T1,typename T2>
 			FieldType operator()(const T1& lambda1,const T2& lambda2) const
@@ -111,7 +111,7 @@ namespace FreeFermions {
 			void transpose() {}
 
 		private:
-			//const BackendType& backend_;
+			const BackendType& backend_;
 	}; // DiagonalOperator
 } // namespace Dmrg 
 
