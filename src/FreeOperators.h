@@ -109,7 +109,8 @@ namespace FreeFermions {
 
 		FreeOperators(const OpPointersType& opPointers,
 		                const IndexGeneratorType& lambda,
-		                const PermutationsType& lambda2)
+		                const PermutationsType& lambda2,
+		                size_t sigma)
 		: value_(1)
 		{
 			size_t counter=0;
@@ -118,6 +119,13 @@ namespace FreeFermions {
 			for (size_t i=0;i<opPointers.size();i++) {
 				FreeOperator fo;
 				fo.type = opPointers[i].type;
+				if (notCreationOrDestruction(fo.type)) {
+					fo.lambda = 0;
+					data_.push_back(fo);
+					continue;
+				}
+				if (opPointers[i].sigma!=sigma) continue;
+
 				if (fo.type==CREATION) {
 					fo.lambda = lambda[counter++];
 				} else if (fo.type==DESTRUCTION) {
@@ -193,48 +201,7 @@ namespace FreeFermions {
 	private:
 		std::vector<FreeOperator> data_;
 		RealType value_;
-
-//		void doSort(std::vector<size_t>& v)
-//		{
-//			Sort<std::vector<size_t> > mysort;
-//			std::vector<size_t> iperm(v.size());
-//			mysort.sort(v,iperm);
-//			//return (repeatedIndices(v)) ? 0 : parityOfPerm(iperm);
-//		}
-
-		// note that v must come in ordered
-//		bool repeatedIndices(std::vector<size_t>& v) const
-//		{
-//			size_t prev = v[0];
-//			for (size_t i=1;i<v.size();i++) {
-//				if (v[i]==prev) return true;
-//				prev = v[i];
-//			}
-//			return false;
-//		}
-
-//
-//		int parityOfPerm(std::vector<size_t>& iperm)
-//		{
-//			std::vector<bool> elementsSeen(iperm.size(),false);
-//			size_t cycles = 0;
-//			for (size_t i=0;i<elementsSeen.size();i++) {
-//				if (elementsSeen[i]) continue;
-//				cycles++;
-//				size_t current = i;
-//				while (!elementsSeen[current]) {
-//					elementsSeen[current] = true;
-//					current = iperm[current];
-//				}
-//			}
-//			int x = iperm.size() - cycles;
-//			return (x &1) ? -1 : 1;
-//		}
-
-		//const OpPointersType& opPointers_;
-        //const IndexGeneratorType& lambda_;
 	}; // FreeOperators
-	
 
 } // namespace Dmrg 
 

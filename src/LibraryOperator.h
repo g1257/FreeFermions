@@ -107,24 +107,25 @@ namespace FreeFermions {
 
 		~LibraryOperator()
 		{
-			for (size_t i=0;i<cOrDOps_.size();i++)
-				delete cOrDOps_[i];
+			for (size_t i=0;i<garbage_.size();i++)
+				delete garbage_[i];
 		}
 
 		template<typename SomeStateType>
 		void applyTo(SomeStateType& state)
 		{
-			cOrDOps_.resize(2);
-			cOrDOps_[0] = new OperatorType(engine_,DESTRUCTION,ind_,sigma_);
-			state.pushInto(*cOrDOps_[0]);
-			cOrDOps_[1] = new OperatorType(engine_,CREATION,ind_,sigma_);
-			state.pushInto(*cOrDOps_[1]);
+			OperatorType* op = new OperatorType(engine_,DESTRUCTION,ind_,sigma_);
+			state.pushInto(*op);
+			garbage_.push_back(op);
+			op = new OperatorType(engine_,CREATION,ind_,sigma_);
+			state.pushInto(*op);
+			garbage_.push_back(op);
 		}
 
 	private:
 		const EngineType& engine_;
 		size_t type_,ind_,sigma_;
-		std::vector<OperatorType*> cOrDOps_;
+		std::vector<OperatorType*> garbage_;
 	}; // LibraryOperator
 	
 

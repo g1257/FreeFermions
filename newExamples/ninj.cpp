@@ -26,7 +26,7 @@ int main(int argc,char* argv[])
 	if (argc!=3) throw std::runtime_error("Needs 2 argument(s)\n");
         size_t n = atoi(argv[1]); 
 
-	size_t dof = 2; // spin up and down
+	size_t dof = 1; // spinless
 	MatrixType t(n,n);
 	//GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
 	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
@@ -38,7 +38,7 @@ int main(int argc,char* argv[])
 	EngineType engine(t,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
 	bool debug = false;
-	HilbertStateType gs(engine.size(),ne[0],debug);
+	HilbertStateType gs(engine.size(),ne,debug);
 
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);

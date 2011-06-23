@@ -27,7 +27,7 @@ int main(int argc,char* argv[])
 	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
 	if (argc!=argce) throw std::runtime_error(s.c_str());
 	size_t n = atoi(argv[1]); // n. of  sites
-	size_t dof = 2; // spin up and down
+	size_t dof = 1; // spinless
 	MatrixType t(n,n);
 	//std::vector<MatrixType> t;
 	//GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
@@ -40,7 +40,7 @@ int main(int argc,char* argv[])
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
-	HilbertStateType gs(engine.size(),ne[0]);
+	HilbertStateType gs(engine.size(),ne);
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	

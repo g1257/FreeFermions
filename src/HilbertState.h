@@ -87,8 +87,12 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	struct OperatorPointer {
-		OperatorPointer(size_t t,size_t i) : type(t),index(i) {}
+		OperatorPointer(size_t t,size_t s,size_t i)
+		: type(t),sigma(s),index(i)
+		{}
+
 		size_t type;
+		size_t sigma;
 		size_t index;
 	};
 
@@ -98,7 +102,7 @@ namespace FreeFermions {
 		DummyOperator(const DummyOperator* x) {}
 		template<typename T1>
 		FieldType operator()(const T1& l1,size_t loc) const { return 1; }
-		size_t type() const { return 0; }
+		size_t sigma() const { return 0; }
 		void transpose() {}
 	};
 
@@ -122,7 +126,9 @@ namespace FreeFermions {
 
 	public:
 		// it's the g.s. for now, FIXME change it later to allow more flex.
-		HilbertState(size_t hilbertSize,size_t ne,bool debug = false)
+		HilbertState(size_t hilbertSize,
+		              std::vector<size_t>& ne,
+		              bool debug = false)
 		:  hilbertSize_(hilbertSize),ne_(ne),debug_(debug) {}
 
 		~HilbertState()
@@ -137,11 +143,13 @@ namespace FreeFermions {
 		void pushInto(const CorDOperatorType& op)
 		{
 			if (op.type()==CREATION) {
-				OperatorPointer opPointer(op.type(),operatorsCreation_.size());
+				OperatorPointer opPointer(op.type(),op.sigma(),
+						operatorsCreation_.size());
 				operatorsCreation_.push_back(&op);
 				opPointers_.push_back(opPointer);
 			} else if (op.type()==DESTRUCTION) {
-				OperatorPointer opPointer(op.type(),operatorsDestruction_.size());
+				OperatorPointer opPointer(op.type(),op.sigma(),
+						operatorsDestruction_.size());
 				operatorsDestruction_.push_back(&op);
 				opPointers_.push_back(opPointer);
 			}
@@ -149,7 +157,8 @@ namespace FreeFermions {
 
 		void pushInto(const DiagonalOperatorType& op)
 		{
-				OperatorPointer opPointer(DIAGONAL,operatorsDiagonal_.size());
+				OperatorPointer opPointer(DIAGONAL,op.sigma(),
+						operatorsDiagonal_.size());
 				operatorsDiagonal_.push_back(&op);
 				opPointers_.push_back(opPointer);
 		}
@@ -196,43 +205,62 @@ namespace FreeFermions {
 
 		FieldType close() const
 		{
-			size_t m = operatorsCreation_.size();
-			IndexGeneratorType lambda(m,hilbertSize_);
-			FieldType sum  = 0;
-			do {
-				sum += compute(lambda);
-			} while (lambda.increase());
-			return sum;
+			FieldType prod = 1.0;
+			for (size_t i=0;i<ne_.size();i++) {
+				prod *= close(i);
+			}
+			return prod; // FIXME: NEEDS FERMION SIGN
 		}
 
 	private:
 
+		FieldType close(size_t sigma) const
+		{
+			size_t m = findCreationGivenSpin(sigma);
+			IndexGeneratorType lambda(m,hilbertSize_);
+			FieldType sum  = 0;
+			do {
+				sum += compute(lambda,sigma);
+			} while (lambda.increase());
+			return sum;
+		}
 
+		size_t findCreationGivenSpin(size_t sigma) const
+		{
+			size_t counter = 0;
+			for (size_t i=0;i<opPointers_.size();i++) {
+				if (opPointers_[i].type == CREATION &&
+				    opPointers_[i].sigma == sigma) counter++;
+			}
+			return counter;
+		}
 
-		FieldType compute(const IndexGeneratorType& lambda) const
+		FieldType compute(const IndexGeneratorType& lambda,size_t sigma) const
 		{
 
 			PermutationsType lambda2(lambda);
 			FieldType sum = 0;
 			do  {
 				FieldType prod = 1;
-				FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2);
+				FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2,sigma);
 				// diag. part need to be done here, because...
 				FieldType dd = 1.0;
 				for (size_t i=0;i<operatorsDiagonal_.size();i++) {
-					size_t loc = findLocOfDiagOp(i);
+					size_t loc = findLocOfDiagOp(i,sigma);
 					dd *= operatorsDiagonal_[i]->operator()(lambdaOperators,loc);
 				}
 				// ... fermionFactor ctor will modify lambdaOperators
-				FermionFactorType fermionFactor(lambdaOperators,ne_);
+				FermionFactorType fermionFactor(lambdaOperators,ne_[sigma]);
 				RealType ff = fermionFactor();
 
 				if (ff==0) continue;
 				for (size_t i=0;i<lambda.size();i++) {
-					prod *= operatorsCreation_[i]->operator()(lambda[i]);
+					size_t loc = findLocOf(operatorsCreation_,i,sigma);
+					prod *= operatorsCreation_[loc]->operator()(lambda[i]);
 				}
 				for (size_t i=0;i<lambda2.size();i++) {
-					prod *= operatorsDestruction_[i]->operator()(lambda2[i]);
+					size_t loc = findLocOf(operatorsDestruction_,i,sigma);
+					prod *= operatorsDestruction_[loc]->operator()(lambda2[i]);
 				}
 				if (debug_) {
 					std::cerr<<" lambda="<<lambda;
@@ -246,19 +274,38 @@ namespace FreeFermions {
 			return sum;
 		}
 
-		size_t findLocOfDiagOp(size_t ind) const
+		size_t findLocOfDiagOp(size_t ind,size_t sigma) const
 		{
 			size_t counter = 0;
+			size_t j = 0;
 			for (size_t i=0;i<opPointers_.size();i++) {
 				if (opPointers_[i].type == DIAGONAL) {
-					if (counter==ind) return i;
+					if (counter==ind) return j;
 					counter++;
+					j++;
 				}
+				if (opPointers_[i].sigma != sigma) continue;
+				j++;
 			}
 			throw std::runtime_error("findLocOfDiagOp\n");
 		}
 
-		size_t hilbertSize_,ne_;
+		size_t findLocOf(
+		                  const std::vector<const CorDOperatorType*>& v,
+		                  size_t ind,
+		                  size_t sigma) const
+		{
+			size_t counter = 0;
+			for (size_t i=0;i<v.size();i++) {
+				if (v[i]->sigma() != sigma) continue;
+				if (counter==ind) return i;
+				counter++;
+			}
+			throw std::runtime_error("findLocOf\n");
+		}
+
+		size_t hilbertSize_;
+		std::vector<size_t> ne_;
 		bool debug_;
 		std::vector<const CorDOperatorType*> operatorsCreation_,operatorsDestruction_;
 		std::vector<const DiagonalOperatorType*> operatorsDiagonal_;

@@ -27,9 +27,9 @@ typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertSta
 int main(int argc,char *argv[])
 {
 	if (argc!=6) throw std::runtime_error("Needs 6 arguments\n");
-	size_t n = 4;
-	size_t electronsUp = 2;
-	size_t dof = 2; // spin up and down
+	size_t n = 50;
+	size_t electronsUp = 25;
+	size_t dof = 1; // spinless
 	MatrixType t(n,n);
 	
 	/*GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
@@ -46,7 +46,7 @@ int main(int argc,char *argv[])
 
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
-	HilbertStateType gs(engine.size(),ne[0],debug);
+	HilbertStateType gs(engine.size(),ne,debug);
 
 	size_t sigma =0;
 	size_t site = atoi(argv[1]);
@@ -62,7 +62,7 @@ int main(int argc,char *argv[])
 	std::cout<<"#site2="<<site2<<"\n";
 	for (size_t it = 0; it<size_t(atoi(argv[3])); it++) {
 		RealType time = it * atof(argv[4]) + atof(argv[5]);
-		EtoTheIhTimeType eih(time,engine,0);
+		EtoTheIhTimeType eih(time,sigma,engine,0);
 		DiagonalOperatorType eihOp(eih);
 		HilbertStateType phi = gs;
 		myOp.applyTo(phi);

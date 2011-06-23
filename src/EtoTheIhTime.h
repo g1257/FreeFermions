@@ -92,11 +92,17 @@ namespace FreeFermions {
 			typedef typename EngineType::RealType RealType;
 			typedef typename EngineType::FieldType FieldType;
 
-			EToTheIhTime(RealType time,const EngineType& engine,RealType energyOffset) :
-				time_(time),engine_(engine),energyOffset_(energyOffset)
+			EToTheIhTime(RealType time,
+			              size_t sigma,
+			              const EngineType& engine,
+			              RealType energyOffset) :
+				time_(time),sigma_(sigma),
+				engine_(engine),energyOffset_(energyOffset)
 			{
 			}
 			
+			size_t sigma() const { return sigma_; }
+
 			template<typename FreeOperatorsType>
 			FieldType operator()(const FreeOperatorsType& freeOps,
 			                      size_t loc) const
@@ -121,6 +127,7 @@ namespace FreeFermions {
 		private:
 			
 			RealType time_;
+			size_t sigma_;
 			const EngineType& engine_;
 			RealType energyOffset_;
 	}; // EToTheIhTime
