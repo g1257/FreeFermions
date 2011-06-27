@@ -85,10 +85,10 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename EngineType>
+	template<typename EngineType_>
 	class EToTheIhTime {
-
 	public:
+			typedef EngineType_ EngineType;
 			typedef typename EngineType::RealType RealType;
 			typedef typename EngineType::FieldType FieldType;
 

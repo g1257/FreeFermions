@@ -92,6 +92,7 @@ namespace FreeFermions {
 			typedef DiagonalOperator<BackendType> ThisType;
 
 		public:
+			typedef typename BackendType::EngineType EngineType;
 			typedef OperatorFactory<ThisType> FactoryType;
 
 			friend class OperatorFactory<ThisType>;

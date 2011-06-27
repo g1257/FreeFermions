@@ -101,6 +101,8 @@ namespace FreeFermions {
 	public:
 		class DummyFactory {
 		public:
+			template<typename X>
+			DummyFactory(const X& x) {}
 			DummyOperator* operator()(const DummyOperator* op) {
 				throw std::runtime_error("DummyOperatorFactory\n");
 			}
@@ -117,6 +119,7 @@ namespace FreeFermions {
 	          typename DiagonalOperatorType=
 	                    DummyOperator<typename CorDOperatorType::FieldType> >
 	class HilbertState {
+		typedef typename CorDOperatorType::EngineType EngineType;
 		typedef typename CorDOperatorType::RealType RealType;
 		typedef typename CorDOperatorType::FieldType FieldType;
 		typedef FermionFactor<CorDOperatorType,OperatorPointer> FermionFactorType;
@@ -134,10 +137,11 @@ namespace FreeFermions {
 
 	public:
 		// it's the g.s. for now, FIXME change it later to allow more flex.
-		HilbertState(size_t hilbertSize,
+		HilbertState(const EngineType* engine,
 		              std::vector<size_t>& ne,
 		              bool debug = false)
-		:  hilbertSize_(hilbertSize),ne_(ne),debug_(debug) {}
+		:  hilbertSize_(engine->size()),ne_(ne),debug_(debug),
+		   opNormalFactory_(*engine),opDiagonalFactory_(*engine) {}
 
 		void pushInto(const CorDOperatorType& op)
 		{

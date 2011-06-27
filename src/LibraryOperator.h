@@ -113,9 +113,9 @@ namespace FreeFermions {
 		template<typename SomeStateType>
 		void applyTo(SomeStateType& state)
 		{
-			OperatorType* op = opNormalFactory_(engine_,DESTRUCTION,ind_,sigma_);
+			OperatorType* op = opNormalFactory_(DESTRUCTION,ind_,sigma_);
 //			garbage_.push_back(op);
-			OperatorType* op2 = opNormalFactory_(engine_,CREATION,ind_,sigma_);
+			OperatorType* op2 = opNormalFactory_(CREATION,ind_,sigma_);
 //			garbage_.push_back(op2);
 
 			if (type_==N) {
@@ -135,12 +135,11 @@ namespace FreeFermions {
 				size_t type,
 				size_t ind,
 				size_t sigma)
-		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
+		: opNormalFactory_(engine),type_(type),ind_(ind),sigma_(sigma)
 		{}
 
-		const EngineType& engine_;
-		size_t type_,ind_,sigma_;
 		OpNormalFactoryType opNormalFactory_;
+		size_t type_,ind_,sigma_;
 		//std::vector<OperatorType*> garbage_;
 	}; // LibraryOperator
 	

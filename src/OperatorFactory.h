@@ -87,10 +87,10 @@ namespace FreeFermions {
 
 	template<typename OpType>
 	class OperatorFactory {
-
+		typedef typename OpType::EngineType EngineType;
 	public:
 
-			OperatorFactory()
+			OperatorFactory(const EngineType& engine) : engine_(&engine)
 			{
 			}
 			
@@ -100,10 +100,10 @@ namespace FreeFermions {
 					delete garbage_[i];
 			}
 
-			template<typename EngineType>
-			OpType* operator()(EngineType& engine,size_t x,size_t site,size_t sigma)
+			//template<typename EngineType>
+			OpType* operator()(size_t x,size_t site,size_t sigma)
 			{
-				OpType* op = new OpType(engine,x,site,sigma);
+				OpType* op = new OpType(*engine_,x,site,sigma);
 				garbage_.push_back(op);
 				return op;
 			}
@@ -124,7 +124,7 @@ namespace FreeFermions {
 			}
 
 		private:
-			
+			const EngineType* engine_;
 			std::vector<OpType*> garbage_;
 
 	}; // OperatorFactory

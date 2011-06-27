@@ -41,28 +41,28 @@ FieldType calcSuperDensity(size_t site,
 	HilbertStateType savedVector = gs;
 	FieldType savedValue = 0;
 	FieldType sum = 0;
-	OpNormalFactoryType opNormalFactory;
-	OpLibFactoryType opLibFactory;
+	OpNormalFactoryType opNormalFactory(engine);
+	OpLibFactoryType opLibFactory(engine);
 
 	for (size_t sigma = 0;sigma<2;sigma++) {
 		HilbertStateType phi = gs;
 
-		LibraryOperatorType* myOp = opLibFactory(engine,
+		LibraryOperatorType* myOp = opLibFactory(
 		                         LibraryOperatorType::N,site,1-sigma);
 
 		myOp->applyTo(phi);
-		OperatorType* myOp2 = opNormalFactory(engine,OperatorType::CREATION,
+		OperatorType* myOp2 = opNormalFactory(OperatorType::CREATION,
 		                         site,sigma);
 
 		myOp2->applyTo(phi);
 		
 		for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
 			HilbertStateType phi3 = phi;
-			LibraryOperatorType* myOp3 = opLibFactory(engine,
+			LibraryOperatorType* myOp3 = opLibFactory(
 			                         LibraryOperatorType::NBAR,site2,1-sigma2);
 			myOp3->applyTo(phi3);
 
-			OperatorType* myOp4 = opNormalFactory(engine,
+			OperatorType* myOp4 = opNormalFactory(
 			                         OperatorType::DESTRUCTION,site2,sigma2);
 
 			myOp4->applyTo(phi3);
@@ -144,7 +144,7 @@ int main(int argc,char *argv[])
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	bool verbose = false;
-	HilbertStateType gs(engine.size(),ne,debug);
+	HilbertStateType gs(&engine,ne,debug);
 	
 	size_t sigma3 = 0;
 	
@@ -156,9 +156,9 @@ int main(int argc,char *argv[])
 	size_t it = 0;
 
 	while(concurrency.loop(it)) {
-		OpNormalFactoryType opNormalFactory;
-		OpLibFactoryType opLibFactory;
-		OpDiagonalFactoryType opDiagonalFactory;
+		OpNormalFactoryType opNormalFactory(engine);
+		OpLibFactoryType opLibFactory(engine);
+		OpDiagonalFactoryType opDiagonalFactory(engine);
 
 		RealType time = it * step + offset;
 		EtoTheIhTimeType eih(time,engine,0);
@@ -170,11 +170,11 @@ int main(int argc,char *argv[])
 
 		for (size_t sigma = 0;sigma<2;sigma++) {
 			HilbertStateType phi = gs;
-			LibraryOperatorType* myOp = opLibFactory(engine,
+			LibraryOperatorType* myOp = opLibFactory(
 					                      LibraryOperatorType::N,sites[0],1-sigma);
 			myOp->applyTo(phi);
 
-			OperatorType* myOp2 = opNormalFactory(engine,OperatorType::CREATION,
+			OperatorType* myOp2 = opNormalFactory(OperatorType::CREATION,
 					                         sites[0],sigma);
 			myOp2->applyTo(phi);
 
@@ -182,11 +182,11 @@ int main(int argc,char *argv[])
 				HilbertStateType phi3 = phi;
 
 
-				LibraryOperatorType* myOp3 = opLibFactory(engine,
+				LibraryOperatorType* myOp3 = opLibFactory(
 				                 LibraryOperatorType::NBAR,sites[1],1-sigma2);
 				myOp3->applyTo(phi3);
 
-				OperatorType* myOp4 = opNormalFactory(engine,
+				OperatorType* myOp4 = opNormalFactory(
 				                 OperatorType::DESTRUCTION,sites[1],sigma2);
 				myOp4->applyTo(phi3);
 
@@ -194,7 +194,7 @@ int main(int argc,char *argv[])
 				eihOp->applyTo(phi3);
 
 				if (verbose) std::cerr<<"Applying c_p\n";
-				OperatorType* myOp6 = opNormalFactory(engine,
+				OperatorType* myOp6 = opNormalFactory(
 								  OperatorType::DESTRUCTION,sites[2],sigma3);
 				myOp6->applyTo(phi3);
 

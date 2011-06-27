@@ -92,11 +92,11 @@ int main(int argc,char *argv[])
 
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
-	HilbertStateType gs(engine.size(),ne,debug);
+	HilbertStateType gs(&engine,ne,debug);
 
 	size_t sigma =0;
-	OpNormalFactoryType opNormalFactory;
-	OperatorType* myOp = opNormalFactory(engine,OperatorType::DESTRUCTION,sites[0],sigma);
+	OpNormalFactoryType opNormalFactory(engine);
+	OperatorType* myOp = opNormalFactory(OperatorType::DESTRUCTION,sites[0],sigma);
 	HilbertStateType phi2 = gs;
 	myOp->applyTo(phi2);
 	
@@ -106,14 +106,14 @@ int main(int argc,char *argv[])
 	std::cout<<"#site="<<sites[0]<<"\n";
 	std::cout<<"#site2="<<sites[1]<<"\n";
 	for (size_t it = 0; it<total; it++) {
-		OpDiagonalFactoryType opDiagonalFactory;
+		OpDiagonalFactoryType opDiagonalFactory(engine);
 		RealType time = it * step + offset;
 		EtoTheIhTimeType eih(time,engine,0);
 		DiagonalOperatorType* eihOp = opDiagonalFactory(eih);
 		HilbertStateType phi = gs;
 		myOp->applyTo(phi);
 		eihOp->applyTo(phi);
-		OperatorType* myOp2 = opNormalFactory(engine,OperatorType::DESTRUCTION,sites[1],sigma);
+		OperatorType* myOp2 = opNormalFactory(OperatorType::DESTRUCTION,sites[1],sigma);
 		myOp2->applyTo(phi);
 		std::cout<<time<<" "<<scalarProduct(phi,phi)<<"\n";
 	}
