@@ -41,7 +41,7 @@ int main(int argc,char* argv[])
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
-	HilbertStateType gs(&engine,ne);
+	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
@@ -51,12 +51,12 @@ int main(int argc,char* argv[])
 	for (size_t orbital=0; orbital<norb; orbital++) {
 		for (size_t site = 0; site<n ; site++) {
 			OpNormalFactoryType opNormalFactory(engine);
-			OperatorType* myOp = opNormalFactory(OperatorType::DESTRUCTION,site+orbital*n,sigma);
+			OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,site+orbital*n,sigma);
 			for (size_t site2=0; site2<n; site2++) {
 				HilbertStateType phi = gs;
-				myOp->applyTo(phi);
-				OperatorType* myOp2 = opNormalFactory(OperatorType::CREATION,site2+orbital*n,sigma);
-				myOp2->applyTo(phi);
+				myOp.applyTo(phi);
+				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,site2+orbital*n,sigma);
+				myOp2.applyTo(phi);
 				std::cout<<scalarProduct(gs,phi)<<" ";
 				//cicj(site,site2) += scalarProduct(gs,phi);
 			}

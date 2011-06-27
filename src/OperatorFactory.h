@@ -101,26 +101,26 @@ namespace FreeFermions {
 			}
 
 			//template<typename EngineType>
-			OpType* operator()(size_t x,size_t site,size_t sigma)
+			OpType& operator()(size_t x,size_t site,size_t sigma)
 			{
 				OpType* op = new OpType(*engine_,x,site,sigma);
 				garbage_.push_back(op);
-				return op;
+				return *op;
 			}
 
 			template<typename SomeOtherType>
-			OpType* operator()(SomeOtherType& x)
+			OpType& operator()(SomeOtherType& x)
 			{
 				OpType* op = new OpType(x);
 				garbage_.push_back(op);
-				return op;
+				return *op;
 			}
 
-			OpType* operator()(const OpType* op)
+			OpType& operator()(const OpType* op)
 			{
 				OpType* op2 = new OpType(op);
 				garbage_.push_back(op2);
-				return op2;
+				return *op2;
 			}
 
 		private:

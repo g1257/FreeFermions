@@ -40,7 +40,7 @@ int main(int argc,char* argv[])
 
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
 	bool debug = false;
-	HilbertStateType gs(&engine,ne,debug);
+	HilbertStateType gs(engine,ne,debug);
 
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
@@ -49,12 +49,12 @@ int main(int argc,char* argv[])
 	size_t tot = (debug) ? 1 : n;
 	for (size_t site = 0; site<tot ; site++) {
 		OpLibFactoryType opLibFactory(engine);
-		LibraryOperatorType *myOp = opLibFactory(LibraryOperatorType::N,site,sigma);
+		LibraryOperatorType& myOp = opLibFactory(LibraryOperatorType::N,site,sigma);
 		for (size_t site2=0; site2<tot; site2++) {
 			HilbertStateType phi = gs;
-			myOp->applyTo(phi);
-			LibraryOperatorType* myOp2 = opLibFactory(LibraryOperatorType::N,site2,sigma);
-			myOp2->applyTo(phi);
+			myOp.applyTo(phi);
+			LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,site2,sigma);
+			myOp2.applyTo(phi);
 			std::cout<<scalarProduct(gs,phi)<<" ";
 		}
 		std::cout<<"\n";

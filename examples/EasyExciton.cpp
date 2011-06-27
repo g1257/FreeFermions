@@ -92,13 +92,13 @@ int main(int argc,char *argv[])
 
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
-	HilbertStateType gs(&engine,ne,debug);
+	HilbertStateType gs(engine,ne,debug);
 
 	size_t sigma =0;
 	OpNormalFactoryType opNormalFactory(engine);
-	OperatorType* myOp = opNormalFactory(OperatorType::DESTRUCTION,sites[0],sigma);
+	OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,sites[0],sigma);
 	HilbertStateType phi2 = gs;
-	myOp->applyTo(phi2);
+	myOp.applyTo(phi2);
 	
 //	FieldType density = scalarProduct(phi2,phi2);
 //	std::cerr<<"density="<<density<<"\n";
@@ -109,12 +109,12 @@ int main(int argc,char *argv[])
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		RealType time = it * step + offset;
 		EtoTheIhTimeType eih(time,engine,0);
-		DiagonalOperatorType* eihOp = opDiagonalFactory(eih);
+		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
 		HilbertStateType phi = gs;
-		myOp->applyTo(phi);
-		eihOp->applyTo(phi);
-		OperatorType* myOp2 = opNormalFactory(OperatorType::DESTRUCTION,sites[1],sigma);
-		myOp2->applyTo(phi);
+		myOp.applyTo(phi);
+		eihOp.applyTo(phi);
+		OperatorType& myOp2 = opNormalFactory(OperatorType::DESTRUCTION,sites[1],sigma);
+		myOp2.applyTo(phi);
 		std::cout<<time<<" "<<scalarProduct(phi,phi)<<"\n";
 	}
 }

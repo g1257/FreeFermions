@@ -121,6 +121,18 @@ namespace FreeFermions {
 
 			DiagonalOperator(const ThisType* x) : backend_(x->backend_) {}
 
+			DiagonalOperator(const ThisType& x)
+			{
+				throw std::runtime_error(
+				  "DiagonalOperator::copyCtor: Don't even think of coming here\n");
+			}
+
+			ThisType& operator=(const ThisType& x)
+			{
+				throw std::runtime_error(
+				  "DiagonalOperator::assignmentOp: Don't even think of coming here\n");
+			}
+
 			BackendType backend_;
 	}; // DiagonalOperator
 } // namespace Dmrg 

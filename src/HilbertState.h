@@ -103,7 +103,7 @@ namespace FreeFermions {
 		public:
 			template<typename X>
 			DummyFactory(const X& x) {}
-			DummyOperator* operator()(const DummyOperator* op) {
+			DummyOperator& operator()(const DummyOperator* op) {
 				throw std::runtime_error("DummyOperatorFactory\n");
 			}
 		};
@@ -137,11 +137,11 @@ namespace FreeFermions {
 
 	public:
 		// it's the g.s. for now, FIXME change it later to allow more flex.
-		HilbertState(const EngineType* engine,
+		HilbertState(const EngineType& engine,
 		              std::vector<size_t>& ne,
 		              bool debug = false)
-		:  hilbertSize_(engine->size()),ne_(ne),debug_(debug),
-		   opNormalFactory_(*engine),opDiagonalFactory_(*engine) {}
+		:  hilbertSize_(engine.size()),ne_(ne),debug_(debug),
+		   opNormalFactory_(engine),opDiagonalFactory_(engine) {}
 
 		void pushInto(const CorDOperatorType& op)
 		{
@@ -181,23 +181,23 @@ namespace FreeFermions {
 					size_t x1 = hs.operatorsCreation_.size() - 1 - counter;
 					const CorDOperatorType* op = hs.operatorsCreation_[x1];
 					counter++;
-					CorDOperatorType *opCopy = opNormalFactory_(op);
-					opCopy->transpose();
-					pushInto(*opCopy);
+					CorDOperatorType& opCopy = opNormalFactory_(op);
+					opCopy.transpose();
+					pushInto(opCopy);
 				} else if (hs.opPointers_[n1-i-1].type==DESTRUCTION) {
 					size_t x2 = hs.operatorsDestruction_.size() - 1 - counter2;
 					const CorDOperatorType* op = hs.operatorsDestruction_[x2];
 					counter2++;
-					CorDOperatorType *opCopy = opNormalFactory_(op);
-					opCopy->transpose();
-					pushInto(*opCopy);
+					CorDOperatorType& opCopy = opNormalFactory_(op);
+					opCopy.transpose();
+					pushInto(opCopy);
 				} else {
 					size_t x3 = hs.operatorsDiagonal_.size() - 1 - counter3;
 					const DiagonalOperatorType* op = hs.operatorsDiagonal_[x3];
 					counter3++;
-					DiagonalOperatorType *opCopy = opDiagonalFactory_(op);
-					opCopy->transpose();
-					pushInto(*opCopy);
+					DiagonalOperatorType& opCopy = opDiagonalFactory_(op);
+					opCopy.transpose();
+					pushInto(opCopy);
 				}
 			}
 

@@ -142,6 +142,18 @@ namespace FreeFermions {
 		  ind_(op2->ind_),
 		  sigma_(op2->sigma_) {}
 
+		CreationOrDestructionOp(const ThisType& x)
+		{
+			throw std::runtime_error(
+			  "CorDOperator::copyCtor: Don't even think of coming here\n");
+		}
+
+		ThisType& operator=(const ThisType& x)
+		{
+			throw std::runtime_error(
+			  "CorDOperator::assignmentOp: Don't even think of coming here\n");
+		}
+
 		const EngineType& engine_;
 		size_t type_,ind_,sigma_;
 	}; // CreationOrDestructionOp

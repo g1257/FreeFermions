@@ -113,17 +113,17 @@ namespace FreeFermions {
 		template<typename SomeStateType>
 		void applyTo(SomeStateType& state)
 		{
-			OperatorType* op = opNormalFactory_(DESTRUCTION,ind_,sigma_);
+			OperatorType& op = opNormalFactory_(DESTRUCTION,ind_,sigma_);
 //			garbage_.push_back(op);
-			OperatorType* op2 = opNormalFactory_(CREATION,ind_,sigma_);
+			OperatorType& op2 = opNormalFactory_(CREATION,ind_,sigma_);
 //			garbage_.push_back(op2);
 
 			if (type_==N) {
-				state.pushInto(*op);
-				state.pushInto(*op2);
+				state.pushInto(op);
+				state.pushInto(op2);
 			} else if (type_==NBAR){
-				state.pushInto(*op2);
-				state.pushInto(*op);
+				state.pushInto(op2);
+				state.pushInto(op);
 			}
 
 		}
@@ -137,6 +137,18 @@ namespace FreeFermions {
 				size_t sigma)
 		: opNormalFactory_(engine),type_(type),ind_(ind),sigma_(sigma)
 		{}
+
+		LibraryOperator(const ThisType& x)
+		{
+			throw std::runtime_error(
+			  "LibraryOperator::copyCtor: Don't even think of coming here\n");
+		}
+
+		ThisType& operator=(const ThisType& x)
+		{
+			throw std::runtime_error(
+			  "LibraryOperator::assignmentOp: Don't even think of coming here\n");
+		}
 
 		OpNormalFactoryType opNormalFactory_;
 		size_t type_,ind_,sigma_;
