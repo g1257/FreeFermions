@@ -108,6 +108,14 @@ namespace FreeFermions {
 				return op;
 			}
 
+			template<typename SomeOtherType>
+			OpType* operator()(SomeOtherType& x)
+			{
+				OpType* op = new OpType(x);
+				garbage_.push_back(op);
+				return op;
+			}
+
 			OpType* operator()(const OpType* op)
 			{
 				OpType* op2 = new OpType(op);

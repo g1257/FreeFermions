@@ -20,6 +20,7 @@ typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
+typedef typename LibraryOperatorType::FactoryType OpLibFactoryType;
 
 int main(int argc,char* argv[])
 {
@@ -36,6 +37,7 @@ int main(int argc,char* argv[])
 
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
+
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
 	bool debug = false;
 	HilbertStateType gs(engine.size(),ne,debug);
@@ -46,12 +48,13 @@ int main(int argc,char* argv[])
 	size_t sigma = 0;
 	size_t tot = (debug) ? 1 : n;
 	for (size_t site = 0; site<tot ; site++) {
-		LibraryOperatorType myOp(engine,LibraryOperatorType::N,site,sigma);
+		OpLibFactoryType opLibFactory;
+		LibraryOperatorType *myOp = opLibFactory(engine,LibraryOperatorType::N,site,sigma);
 		for (size_t site2=0; site2<tot; site2++) {
 			HilbertStateType phi = gs;
-			myOp.applyTo(phi);
-			LibraryOperatorType myOp2(engine,LibraryOperatorType::N,site2,sigma);
-			myOp2.applyTo(phi);
+			myOp->applyTo(phi);
+			LibraryOperatorType* myOp2 = opLibFactory(engine,LibraryOperatorType::N,site2,sigma);
+			myOp2->applyTo(phi);
 			std::cout<<scalarProduct(gs,phi)<<" ";
 		}
 		std::cout<<"\n";

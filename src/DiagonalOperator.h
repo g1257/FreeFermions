@@ -81,7 +81,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
  */
 #ifndef DIAGONAL_OPERATOR_H
 #define DIAGONAL_OPERATOR_H
-
+#include "OperatorFactory.h"
 
 namespace FreeFermions {
 	// All interactions == 0
@@ -92,12 +92,9 @@ namespace FreeFermions {
 			typedef DiagonalOperator<BackendType> ThisType;
 
 		public:
-			DiagonalOperator(BackendType backend) :
-				backend_(backend)
-			{
-			}
+			typedef OperatorFactory<ThisType> FactoryType;
 
-			DiagonalOperator(const ThisType* x) : backend_(x->backend_) {}
+			friend class OperatorFactory<ThisType>;
 
 			template<typename FreeOperatorsType>
 			FieldType operator()(const FreeOperatorsType& freeOps,
@@ -115,6 +112,14 @@ namespace FreeFermions {
 			}
 
 		private:
+			//! Use factory to create objects of this type
+			DiagonalOperator(BackendType backend) :
+				backend_(backend)
+			{
+			}
+
+			DiagonalOperator(const ThisType* x) : backend_(x->backend_) {}
+
 			BackendType backend_;
 	}; // DiagonalOperator
 } // namespace Dmrg 

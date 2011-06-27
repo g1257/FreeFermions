@@ -29,6 +29,7 @@ typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertSta
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef typename OperatorType::FactoryType OpNormalFactoryType;
 typedef typename LibraryOperatorType::FactoryType OpLibFactoryType;
+typedef typename DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 
 FieldType calcSuperDensity(size_t site,
                              size_t site2,
@@ -120,10 +121,11 @@ int main(int argc,char *argv[])
 	while(concurrency.loop(it)) {
 		OpNormalFactoryType opNormalFactory;
 		OpLibFactoryType opLibFactory;
+		OpDiagonalFactoryType opDiagonalFactory;
 
 		RealType time = it * atof(argv[5]) + atof(argv[6]);
 		EtoTheIhTimeType eih(time,engine,0);
-		DiagonalOperatorType eihOp(eih);
+		DiagonalOperatorType* eihOp = opDiagonalFactory(eih);
 
 		HilbertStateType savedVector = gs;
 		FieldType savedValue = 0;
@@ -152,7 +154,7 @@ int main(int argc,char *argv[])
 				myOp4->applyTo(phi3);
 
 				if (verbose) std::cerr<<"Applying exp(iHt)\n";
-				eihOp.applyTo(phi3);
+				eihOp->applyTo(phi3);
 
 				if (verbose) std::cerr<<"Applying c_p\n";
 				OperatorType* myOp6 = opNormalFactory(engine,

@@ -99,6 +99,13 @@ namespace FreeFermions {
 	template<typename FieldType>
 	class DummyOperator {
 	public:
+		class DummyFactory {
+		public:
+			DummyOperator* operator()(const DummyOperator* op) {
+				throw std::runtime_error("DummyOperatorFactory\n");
+			}
+		};
+		typedef DummyFactory FactoryType;
 		DummyOperator(const DummyOperator* x) {}
 		template<typename T1>
 		FieldType operator()(const T1& l1,size_t loc) const { return 1; }
@@ -117,6 +124,7 @@ namespace FreeFermions {
 		typedef typename FreeOperatorsType::PermutationsType PermutationsType;
 		typedef typename FreeOperatorsType::IndexGeneratorType IndexGeneratorType;
 		typedef typename CorDOperatorType::FactoryType OpNormalFactoryType;
+		typedef typename DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 		typedef HilbertState<CorDOperatorType,DiagonalOperatorType> ThisType;
 
 		enum {CREATION = CorDOperatorType::CREATION,
@@ -130,13 +138,6 @@ namespace FreeFermions {
 		              std::vector<size_t>& ne,
 		              bool debug = false)
 		:  hilbertSize_(hilbertSize),ne_(ne),debug_(debug) {}
-
-		~HilbertState()
-		{
-			// get out the garbage:
-			for (size_t i=0;i<garbage2_.size();i++)
-				delete garbage2_[i];
-		}
 
 		void pushInto(const CorDOperatorType& op)
 		{
@@ -190,8 +191,7 @@ namespace FreeFermions {
 					size_t x3 = hs.operatorsDiagonal_.size() - 1 - counter3;
 					const DiagonalOperatorType* op = hs.operatorsDiagonal_[x3];
 					counter3++;
-					DiagonalOperatorType *opCopy = new DiagonalOperatorType(op);
-					garbage2_.push_back(opCopy);
+					DiagonalOperatorType *opCopy = opDiagonalFactory_(op);
 					opCopy->transpose();
 					pushInto(*opCopy);
 				}
@@ -307,7 +307,7 @@ namespace FreeFermions {
 		std::vector<const DiagonalOperatorType*> operatorsDiagonal_;
 		std::vector<OperatorPointer> opPointers_;
 		OpNormalFactoryType opNormalFactory_;
-		std::vector<const DiagonalOperatorType*> garbage2_;
+		OpDiagonalFactoryType opDiagonalFactory_;
 	}; // HilbertState
 	
 	template<typename CorDOperatorType,typename DiagonalOperatorType>

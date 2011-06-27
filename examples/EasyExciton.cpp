@@ -23,6 +23,7 @@ typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
+typedef typename DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 
 int main(int argc,char *argv[])
 {
@@ -61,12 +62,13 @@ int main(int argc,char *argv[])
 	std::cout<<"#site="<<site<<"\n";
 	std::cout<<"#site2="<<site2<<"\n";
 	for (size_t it = 0; it<size_t(atoi(argv[3])); it++) {
+		OpDiagonalFactoryType opDiagonalFactory;
 		RealType time = it * atof(argv[4]) + atof(argv[5]);
 		EtoTheIhTimeType eih(time,engine,0);
-		DiagonalOperatorType eihOp(eih);
+		DiagonalOperatorType* eihOp = opDiagonalFactory(eih);
 		HilbertStateType phi = gs;
 		myOp.applyTo(phi);
-		eihOp.applyTo(phi);
+		eihOp->applyTo(phi);
 		OperatorType myOp2(engine,OperatorType::DESTRUCTION,site2,sigma);
 		myOp2.applyTo(phi);
 		std::cout<<time<<" "<<scalarProduct(phi,phi)<<"\n";
