@@ -90,6 +90,7 @@ namespace FreeFermions {
 	template<typename OperatorType>
 	class LibraryOperator {
 		typedef LibraryOperator<OperatorType> ThisType;
+		typedef OperatorFactory<OperatorType> OpNormalFactoryType;
 	public:
 		typedef typename OperatorType::EngineType EngineType;
 		typedef typename OperatorType::RealType RealType;
@@ -103,19 +104,19 @@ namespace FreeFermions {
 
 		friend class OperatorFactory<ThisType>;
 
-		~LibraryOperator()
-		{
-			for (size_t i=0;i<garbage_.size();i++)
-				delete garbage_[i];
-		}
+//		~LibraryOperator()
+//		{
+//			for (size_t i=0;i<garbage_.size();i++)
+//				delete garbage_[i];
+//		}
 
 		template<typename SomeStateType>
 		void applyTo(SomeStateType& state)
 		{
-			OperatorType* op = new OperatorType(engine_,DESTRUCTION,ind_,sigma_);
-			garbage_.push_back(op);
-			OperatorType* op2 = new OperatorType(engine_,CREATION,ind_,sigma_);
-			garbage_.push_back(op2);
+			OperatorType* op = opNormalFactory_(engine_,DESTRUCTION,ind_,sigma_);
+//			garbage_.push_back(op);
+			OperatorType* op2 = opNormalFactory_(engine_,CREATION,ind_,sigma_);
+//			garbage_.push_back(op2);
 
 			if (type_==N) {
 				state.pushInto(*op);
@@ -139,7 +140,8 @@ namespace FreeFermions {
 
 		const EngineType& engine_;
 		size_t type_,ind_,sigma_;
-		std::vector<OperatorType*> garbage_;
+		OpNormalFactoryType opNormalFactory_;
+		//std::vector<OperatorType*> garbage_;
 	}; // LibraryOperator
 	
 

@@ -25,6 +25,7 @@ typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
 typedef typename DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
+typedef typename OperatorType::FactoryType OpNormalFactoryType;
 
 int main(int argc,char *argv[])
 {
@@ -94,9 +95,10 @@ int main(int argc,char *argv[])
 	HilbertStateType gs(engine.size(),ne,debug);
 
 	size_t sigma =0;
-	OperatorType myOp(engine,OperatorType::DESTRUCTION,sites[0],sigma);
+	OpNormalFactoryType opNormalFactory;
+	OperatorType* myOp = opNormalFactory(engine,OperatorType::DESTRUCTION,sites[0],sigma);
 	HilbertStateType phi2 = gs;
-	myOp.applyTo(phi2);
+	myOp->applyTo(phi2);
 	
 //	FieldType density = scalarProduct(phi2,phi2);
 //	std::cerr<<"density="<<density<<"\n";
@@ -109,10 +111,10 @@ int main(int argc,char *argv[])
 		EtoTheIhTimeType eih(time,engine,0);
 		DiagonalOperatorType* eihOp = opDiagonalFactory(eih);
 		HilbertStateType phi = gs;
-		myOp.applyTo(phi);
+		myOp->applyTo(phi);
 		eihOp->applyTo(phi);
-		OperatorType myOp2(engine,OperatorType::DESTRUCTION,sites[1],sigma);
-		myOp2.applyTo(phi);
+		OperatorType* myOp2 = opNormalFactory(engine,OperatorType::DESTRUCTION,sites[1],sigma);
+		myOp2->applyTo(phi);
 		std::cout<<time<<" "<<scalarProduct(phi,phi)<<"\n";
 	}
 }

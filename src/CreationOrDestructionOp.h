@@ -100,13 +100,6 @@ namespace FreeFermions {
 
 		friend class OperatorFactory<ThisType>;
 
-		CreationOrDestructionOp(const EngineType& engine,
-		                           size_t type,
-		                           size_t ind,
-		                           size_t sigma)
-		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
-		{}
-
 		size_t type() const { return type_; }
 
 		size_t sigma() const { return sigma_; }
@@ -135,6 +128,14 @@ namespace FreeFermions {
 	private:
 
 		//! Use the factory to create objects of this type
+		CreationOrDestructionOp(const EngineType& engine,
+				size_t type,
+				size_t ind,
+				size_t sigma)
+		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
+		{}
+
+
 		CreationOrDestructionOp(const ThisType* op2)
 		: engine_(op2->engine_),
 		  type_(op2->type_),

@@ -19,6 +19,7 @@ typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
+typedef typename OperatorType::FactoryType OpNormalFactoryType;
 
 
 int main(int argc,char* argv[])
@@ -49,13 +50,13 @@ int main(int argc,char* argv[])
 	size_t norb = 1;
 	for (size_t orbital=0; orbital<norb; orbital++) {
 		for (size_t site = 0; site<n ; site++) {
-			OperatorType myOp(engine,OperatorType::DESTRUCTION,site+orbital*n,sigma);
+			OpNormalFactoryType opNormalFactory;
+			OperatorType* myOp = opNormalFactory(engine,OperatorType::DESTRUCTION,site+orbital*n,sigma);
 			for (size_t site2=0; site2<n; site2++) {
-				//if (site != site2) continue;
 				HilbertStateType phi = gs;
-				myOp.applyTo(phi);
-				OperatorType myOp2(engine,OperatorType::CREATION,site2+orbital*n,sigma);
-				myOp2.applyTo(phi);
+				myOp->applyTo(phi);
+				OperatorType* myOp2 = opNormalFactory(engine,OperatorType::CREATION,site2+orbital*n,sigma);
+				myOp2->applyTo(phi);
 				std::cout<<scalarProduct(gs,phi)<<" ";
 				//cicj(site,site2) += scalarProduct(gs,phi);
 			}
