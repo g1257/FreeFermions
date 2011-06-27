@@ -88,6 +88,8 @@ namespace FreeFermions {
 	template<typename OpType>
 	class OperatorFactory {
 		typedef typename OpType::EngineType EngineType;
+		typedef OperatorFactory<OpType> ThisType;
+
 	public:
 
 			OperatorFactory(const EngineType& engine) : engine_(&engine)
@@ -100,7 +102,6 @@ namespace FreeFermions {
 					delete garbage_[i];
 			}
 
-			//template<typename EngineType>
 			OpType& operator()(size_t x,size_t site,size_t sigma)
 			{
 				OpType* op = new OpType(*engine_,x,site,sigma);
@@ -124,6 +125,19 @@ namespace FreeFermions {
 			}
 
 		private:
+
+//			OperatorFactory(const ThisType& x)
+//			{
+//				throw std::runtime_error(
+//						"OperatorFactory::copyCtor: Don't even think of coming here\n");
+//			}
+//
+//			ThisType& operator=(const ThisType& x)
+//			{
+//				throw std::runtime_error(
+//						"OperatorFactory::assignmentOp: Don't even think of coming here\n");
+//			}
+
 			const EngineType* engine_;
 			std::vector<OpType*> garbage_;
 

@@ -19,7 +19,7 @@ typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
-typedef typename OperatorType::FactoryType OpNormalFactoryType;
+typedef OperatorType::FactoryType OpNormalFactoryType;
 
 
 int main(int argc,char* argv[])

@@ -29,9 +29,9 @@ typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
-typedef typename OperatorType::FactoryType OpNormalFactoryType;
-typedef typename LibraryOperatorType::FactoryType OpLibFactoryType;
-typedef typename DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
+typedef OperatorType::FactoryType OpNormalFactoryType;
+typedef LibraryOperatorType::FactoryType OpLibFactoryType;
+typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 
 FieldType calcSuperDensity(size_t site,
                              size_t site2,

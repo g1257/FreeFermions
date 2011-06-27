@@ -24,8 +24,8 @@ typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
-typedef typename DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
-typedef typename OperatorType::FactoryType OpNormalFactoryType;
+typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
+typedef OperatorType::FactoryType OpNormalFactoryType;
 
 int main(int argc,char *argv[])
 {

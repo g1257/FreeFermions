@@ -20,7 +20,7 @@ typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
-typedef typename LibraryOperatorType::FactoryType OpLibFactoryType;
+typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
 int main(int argc,char* argv[])
 {
