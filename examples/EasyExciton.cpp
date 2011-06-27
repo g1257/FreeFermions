@@ -69,11 +69,7 @@ int main(int argc,char *argv[])
 
 	size_t dof = 1; // spinless
 	MatrixType t(n,n);
-	
 
-	/*GeometryLibraryType geometry
-
-	*/
 	GeometryLibraryType* geometry;
 	if (!ladder) {
 		geometry = new GeometryLibraryType(n,GeometryLibraryType::CHAIN);

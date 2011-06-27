@@ -113,7 +113,6 @@ namespace FreeFermions {
 							       FreeOperatorsType::CREATION) ? -1 : 1;
 					sum += engine_.eigenvalue(freeOps[i].lambda)*sign;
 				}
-				//if (fabs(sum)>1e-6) std::cerr<<"ffffffffffffffffff\n";
 
 				RealType exponent = -time_*sum;
 				return FieldType(cos(exponent),sin(exponent));
