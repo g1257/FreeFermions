@@ -5,6 +5,7 @@
 // |phi> = c_{p up} exp(iHt) c_{i\sigma} nbar_{i \bar{sigma}} c^dagger_{j sigma'} n_{j \bar{sigma'}} |gs>
 
 #include <cstdlib>
+#include "unistd.h"
 #include "Engine.h"
 #include "GeometryLibrary.h"
 #include "ConcurrencySerial.h"
@@ -14,6 +15,7 @@
 #include "EtoTheIhTime.h"
 #include "DiagonalOperator.h"
 #include "LibraryOperator.h"
+#include "Tokenizer.h" // in PsimagLite
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -81,21 +83,59 @@ FieldType calcSuperDensity(size_t site,
 
 int main(int argc,char *argv[])
 {
-	if (argc!=7) throw std::runtime_error("Needs 7 arguments\n");
-	size_t n = 32;
-	size_t electronsUp = 16;
+	int opt;
+	size_t n =0,electronsUp=0,total=0;
+	RealType offset = 0;
+	std::vector<size_t> sites;
+	std::vector<std::string> str;
+	bool ladder = false;
+	RealType step = 0;
+	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:l")) != -1) {
+		switch (opt) {
+		case 'n':
+			n = atoi(optarg);
+			break;
+		case 'e':
+			electronsUp = atoi(optarg);
+			break;
+		case 's':
+			PsimagLite::tokenizer(optarg,str,",");
+			for (size_t i=0;i<str.size();i++)
+				sites.push_back(atoi(str[i].c_str()));
+			break;
+		case 't':
+			total = atoi(optarg);
+			break;
+		case 'i':
+			step = atof(optarg);
+			break;
+		case 'o':
+			offset = atof(optarg);
+			break;
+		case 'l':
+			ladder = true;
+			break;
+		default: /* '?' */
+			throw std::runtime_error("Wrong usage\n");
+		}
+	}
+	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
+
 	size_t dof = 2; // spin up and down
 	
 	MatrixType t(n,n);
-	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t);
+	GeometryLibraryType *geometry;
+	if (!ladder) {
+		geometry = new GeometryLibraryType(n,GeometryLibraryType::CHAIN);
+		geometry->setGeometry(t);
+	} else {
+		geometry = new GeometryLibraryType(n,GeometryLibraryType::LADDER);
+		geometry->setGeometry(t,2);
 
-	/* GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
-	geometry.setGeometry(t,2);
-
-	for (size_t ii=0;ii<n;ii+=2)
-		t(ii,ii+1) = t(ii+1,ii) = 0.5;
-	*/
+		for (size_t ii=0;ii<n;ii+=2)
+			t(ii,ii+1) = t(ii+1,ii) = 0.5;
+	}
+	delete geometry;
 	std::cerr<<t;
 	
 	ConcurrencyType concurrency(argc,argv);
@@ -106,16 +146,13 @@ int main(int argc,char *argv[])
 	bool verbose = false;
 	HilbertStateType gs(engine.size(),ne,debug);
 	
-	size_t site = atoi(argv[1]);
-	size_t site2 = atoi(argv[2]);
-	size_t site3 = atoi(argv[3]);
 	size_t sigma3 = 0;
 	
-	FieldType superdensity = calcSuperDensity(site,site2,gs,engine);
+	FieldType superdensity = calcSuperDensity(sites[0],sites[1],gs,engine);
 	std::cout<<"#superdensity="<<superdensity<<"\n";
-	std::cout<<"#site="<<site<<" site2="<<site2<<"\n";
+	std::cout<<"#site="<<sites[0]<<" site2="<<sites[1]<<"\n";
 
-	concurrency.loopCreate(size_t(atoi(argv[4])));
+	concurrency.loopCreate(total);
 	size_t it = 0;
 
 	while(concurrency.loop(it)) {
@@ -123,7 +160,7 @@ int main(int argc,char *argv[])
 		OpLibFactoryType opLibFactory;
 		OpDiagonalFactoryType opDiagonalFactory;
 
-		RealType time = it * atof(argv[5]) + atof(argv[6]);
+		RealType time = it * step + offset;
 		EtoTheIhTimeType eih(time,engine,0);
 		DiagonalOperatorType* eihOp = opDiagonalFactory(eih);
 
@@ -134,11 +171,11 @@ int main(int argc,char *argv[])
 		for (size_t sigma = 0;sigma<2;sigma++) {
 			HilbertStateType phi = gs;
 			LibraryOperatorType* myOp = opLibFactory(engine,
-					                      LibraryOperatorType::N,site,1-sigma);
+					                      LibraryOperatorType::N,sites[0],1-sigma);
 			myOp->applyTo(phi);
 
 			OperatorType* myOp2 = opNormalFactory(engine,OperatorType::CREATION,
-					                         site,sigma);
+					                         sites[0],sigma);
 			myOp2->applyTo(phi);
 
 			for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
@@ -146,11 +183,11 @@ int main(int argc,char *argv[])
 
 
 				LibraryOperatorType* myOp3 = opLibFactory(engine,
-				                 LibraryOperatorType::NBAR,site2,1-sigma2);
+				                 LibraryOperatorType::NBAR,sites[1],1-sigma2);
 				myOp3->applyTo(phi3);
 
 				OperatorType* myOp4 = opNormalFactory(engine,
-				                 OperatorType::DESTRUCTION,site2,sigma2);
+				                 OperatorType::DESTRUCTION,sites[1],sigma2);
 				myOp4->applyTo(phi3);
 
 				if (verbose) std::cerr<<"Applying exp(iHt)\n";
@@ -158,7 +195,7 @@ int main(int argc,char *argv[])
 
 				if (verbose) std::cerr<<"Applying c_p\n";
 				OperatorType* myOp6 = opNormalFactory(engine,
-								  OperatorType::DESTRUCTION,site3,sigma3);
+								  OperatorType::DESTRUCTION,sites[2],sigma3);
 				myOp6->applyTo(phi3);
 
 				if (verbose) std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
