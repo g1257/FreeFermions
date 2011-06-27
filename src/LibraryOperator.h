@@ -83,28 +83,25 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define LIBRARY_OPERATOR_H
 
 #include "Complex.h" // in PsimagLite
-
+#include "OperatorFactory.h"
 
 namespace FreeFermions {
 	
 	template<typename OperatorType>
 	class LibraryOperator {
+		typedef LibraryOperator<OperatorType> ThisType;
 	public:
 		typedef typename OperatorType::EngineType EngineType;
 		typedef typename OperatorType::RealType RealType;
 		typedef typename OperatorType::FieldType FieldType;
+		typedef OperatorFactory<ThisType> FactoryType;
 
 		enum {CREATION = OperatorType::CREATION,
 		      DESTRUCTION = OperatorType::DESTRUCTION,
 		      N,
 		      NBAR};
 
-		LibraryOperator(const EngineType& engine,
-                          size_t type,
-                          size_t ind,
-                          size_t sigma)
-		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
-		{}
+		friend class OperatorFactory<ThisType>;
 
 		~LibraryOperator()
 		{
@@ -131,6 +128,15 @@ namespace FreeFermions {
 		}
 
 	private:
+
+		//! Use OperatorFactory to create objects of this class
+		LibraryOperator(const EngineType& engine,
+				size_t type,
+				size_t ind,
+				size_t sigma)
+		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
+		{}
+
 		const EngineType& engine_;
 		size_t type_,ind_,sigma_;
 		std::vector<OperatorType*> garbage_;

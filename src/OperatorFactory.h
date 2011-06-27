@@ -108,6 +108,13 @@ namespace FreeFermions {
 				return op;
 			}
 
+			OpType* operator()(const OpType* op)
+			{
+				OpType* op2 = new OpType(op);
+				garbage_.push_back(op2);
+				return op2;
+			}
+
 		private:
 			
 			std::vector<OpType*> garbage_;

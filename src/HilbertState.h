@@ -116,7 +116,7 @@ namespace FreeFermions {
 		typedef typename FermionFactorType::FreeOperatorsType FreeOperatorsType;
 		typedef typename FreeOperatorsType::PermutationsType PermutationsType;
 		typedef typename FreeOperatorsType::IndexGeneratorType IndexGeneratorType;
-
+		typedef typename CorDOperatorType::FactoryType OpNormalFactoryType;
 		typedef HilbertState<CorDOperatorType,DiagonalOperatorType> ThisType;
 
 		enum {CREATION = CorDOperatorType::CREATION,
@@ -134,8 +134,6 @@ namespace FreeFermions {
 		~HilbertState()
 		{
 			// get out the garbage:
-			for (size_t i=0;i<garbage_.size();i++)
-				delete garbage_[i];
 			for (size_t i=0;i<garbage2_.size();i++)
 				delete garbage2_[i];
 		}
@@ -178,16 +176,14 @@ namespace FreeFermions {
 					size_t x1 = hs.operatorsCreation_.size() - 1 - counter;
 					const CorDOperatorType* op = hs.operatorsCreation_[x1];
 					counter++;
-					CorDOperatorType *opCopy = new CorDOperatorType(op);
-					garbage_.push_back(opCopy);
+					CorDOperatorType *opCopy = opNormalFactory_(op);
 					opCopy->transpose();
 					pushInto(*opCopy);
 				} else if (hs.opPointers_[n1-i-1].type==DESTRUCTION) {
 					size_t x2 = hs.operatorsDestruction_.size() - 1 - counter2;
 					const CorDOperatorType* op = hs.operatorsDestruction_[x2];
 					counter2++;
-					CorDOperatorType *opCopy = new CorDOperatorType(op);
-					garbage_.push_back(opCopy);
+					CorDOperatorType *opCopy = opNormalFactory_(op);
 					opCopy->transpose();
 					pushInto(*opCopy);
 				} else {
@@ -310,7 +306,7 @@ namespace FreeFermions {
 		std::vector<const CorDOperatorType*> operatorsCreation_,operatorsDestruction_;
 		std::vector<const DiagonalOperatorType*> operatorsDiagonal_;
 		std::vector<OperatorPointer> opPointers_;
-		std::vector<const CorDOperatorType*> garbage_;
+		OpNormalFactoryType opNormalFactory_;
 		std::vector<const DiagonalOperatorType*> garbage2_;
 	}; // HilbertState
 	

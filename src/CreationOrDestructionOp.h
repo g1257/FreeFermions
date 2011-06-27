@@ -83,19 +83,22 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define CREATION_OR_DEST_H_H
 
 #include "Complex.h" // in PsimagLite
-
+#include "OperatorFactory.h"
 
 namespace FreeFermions {
 	
 	template<typename EngineType_>
 	class CreationOrDestructionOp {
+		typedef CreationOrDestructionOp<EngineType_> ThisType;
 	public:
 		typedef EngineType_ EngineType;
 		typedef typename EngineType::RealType RealType;
 		typedef typename EngineType::FieldType FieldType;
-		typedef CreationOrDestructionOp<EngineType_> ThisType;
+		typedef OperatorFactory<ThisType> FactoryType;
 
 		enum {CREATION,DESTRUCTION};
+
+		friend class OperatorFactory<ThisType>;
 
 		CreationOrDestructionOp(const EngineType& engine,
 		                           size_t type,
@@ -103,12 +106,6 @@ namespace FreeFermions {
 		                           size_t sigma)
 		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
 		{}
-
-		CreationOrDestructionOp(const ThisType* op2)
-		: engine_(op2->engine_),
-		  type_(op2->type_),
-		  ind_(op2->ind_),
-		  sigma_(op2->sigma_) {}
 
 		size_t type() const { return type_; }
 
@@ -136,6 +133,14 @@ namespace FreeFermions {
 		}
 
 	private:
+
+		//! Use the factory to create objects of this type
+		CreationOrDestructionOp(const ThisType* op2)
+		: engine_(op2->engine_),
+		  type_(op2->type_),
+		  ind_(op2->ind_),
+		  sigma_(op2->sigma_) {}
+
 		const EngineType& engine_;
 		size_t type_,ind_,sigma_;
 	}; // CreationOrDestructionOp

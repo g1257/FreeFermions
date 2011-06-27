@@ -14,7 +14,6 @@
 #include "EtoTheIhTime.h"
 #include "DiagonalOperator.h"
 #include "LibraryOperator.h"
-#include "OperatorFactory.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -28,8 +27,8 @@ typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
-typedef FreeFermions::OperatorFactory<OperatorType> OpNormalFactoryType;
-typedef FreeFermions::OperatorFactory<LibraryOperatorType> OpLibFactoryType;
+typedef typename OperatorType::FactoryType OpNormalFactoryType;
+typedef typename LibraryOperatorType::FactoryType OpLibFactoryType;
 
 FieldType calcSuperDensity(size_t site,
                              size_t site2,
@@ -82,8 +81,8 @@ FieldType calcSuperDensity(size_t site,
 int main(int argc,char *argv[])
 {
 	if (argc!=7) throw std::runtime_error("Needs 7 arguments\n");
-	size_t n = 8; 
-	size_t electronsUp = 4;
+	size_t n = 32;
+	size_t electronsUp = 16;
 	size_t dof = 2; // spin up and down
 	
 	MatrixType t(n,n);
