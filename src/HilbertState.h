@@ -84,6 +84,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 #include "Complex.h" // in PsimagLite
 #include "FermionFactor.h"
+#include "TypeToString.h"
 
 namespace FreeFermions {
 	struct OperatorPointer {
@@ -115,32 +116,36 @@ namespace FreeFermions {
 		void transpose() {}
 	};
 
-	template<typename CorDOperatorType,
-	          typename DiagonalOperatorType=
-	                    DummyOperator<typename CorDOperatorType::FieldType> >
+	template<typename CorDOperatorType_,
+	          typename DiagonalOperatorType_=
+	                    DummyOperator<typename CorDOperatorType_::FieldType> >
 	class HilbertState {
-		typedef typename CorDOperatorType::EngineType EngineType;
-		typedef typename CorDOperatorType::RealType RealType;
-		typedef typename CorDOperatorType::FieldType FieldType;
-		typedef FermionFactor<CorDOperatorType,OperatorPointer> FermionFactorType;
+		typedef typename CorDOperatorType_::EngineType EngineType;
+		typedef typename CorDOperatorType_::RealType RealType;
+		typedef typename CorDOperatorType_::FieldType FieldType;
+		typedef FermionFactor<CorDOperatorType_,OperatorPointer> FermionFactorType;
 		typedef typename FermionFactorType::FreeOperatorsType FreeOperatorsType;
 		typedef typename FreeOperatorsType::PermutationsType PermutationsType;
 		typedef typename FreeOperatorsType::IndexGeneratorType IndexGeneratorType;
-		typedef typename CorDOperatorType::FactoryType OpNormalFactoryType;
-		typedef typename DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
-		typedef HilbertState<CorDOperatorType,DiagonalOperatorType> ThisType;
 
-		enum {CREATION = CorDOperatorType::CREATION,
-		       DESTRUCTION = CorDOperatorType::DESTRUCTION,
+		typedef HilbertState<CorDOperatorType_,DiagonalOperatorType_> ThisType;
+
+		enum {CREATION = CorDOperatorType_::CREATION,
+		       DESTRUCTION = CorDOperatorType_::DESTRUCTION,
 		       DIAGONAL
 		};
 
 	public:
+		typedef CorDOperatorType_ CorDOperatorType;
+		typedef DiagonalOperatorType_ DiagonalOperatorType;
+		typedef typename CorDOperatorType::FactoryType OpNormalFactoryType;
+		typedef typename DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
+
 		// it's the g.s. for now, FIXME change it later to allow more flex.
 		HilbertState(const EngineType& engine,
-		              std::vector<size_t>& ne,
+		              const std::vector<size_t>& ne,
 		              bool debug = false)
-		:  hilbertSize_(engine.size()),ne_(ne),debug_(debug),
+		:  engine_(&engine),ne_(ne),debug_(debug),
 		   opNormalFactory_(engine),opDiagonalFactory_(engine) {}
 
 		void pushInto(const CorDOperatorType& op)
@@ -168,39 +173,22 @@ namespace FreeFermions {
 
 		void pour(const ThisType& hs)
 		{
-			if (hs.hilbertSize_!=hilbertSize_ || hs.ne_!=ne_)
-				throw std::runtime_error("HilbertState::pour(...)\n");
-
-			size_t counter = 0;
-			size_t counter2 = 0;
-			size_t counter3 = 0;
-			size_t n1 = hs.opPointers_.size();
-			// pour them in reverse order:
-			for (size_t i=0;i<hs.opPointers_.size();i++) {
-				if (hs.opPointers_[n1-i-1].type==CREATION) {
-					size_t x1 = hs.operatorsCreation_.size() - 1 - counter;
-					const CorDOperatorType* op = hs.operatorsCreation_[x1];
-					counter++;
-					CorDOperatorType& opCopy = opNormalFactory_(op);
-					opCopy.transpose();
-					pushInto(opCopy);
-				} else if (hs.opPointers_[n1-i-1].type==DESTRUCTION) {
-					size_t x2 = hs.operatorsDestruction_.size() - 1 - counter2;
-					const CorDOperatorType* op = hs.operatorsDestruction_[x2];
-					counter2++;
-					CorDOperatorType& opCopy = opNormalFactory_(op);
-					opCopy.transpose();
-					pushInto(opCopy);
-				} else {
-					size_t x3 = hs.operatorsDiagonal_.size() - 1 - counter3;
-					const DiagonalOperatorType* op = hs.operatorsDiagonal_[x3];
-					counter3++;
-					DiagonalOperatorType& opCopy = opDiagonalFactory_(op);
-					opCopy.transpose();
-					pushInto(opCopy);
-				}
+			if (hs.engine_->size()!=engine_->size()) {
+				std::string s = "HilbertState::pour(...)  size1=" +
+				                 ttos(engine_->size()) +
+				                " size2=" + ttos(hs.engine_->size()) + "\n";
+				throw std::runtime_error(s.c_str());
+			}
+			if (hs.ne_!=ne_ && !equalZero(ne_)) {
+				std::string s = "HilbertState::pour(...)  ne1=" + ttos(ne_) +
+				                " ne2=" + ttos(hs.ne_) + "\n";
+				throw std::runtime_error(s.c_str());
 			}
 
+			pourInternal(hs);
+			if (hs.ne_!=ne_) { // ne_ == 0 here
+				ne2_ = hs.ne_;
+			}
 		}
 
 		FieldType close() const
@@ -214,10 +202,16 @@ namespace FreeFermions {
 
 	private:
 
+		bool equalZero(const std::vector<size_t>& v) const
+		{
+			for (size_t i=0;i<v.size();i++) if (v[i]!=0) return false;
+			return true;
+		}
+
 		FieldType close(size_t sigma) const
 		{
 			size_t m = findCreationGivenSpin(sigma);
-			IndexGeneratorType lambda(m,hilbertSize_);
+			IndexGeneratorType lambda(m,engine_->size());
 			FieldType sum  = 0;
 			do {
 				sum += compute(lambda,sigma);
@@ -240,9 +234,10 @@ namespace FreeFermions {
 
 			PermutationsType lambda2(lambda);
 			FieldType sum = 0;
+			size_t ne2 = (ne2_.size()>sigma) ? ne2_[sigma] : 0;
 			do  {
 				FieldType prod = 1;
-				FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2,sigma);
+				FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2,sigma,ne2);
 				// diag. part need to be done here, because...
 				FieldType dd = 1.0;
 				for (size_t i=0;i<operatorsDiagonal_.size();i++) {
@@ -250,16 +245,19 @@ namespace FreeFermions {
 					dd *= operatorsDiagonal_[i]->operator()(lambdaOperators,loc);
 				}
 				// ... fermionFactor ctor will modify lambdaOperators
+
 				FermionFactorType fermionFactor(lambdaOperators,ne_[sigma]);
 				RealType ff = fermionFactor();
 
 				if (ff==0) continue;
 				for (size_t i=0;i<lambda.size();i++) {
-					size_t loc = findLocOf(operatorsCreation_,i,sigma);
+					int loc = findLocOf(operatorsCreation_,i,sigma);
+					if (loc<0) continue;
 					prod *= operatorsCreation_[loc]->operator()(lambda[i]);
 				}
 				for (size_t i=0;i<lambda2.size();i++) {
-					size_t loc = findLocOf(operatorsDestruction_,i,sigma);
+					int loc = findLocOf(operatorsDestruction_,i,sigma);
+					if (loc<0) continue;
 					prod *= operatorsDestruction_[loc]->operator()(lambda2[i]);
 				}
 				if (debug_) {
@@ -290,7 +288,7 @@ namespace FreeFermions {
 			throw std::runtime_error("findLocOfDiagOp\n");
 		}
 
-		size_t findLocOf(
+		int findLocOf(
 		                  const std::vector<const CorDOperatorType*>& v,
 		                  size_t ind,
 		                  size_t sigma) const
@@ -301,11 +299,45 @@ namespace FreeFermions {
 				if (counter==ind) return i;
 				counter++;
 			}
-			throw std::runtime_error("findLocOf\n");
+			return -1;
 		}
 
-		size_t hilbertSize_;
+		void pourInternal(const ThisType& hs)
+		{
+			size_t counter = 0;
+			size_t counter2 = 0;
+			size_t counter3 = 0;
+			size_t n1 = hs.opPointers_.size();
+			// pour them in reverse order:
+			for (size_t i=0;i<hs.opPointers_.size();i++) {
+				if (hs.opPointers_[n1-i-1].type==CREATION) {
+					size_t x1 = hs.operatorsCreation_.size() - 1 - counter;
+					const CorDOperatorType* op = hs.operatorsCreation_[x1];
+					counter++;
+					CorDOperatorType& opCopy = opNormalFactory_(op);
+					opCopy.transpose();
+					pushInto(opCopy);
+				} else if (hs.opPointers_[n1-i-1].type==DESTRUCTION) {
+					size_t x2 = hs.operatorsDestruction_.size() - 1 - counter2;
+					const CorDOperatorType* op = hs.operatorsDestruction_[x2];
+					counter2++;
+					CorDOperatorType& opCopy = opNormalFactory_(op);
+					opCopy.transpose();
+					pushInto(opCopy);
+				} else {
+					size_t x3 = hs.operatorsDiagonal_.size() - 1 - counter3;
+					const DiagonalOperatorType* op = hs.operatorsDiagonal_[x3];
+					counter3++;
+					DiagonalOperatorType& opCopy = opDiagonalFactory_(op);
+					opCopy.transpose();
+					pushInto(opCopy);
+				}
+			}
+		}
+
+		const EngineType* engine_;
 		std::vector<size_t> ne_;
+		std::vector<size_t> ne2_;
 		bool debug_;
 		std::vector<const CorDOperatorType*> operatorsCreation_,operatorsDestruction_;
 		std::vector<const DiagonalOperatorType*> operatorsDiagonal_;

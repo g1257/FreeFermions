@@ -108,6 +108,7 @@ template<typename OperatorType,typename OpPointerType>
 				return;
 			}
 			freeOps.removeNonCsOrDs();
+
 			freeOps.reverse();
 			pairUp(ne,freeOps);
 		}
@@ -129,9 +130,9 @@ template<typename OperatorType,typename OpPointerType>
 				// take first operator's lambda:
 				size_t thisLambda = freeOps[0].lambda;
 				// find next operator with same lambda:
-				size_t x = freeOps.findOpGivenLambda(thisLambda,1);
+				int x = freeOps.findOpGivenLambda(thisLambda,1);
 				// if types are equal then result is zero, and we're done:
-				if (freeOps[0].type == freeOps[x].type) {
+				if (x<0 || freeOps[0].type == freeOps[x].type) {
 					value_ = 0;
 					return;
 				}

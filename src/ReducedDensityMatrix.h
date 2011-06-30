@@ -81,10 +81,12 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
  */
 #ifndef R_DENSITY_MATRIX_H
 #define R_DENSITY_MATRIX_H
+#include <assert.h>
 #include "Engine.h"
-#include "ObservableLibrary.h"
 #include "GeometryLibrary.h"
 #include "CanonicalStates.h"
+#include "CreationOrDestructionOp.h"
+#include "HilbertState.h"
 
 namespace FreeFermions {
 	template<typename EngineType>
@@ -94,10 +96,15 @@ namespace FreeFermions {
 		typedef typename EngineType::FieldType FieldType;
 		typedef typename EngineType::RealType RealType;
 		typedef std::vector<FieldType> VectorType;
-		typedef psimag::Matrix<FieldType> MatrixType;
-		typedef typename EngineType::HilbertVectorType HilbertVectorType;
-		typedef typename EngineType::FreeOperatorType FreeOperatorType;
+		typedef PsimagLite::Matrix<FieldType> MatrixType;
 		typedef typename EngineType::ConcurrencyType ConcurrencyType;
+		typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
+		typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
+		typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
+		typedef typename OperatorType::FactoryType OpNormalFactoryType;
+
+		enum {CREATION = OperatorType::CREATION,
+				       DESTRUCTION = OperatorType::DESTRUCTION};
 
 		public:
 			// note: right and left blocks are assumed equal and of size n
@@ -106,6 +113,7 @@ namespace FreeFermions {
 			{
 				assert(engine_.dof()==1);
 				calculatePsi(psi_);
+				std::cout<<psi_;
 				if (!concurrency_.root()) return;
 				calculateRdm(rho_,psi_);
 			}
@@ -115,27 +123,28 @@ namespace FreeFermions {
 			void diagonalize(std::vector<RealType>& e)
 			{
 				if (!concurrency_.root()) return;
-				utils::diag(rho_,e,'N');
+				diag(rho_,e,'N');
 			}
 
 		private:
 			void calculatePsi(MatrixType& psi)
 			{
+				OpNormalFactoryType opNormalFactory(engine_);
 				CanonicalStates aux(n_,ne_);
 				size_t states = aux.states();
 				psi.resize(states,states);
 				
 				VectorUintType neV(engine_.dof(),ne_);
 				VectorUintType zeroV(engine_.dof(),0);
-				HilbertVectorType gs =  engine_.newGroundState(neV);
+				HilbertStateType gs(engine_,neV);
 				
 				std::cout<<"#psi of size"<<states<<"x"<<states<<"\n";
 				size_t each = states/10;
 				concurrency_.loopCreate(states);
-				//for (size_t i=0;i<states;i++) {
-				size_t i=0;
 				VectorType psiV(states);
 				std::vector<VectorType> psiVv(states);
+				RealType sum = 0;
+				size_t i=0;
 				while(concurrency_.loop(i)) {
 					if (i%each ==0 && concurrency_.name()=="serial") {
 						std::cerr<<"Done "<<(i*10/each)<<"%\n";
@@ -143,8 +152,8 @@ namespace FreeFermions {
 					}
 					VectorUintType v;
 					aux.getSites(v,i);
-					HilbertVectorType phi =  engine_.newGroundState(zeroV);
-					psiOneBlock(phi,v,"creation");
+					HilbertStateType phi(engine_,zeroV);
+					psiOneBlock(phi,v,CREATION,opNormalFactory);
 					//std::cout<<phi;
 					for (size_t j=0;j<states;j++) {
 						VectorUintType w;
@@ -154,32 +163,37 @@ namespace FreeFermions {
 							continue;
 						}
 						
-						HilbertVectorType phi2 = gs;
-						psiOneBlock(phi2,w,"destruction",n_);
+						HilbertStateType phi2 = gs;
+						psiOneBlock(phi2,w,DESTRUCTION,opNormalFactory,n_);
 						psiV[j] = scalarProduct(phi2,phi);
 						//std::cout<<psi(i,j)<<" ";
 					}
 					psiVv[i]=psiV;
+					sum += psiV*psiV;
 					//std::cout<<"\n";
 				}	
 				concurrency_.gather(psiVv);
-				for (size_t i=0;i<psiVv.size();i++) 
-					for (size_t j=0;j<psiVv[i].size();j++) 
-						psi(i,j) = psiVv[i][j];
+				std::cerr<<"sum="<<sum<<"\n";
+				for (size_t i=0;i<psiVv.size();i++)
+					for (size_t j=0;j<psiVv[i].size();j++)
+						psi(i,j) = psiVv[i][j]/sqrt(sum);
+
+
+
 			}
 			
-			void psiOneBlock(HilbertVectorType& phi,const VectorUintType& v,
-					 const std::string& label,size_t offset = 0)
+			void psiOneBlock(HilbertStateType& phi,
+			                   const VectorUintType& v,
+			                   size_t label,
+			                   OpNormalFactoryType& opNormalFactory,
+			                   size_t offset = 0)
 			{
 				size_t sigma = 0; 
 				for (size_t i=0;i<v.size();i++) {
 					size_t site = v[i] + offset;
-					FreeOperatorType myOp = engine_.newSimpleOperator(label,site,sigma);
-					HilbertVectorType phi2 = engine_.newState();
-					myOp.apply(phi2,phi,FreeOperatorType::SIMPLIFY);
-					phi = phi2;
+					OperatorType& myOp = opNormalFactory(label,site,sigma);
+					myOp.applyTo(phi);
 				}
-				//phi.simplify();
 			}
 			
 			void calculateRdm(MatrixType& rho,const MatrixType& psi)

@@ -34,19 +34,23 @@ print FILE<<EOF;
 LDFLAGS =      -llapack    -lm  -lpthread 
 CPPFLAGS = -Werror -Wall -I../PartialPsimag  -I../../PsimagLite/src -I../src
 CXX = g++ -O2 -pg -DNDEBUG
+EXAMPLES = HolonDoublon EasyExciton cicj ninj reducedDensityMatrix
 
-
-all: clean $what 
+all: $what
 
 $what.o: $what.cpp $headers Makefile
 	\$(CXX) \$(CPPFLAGS) -c $what.cpp  
 
-$what: clean  $what.o
+$what: $what.o
 	\$(CXX) -o  $what $what.o \$(LDFLAGS)
+
+Makefile.dep: $what.cpp
+	\$(CXX) \$(CPPFLAGS) -MM $what.cpp  > Makefile.dep
 
 clean:
 	rm -f core* $what *.o *.ii *.tt
 
+include Makefile.dep
 ######## End of Makefile ########
 
 EOF

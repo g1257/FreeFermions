@@ -110,7 +110,8 @@ namespace FreeFermions {
 		FreeOperators(const OpPointersType& opPointers,
 		                const IndexGeneratorType& lambda,
 		                const PermutationsType& lambda2,
-		                size_t sigma)
+		                size_t sigma,
+		                size_t ne2)
 		: value_(1)
 		{
 			size_t counter=0;
@@ -134,6 +135,10 @@ namespace FreeFermions {
 					fo.lambda = 0;
 				}
 				data_.push_back(fo);
+			}
+			if (ne2>0) {
+				addGsAtTheEnd(ne2);
+				counter2 += ne2;
 			}
 			// if daggers > non-daggers, result is zero
 			if (counter!=counter2) {
@@ -178,6 +183,7 @@ namespace FreeFermions {
 			data_.erase(itp);
 			// find again because the erase changed data:
 			int y = findOpGivenLambda(thisLambda,0);
+			if (y<0) throw std::runtime_error("removePair\n");
 			itp = data_.begin()+y;
 			data_.erase(itp);
 		}
@@ -189,7 +195,8 @@ namespace FreeFermions {
 					if (notCreationOrDestruction(data_[i].type)) continue;
 					if (data_[i].lambda==thisLambda) return i;
 			}
-			throw std::runtime_error("FreeOperators::findOpGivenLambda()\n");
+			return -1;
+			//throw std::runtime_error("FreeOperators::findOpGivenLambda()\n");
 		}
 
 		 bool notCreationOrDestruction(size_t type1) const
@@ -199,6 +206,17 @@ namespace FreeFermions {
 		 }
 
 	private:
+
+		 void addGsAtTheEnd(size_t ne2)
+		 {
+			 for (size_t i=0;i<ne2;i++) {
+				 FreeOperator fo;
+				 fo.lambda = ne2-i-1;
+				 fo.type = DESTRUCTION;
+				 data_.push_back(fo);
+			 }
+		 }
+
 		std::vector<FreeOperator> data_;
 		RealType value_;
 	}; // FreeOperators
