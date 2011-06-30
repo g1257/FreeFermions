@@ -87,6 +87,8 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "CanonicalStates.h"
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
+#include "DoublePointerPacker.h"
+#include "BLAS.h"
 
 namespace FreeFermions {
 	template<typename EngineType>
@@ -113,7 +115,7 @@ namespace FreeFermions {
 			{
 				assert(engine_.dof()==1);
 				calculatePsi(psi_);
-				std::cout<<psi_;
+				//std::cout<<psi_;
 				if (!concurrency_.root()) return;
 				calculateRdm(rho_,psi_);
 			}
@@ -162,7 +164,7 @@ namespace FreeFermions {
 							psiV[j] = 0;
 							continue;
 						}
-						
+
 						HilbertStateType phi2 = gs;
 						psiOneBlock(phi2,w,DESTRUCTION,opNormalFactory,n_);
 						psiV[j] = scalarProduct(phi2,phi);
@@ -177,9 +179,6 @@ namespace FreeFermions {
 				for (size_t i=0;i<psiVv.size();i++)
 					for (size_t j=0;j<psiVv[i].size();j++)
 						psi(i,j) = psiVv[i][j]/sqrt(sum);
-
-
-
 			}
 			
 			void psiOneBlock(HilbertStateType& phi,
@@ -201,22 +200,28 @@ namespace FreeFermions {
 				size_t states=psi.n_row();
 				rho.resize(states,states);
 				std::cout<<"#rho of size "<<states<<"x"<<states<<"\n";
-				size_t each = states/10;
-				for (size_t i1=0;i1<states;i1++) {
-					if (i1%each ==0) {
-						std::cerr<<"Done "<<(i1*10/each)<<"%\n";
-						std::cerr.flush();
-					}
-					for (size_t i2=0;i2<states;i2++) {
-						rho(i1,i2) = 0;
-						for (size_t j=0;j<states;j++) {
-							rho(i1,i2) += psi(i1,j) * std::conj(psi(i2,j));
-						}
-						//std::cout<<rho(i1,i2)<<" ";
-					}
-					//std::cout<<"\n";
-				}
-				if (!isHermitian(rho)) throw std::runtime_error("DensityMatrix not Hermitian\n");
+//				size_t each = states/10;
+//				for (size_t i1=0;i1<states;i1++) {
+//					if (i1%each ==0) {
+//						std::cerr<<"Done "<<(i1*10/each)<<"%\n";
+//						std::cerr.flush();
+//					}
+//					for (size_t i2=0;i2<states;i2++) {
+//						rho(i1,i2) = 0;
+//						for (size_t j=0;j<states;j++) {
+//							rho(i1,i2) += psi(i1,j) * std::conj(psi(i2,j));
+//						}
+//						//std::cout<<rho(i1,i2)<<" ";
+//					}
+//					//std::cout<<"\n";
+//				}
+//
+				RealType alpha = 1.0;
+				RealType beta = 0.0;
+				psimag::BLAS::GEMM('N','C',states,states,states,alpha,&(psi(0,0)),states,
+				     &(psi(0,0)),states,beta,&(rho(0,0)),states);
+				if (!isHermitian(rho))
+				  throw std::runtime_error("DensityMatrix not Hermitian\n");
 			}
 			
 			EngineType& engine_;

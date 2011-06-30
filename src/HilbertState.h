@@ -193,6 +193,7 @@ namespace FreeFermions {
 
 		FieldType close() const
 		{
+			//std::cerr<<"DEBUG: closing with weight="<<opPointers_.size()<<"\n";
 			FieldType prod = 1.0;
 			for (size_t i=0;i<ne_.size();i++) {
 				prod *= close(i);
