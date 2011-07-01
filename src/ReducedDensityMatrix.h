@@ -87,7 +87,6 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "CanonicalStates.h"
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
-#include "DoublePointerPacker.h"
 #include "BLAS.h"
 
 namespace FreeFermions {
@@ -175,6 +174,7 @@ namespace FreeFermions {
 					//std::cout<<"\n";
 				}	
 				concurrency_.gather(psiVv);
+				concurrency_.gather(sum);
 				std::cerr<<"sum="<<sum<<"\n";
 				for (size_t i=0;i<psiVv.size();i++)
 					for (size_t j=0;j<psiVv[i].size();j++)

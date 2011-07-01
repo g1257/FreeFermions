@@ -1,13 +1,21 @@
 
 #include "ReducedDensityMatrix.h"
-//#include "ConcurrencyMpi.h"
+#ifdef USE_MPI
+#include "ConcurrencyMpi.h"
+#else
 #include "ConcurrencySerial.h"
+#endif
 
 // TBW FIXME
 typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef RealType FieldType;
+#ifndef USE_MPI
 typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
+#else
+typedef PsimagLite::ConcurrencyMpi<RealType> ConcurrencyType;
+#endif
+
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
