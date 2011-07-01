@@ -82,11 +82,13 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #ifndef R_DENSITY_MATRIX_H
 #define R_DENSITY_MATRIX_H
 #include <assert.h>
+#include <cstdlib>
 #include "Engine.h"
 #include "GeometryLibrary.h"
 #include "CanonicalStates.h"
 #include "CreationOrDestructionOp.h"
-#include "HilbertState.h"
+//#include "HilbertState.h"
+#include "RealSpaceState.h"
 #include "BLAS.h"
 
 namespace FreeFermions {
@@ -100,7 +102,8 @@ namespace FreeFermions {
 		typedef PsimagLite::Matrix<FieldType> MatrixType;
 		typedef typename EngineType::ConcurrencyType ConcurrencyType;
 		typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
-		typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
+//		typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
+		typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
 		typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 		typedef typename OperatorType::FactoryType OpNormalFactoryType;
 
@@ -199,23 +202,7 @@ namespace FreeFermions {
 			{
 				size_t states=psi.n_row();
 				rho.resize(states,states);
-				std::cout<<"#rho of size "<<states<<"x"<<states<<"\n";
-//				size_t each = states/10;
-//				for (size_t i1=0;i1<states;i1++) {
-//					if (i1%each ==0) {
-//						std::cerr<<"Done "<<(i1*10/each)<<"%\n";
-//						std::cerr.flush();
-//					}
-//					for (size_t i2=0;i2<states;i2++) {
-//						rho(i1,i2) = 0;
-//						for (size_t j=0;j<states;j++) {
-//							rho(i1,i2) += psi(i1,j) * std::conj(psi(i2,j));
-//						}
-//						//std::cout<<rho(i1,i2)<<" ";
-//					}
-//					//std::cout<<"\n";
-//				}
-//
+				//std::cout<<"#rho of size "<<states<<"x"<<states<<"\n";
 				RealType alpha = 1.0;
 				RealType beta = 0.0;
 				psimag::BLAS::GEMM('N','C',states,states,states,alpha,&(psi(0,0)),states,

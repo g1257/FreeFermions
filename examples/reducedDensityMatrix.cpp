@@ -19,7 +19,8 @@ typedef PsimagLite::ConcurrencyMpi<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
-typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
+//typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
+typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
 typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 

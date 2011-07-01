@@ -104,6 +104,8 @@ namespace FreeFermions {
 
 		size_t sigma() const { return sigma_; }
 
+		size_t index() const { return ind_; }
+
 		FieldType const operator()(size_t j) const
 		{
 			if (type_==CREATION) return engine_.eigenvector(ind_,j);

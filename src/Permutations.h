@@ -83,7 +83,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define PERMUTATIONS_H_H
 
 #include "Complex.h" // in PsimagLite
-
+#include "Sort.h"
 
 namespace FreeFermions {
 	
