@@ -85,6 +85,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Complex.h" // in PsimagLite
 #include "TypeToString.h"
 #include "FlavoredState.h"
+#include "Permutations.h"
 #include "ArrangementsWithoutRepetition.h"
 #include "Sort.h"
 
@@ -97,6 +98,9 @@ namespace FreeFermions {
 		typedef typename CorDOperatorType_::FieldType FieldType;
 		typedef  FlavoredState<std::vector<bool>,CorDOperatorType_> FlavoredStateType;
 		typedef RealSpaceState<CorDOperatorType_> ThisType;
+		typedef ArrangementsWithoutRepetition<std::vector<size_t> >
+						ArrangementsWithoutRepetitionType;
+		typedef Permutations<ArrangementsWithoutRepetitionType> PermutationsType;
 
 		enum {CREATION = CorDOperatorType_::CREATION,
 		       DESTRUCTION = CorDOperatorType_::DESTRUCTION,
@@ -122,8 +126,16 @@ namespace FreeFermions {
 				int x = terms_[i].apply(op.type(),op.sigma(),op.index());
 				values_[i] *= x;
 			}
-			FIXME CREATE NEW TERM IF NEEDED
-			// remove 0 values FIXME
+			std::vector<FlavoredStateType> terms2(terms_);
+			terms_.clear();
+			std::vector<FieldType> values2(values_);
+			values_.clear();
+			for (size_t i=0;i<terms2.size();i++) {
+				if (values2[i]!=0) {
+					terms_.push_back(terms2[i]);
+					values_.push_back(values2[i]);
+				}
+			}
 		}
 
 		FieldType scalarProduct(ThisType& other)
@@ -165,28 +177,38 @@ namespace FreeFermions {
 		void initTerms(size_t sigma)
 		{
 			size_t n = engine_->sites();
-			std::vector<bool> v(n);
-			typedef ArrangementsWithoutRepetition<std::vector<size_t> >
-				ArrangementsWithoutRepetitionType;
-			ArrangementsWithoutRepetitionType p(n,ne_[sigma]);
-			do {
-				RealType prod = (isArrangementEven(p)) ? 1.0 : -1.0;
-				for (size_t i=0;i<ne_[sigma];i++) {
-					prod *= engine_->eigenvector(p[i],i);
-				}
-
-				for (size_t i=0;i<v.size();i++) v[i] = false;
-				for (size_t i=0;i<p.size();i++) v[p[i]] = true;
-				assert(engine_->dof()==1);
+			std::vector<bool> v(n,false);
+			if (ne_[sigma]==0) {
 				FlavoredStateType fl(engine_->dof(),v.size());
 				fl.pushInto(sigma,v);
 				terms_.push_back(fl);
-				values_.push_back(prod);
-			} while (p.increase());
+				values_.push_back(1.0);
+				return;
+			}
+
+			ArrangementsWithoutRepetitionType ap(n,ne_[sigma]);
+			while (ap.increase()) {
+				PermutationsType p(ap);
+				do {
+					std::cerr<<"--------> "<<p<<" <---------\n";
+					RealType prod = (isArrangementOdd(p)) ? -1.0 : 1.0;
+					for (size_t i=0;i<ne_[sigma];i++) {
+						prod *= engine_->eigenvector(p[i],i);
+					}
+
+					for (size_t i=0;i<v.size();i++) v[i] = false;
+					for (size_t i=0;i<ne_[sigma];i++) v[p[i]] = true;
+					assert(engine_->dof()==1);
+					FlavoredStateType fl(engine_->dof(),v.size());
+					fl.pushInto(sigma,v);
+					terms_.push_back(fl);
+					values_.push_back(prod);
+				} while (p.increase());
+			};
 		}
 
 		template<typename SomeVectorType>
-		bool isArrangementEven(const SomeVectorType& v)
+		bool isArrangementOdd(const SomeVectorType& v)
 		{
 			// make a copy because sort will modify it:
 			typedef typename SomeVectorType::value_type SomeElementType;
@@ -195,13 +217,14 @@ namespace FreeFermions {
 			Sort<std::vector<SomeElementType> > mysort;
 			std::vector<size_t> iperm(w.size());
 			mysort.sort(w,iperm);
-			return even(iperm);
+			return isOdd(iperm);
 		}
 
-		static bool even(const std::vector<size_t>& x)
+		bool isOdd(const std::vector<size_t>& x)
 		{
 			//Return even parity for the permutation
-			return (x.size() - ncycles(x)) % 2 == 0;
+			int temp =  (x.size() - ncycles(x));
+			return temp & 1;
 		}
 
 		static size_t ncycles(const std::vector<size_t>& x)
@@ -212,7 +235,7 @@ namespace FreeFermions {
 			for (size_t i=0;i<seen.size();i++) {
 				if (seen[i]) continue;
 				ncycles++;
-				//mark indices that belongs to the cycle
+				//mark indices that belong to the cycle
 				size_t j = i;
 				while (!seen[j]) {
 					seen[j] = true;

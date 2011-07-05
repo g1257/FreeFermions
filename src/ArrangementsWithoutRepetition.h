@@ -92,7 +92,7 @@ namespace FreeFermions {
 	public:
 		typedef FieldType value_type;
 
-		ArrangementsWithoutRepetition(size_t k,size_t n)
+		ArrangementsWithoutRepetition(size_t n,size_t k)
 		: data_(n),k_(k)
 		{
 			if (k==0 || n<k) throw std::runtime_error(
@@ -134,7 +134,7 @@ namespace FreeFermions {
 			return data_[i];
 		}
 
-		size_t size() const { return data_.size(); }
+		size_t size() const { return k_; }
 
 	private:
 

@@ -91,6 +91,8 @@ namespace FreeFermions {
 	class Permutations {
 		typedef typename ContainerType::value_type FieldType;
 	public:
+		typedef FieldType value_type;
+
 		Permutations(const ContainerType& orig) : data_(orig.size())
 		{
 			for (size_t i=0;i<data_.size();i++) data_[i] = orig[i];

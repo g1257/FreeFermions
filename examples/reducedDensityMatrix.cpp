@@ -34,7 +34,7 @@ int main(int argc,char* argv[])
 	ConcurrencyType concurrency(argc,argv);
 	MatrixType t(2*n,2*n);
 	size_t geometryType = GeometryLibraryType::CHAIN;
-	size_t leg = GeometryLibraryType::OPTION_PERIODIC;
+	size_t leg = GeometryLibraryType::OPTION_NONE;
 	if (argc>=4) {
 		leg = atoi(argv[3]);
 		if (leg>0) geometryType = GeometryLibraryType::LADDER;
