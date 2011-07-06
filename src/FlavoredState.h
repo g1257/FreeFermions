@@ -225,18 +225,27 @@ namespace FreeFermions {
 	}
 	
 	template<typename T,typename U>
-	bool operator==(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
+	inline bool operator==(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
 	{
 		// eliminated due to performance reasons:
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
-		
-		for (size_t i=0;i<v1.data_.size();i++) 
+
+		for (size_t i=0;i<v1.data_.size();i++)
 			if (v1.data_[i]!=v2.data_[i]) return false;
 		return true;
 	}
-	
+
+	inline bool operator<(const std::vector<bool>& v1,const std::vector<bool>& v2)
+	{
+		for (size_t i=0;i<v1.size();i++) {
+			if (v1[i] && !v2[i]) return false;
+			if (!v1[i] && v2[i]) return true;
+		}
+		return false;
+	}
+
 	template<typename T,typename U>
-	bool operator<(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
+	inline bool operator<(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
 	{
 		// eliminated due to performance reasons:
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
@@ -248,31 +257,31 @@ namespace FreeFermions {
 		return false;
 	}
 	
-	template<typename T,typename U>
-	bool operator>(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
-	{
-		// eliminated due to performance reasons:
-		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
-		
-		for (size_t i=0;i<v1.data_.size();i++) {
-			if (v1.data_[i]<v2.data_[i]) return false;
-			if (v1.data_[i]>v2.data_[i]) return true;
-		}
-		return false;
-	}
-	
-	template<typename T,typename U>
-	bool operator<=(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
-	{
-		// eliminated due to performance reasons:
-		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
-		
-		for (size_t i=0;i<v1.data_.size();i++) {
-			if (v1.data_[i]>v2.data_[i]) return false;
-			if (v1.data_[i]<v2.data_[i]) return true;
-		}
-		return true;
-	}
+//	template<typename T,typename U>
+//	inline bool operator>(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
+//	{
+//		// eliminated due to performance reasons:
+//		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
+//
+//		for (size_t i=0;i<v1.data_.size();i++) {
+//			if (!v1.data_[i] && v2.data_[i]) return false;
+//			if (v1.data_[i]&& !v2.data_[i]) return true;
+//		}
+//		return false;
+//	}
+//
+//	template<typename T,typename U>
+//	inline bool operator<=(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
+//	{
+//		// eliminated due to performance reasons:
+//		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
+//
+//		for (size_t i=0;i<v1.data_.size();i++) {
+//			if (v1.data_[i] && !v2.data_[i]) return false;
+//			if (!v1.data_[i] && v2.data_[i]) return true;
+//		}
+//		return true;
+//	}
 } // namespace Dmrg 
 
 /*@}*/

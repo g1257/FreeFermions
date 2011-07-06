@@ -117,7 +117,7 @@ namespace FreeFermions {
 			{
 				assert(engine_.dof()==1);
 				calculatePsi(psi_);
-				std::cout<<psi_;
+				//std::cout<<psi_;
 				if (!concurrency_.root()) return;
 				calculateRdm(rho_,psi_);
 			}

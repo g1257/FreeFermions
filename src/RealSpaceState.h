@@ -114,7 +114,7 @@ namespace FreeFermions {
 		RealSpaceState(const EngineType& engine,
 		              const std::vector<size_t>& ne,
 		              bool debug = false)
-		:  engine_(&engine),ne_(ne),debug_(debug),sorted_(false)
+		:  engine_(&engine),ne_(ne),debug_(debug),sorted_(false),zeroVals_(0)
 		{
 			for (size_t i=0;i<engine_->dof();i++)
 				initTerms(i);
@@ -123,27 +123,25 @@ namespace FreeFermions {
 		void pushInto(const CorDOperatorType& op)
 		{
 			for (size_t i=0;i<terms_.size();i++) {
+				if (fabs(values_[i])<1e-8) continue;
 				int x = terms_[i].apply(op.type(),op.sigma(),op.index());
 				values_[i] *= x;
+				if (x==0) zeroVals_++;
 			}
-			std::vector<FlavoredStateType> terms2(terms_);
-			terms_.clear();
-			std::vector<FieldType> values2(values_);
-			values_.clear();
-			for (size_t i=0;i<terms2.size();i++) {
-				if (values2[i]!=0) {
-					terms_.push_back(terms2[i]);
-					values_.push_back(values2[i]);
-				}
+			if (zeroVals_>2000) {
+				killZeroVals();
+				//std::cerr<<"zerovals\n";
 			}
 		}
 
 		FieldType scalarProduct(ThisType& other)
 		{
-			sort();
-			other.sort();
+			simplify();
+			other.simplify();
 			FieldType sum = 0;
 			size_t j=0;
+			std::cout<<"size1="<<terms_.size()<<" size2=";
+			std::cout<<other.terms_.size()<<"\n";
 			for (size_t i=0;i<other.terms_.size();i++) {
 				while (j<terms_.size() && terms_[j]<other.terms_[i]) j++;
 				size_t k = j;
@@ -156,6 +154,27 @@ namespace FreeFermions {
 		}
 
 	private:
+
+		void simplify()
+		{
+			if (terms_.size()==0) return;
+
+			if (zeroVals_>100) killZeroVals();
+			sort();
+
+			FlavoredStateType prev = terms_[0];
+			std::vector<FlavoredStateType> terms2 = terms_;
+			terms_.clear();
+			std::vector<FieldType> values2 = values_;
+			values_.clear();
+			terms_.push_back(prev);
+			values_.push_back(values_[0]);
+			for (size_t i=1;i<terms2.size();i++) {
+				if (terms2[i] == prev) continue;
+				terms_.push_back(terms2[i]);
+				values_.push_back(values2[i]);
+			}
+		}
 
 		void sort()
 		{
@@ -190,7 +209,7 @@ namespace FreeFermions {
 			while (ap.increase()) {
 				PermutationsType p(ap);
 				do {
-					std::cerr<<"--------> "<<p<<" <---------\n";
+					//std::cerr<<"--------> "<<p<<" <---------\n";
 					RealType prod = (isArrangementOdd(p)) ? -1.0 : 1.0;
 					for (size_t i=0;i<ne_[sigma];i++) {
 						prod *= engine_->eigenvector(p[i],i);
@@ -227,7 +246,36 @@ namespace FreeFermions {
 			return temp & 1;
 		}
 
-		static size_t ncycles(const std::vector<size_t>& x)
+		void killZeroVals()
+		{
+			FlavoredStateType prev = terms_[0];
+			std::vector<FlavoredStateType>  terms2 = terms_;
+			terms_.clear();
+			std::vector<FieldType> values2 = values_;
+			values_.clear();
+			terms_.push_back(prev);
+			values_.push_back(values_[0]);
+			for (size_t i=1;i<terms2.size();i++) {
+				if (fabs(values2[i])<1e-8) continue;
+				terms_.push_back(terms2[i]);
+				values_.push_back(values2[i]);
+			}
+			zeroVals_=0;
+		}
+
+//		void killZeroVals()
+//		{
+//			for (size_t i=1;i<terms_.size();i++) {
+//				if (fabs(values_[i])<1e-8) {
+//					terms_.erase(terms_.begin()+i);
+//					values_.erase(values_.begin()+i);
+//					i--;
+//				}
+//			}
+//			zeroVals_=0;
+//		}
+
+		size_t ncycles(const std::vector<size_t>& x)
 		{
 			size_t ncycles = 0;
 			std::vector<bool> seen(x.size(),false);
@@ -248,6 +296,7 @@ namespace FreeFermions {
 		std::vector<size_t> ne_;
 		bool debug_;
 		bool sorted_;
+		size_t zeroVals_;
 		std::vector<FlavoredStateType> terms_;
 		std::vector<FieldType> values_;
 	}; // RealSpaceState
