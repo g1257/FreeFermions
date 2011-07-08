@@ -140,8 +140,8 @@ namespace FreeFermions {
 			other.simplify();
 			FieldType sum = 0;
 			size_t j=0;
-			std::cout<<"size1="<<terms_.size()<<" size2=";
-			std::cout<<other.terms_.size()<<"\n";
+//			std::cout<<"size1="<<terms_.size()<<" size2=";
+//			std::cout<<other.terms_.size()<<"\n";
 			for (size_t i=0;i<other.terms_.size();i++) {
 				while (j<terms_.size() && terms_[j]<other.terms_[i]) j++;
 				size_t k = j;
@@ -195,6 +195,7 @@ namespace FreeFermions {
 		// where the sum is over all permutations p of 0,1,2 ... N-1
 		void initTerms(size_t sigma)
 		{
+			assert(engine_->dof()==1);
 			size_t n = engine_->sites();
 			std::vector<bool> v(n,false);
 			if (ne_[sigma]==0) {
@@ -206,23 +207,25 @@ namespace FreeFermions {
 			}
 
 			ArrangementsWithoutRepetitionType ap(n,ne_[sigma]);
+			//std::cerr<<"ap.size="<<ap.size()<<"\n";
 			while (ap.increase()) {
 				PermutationsType p(ap);
+				//std::cerr<<"p.size="<<p.size()<<" terms="<<terms_.size()<<"\n";
+				for (size_t i=0;i<v.size();i++) v[i] = false;
+				for (size_t i=0;i<ne_[sigma];i++) v[p[i]] = true;
+				RealType sum = 0;
 				do {
-					//std::cerr<<"--------> "<<p<<" <---------\n";
+//					std::cerr<<"--------> "<<p<<" <---------\n";
 					RealType prod = (isArrangementOdd(p)) ? -1.0 : 1.0;
 					for (size_t i=0;i<ne_[sigma];i++) {
 						prod *= engine_->eigenvector(p[i],i);
 					}
-
-					for (size_t i=0;i<v.size();i++) v[i] = false;
-					for (size_t i=0;i<ne_[sigma];i++) v[p[i]] = true;
-					assert(engine_->dof()==1);
-					FlavoredStateType fl(engine_->dof(),v.size());
-					fl.pushInto(sigma,v);
-					terms_.push_back(fl);
-					values_.push_back(prod);
+					sum += prod;
 				} while (p.increase());
+				FlavoredStateType fl(engine_->dof(),v.size());
+				fl.pushInto(sigma,v);
+				terms_.push_back(fl);
+				values_.push_back(sum);
 			};
 		}
 
