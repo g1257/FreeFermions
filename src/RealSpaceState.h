@@ -128,10 +128,10 @@ namespace FreeFermions {
 				values_[i] *= x;
 				if (x==0) zeroVals_++;
 			}
-			if (zeroVals_>2000) {
+			//if (zeroVals_>2000) {
 				killZeroVals();
 				//std::cerr<<"zerovals\n";
-			}
+			//}
 		}
 
 		FieldType scalarProduct(ThisType& other)
@@ -159,7 +159,7 @@ namespace FreeFermions {
 		{
 			if (terms_.size()==0) return;
 
-			if (zeroVals_>100) killZeroVals();
+			killZeroVals();
 			sort();
 
 			FlavoredStateType prev = terms_[0];

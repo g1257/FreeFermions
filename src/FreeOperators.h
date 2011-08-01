@@ -90,6 +90,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 namespace FreeFermions {
 	
 	struct FreeOperator {
+		FreeOperator() : lambda(0),type(0) {}
 		size_t lambda;
 		size_t type;
 	};
@@ -128,9 +129,11 @@ namespace FreeFermions {
 				if (opPointers[i].sigma!=sigma) continue;
 
 				if (fo.type==CREATION) {
-					fo.lambda = lambda[counter++];
+					if (counter<lambda.size()) fo.lambda = lambda[counter];
+					counter++;
 				} else if (fo.type==DESTRUCTION) {
-					fo.lambda = lambda2[counter2++];
+					if (counter2<lambda2.size()) fo.lambda = lambda2[counter2];
+					counter2++;
 				} else {
 					fo.lambda = 0;
 				}

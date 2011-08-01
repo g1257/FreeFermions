@@ -31,11 +31,11 @@ int main(int argc,char* argv[])
 	size_t dof = 1; // spinless
 	MatrixType t(n,n);
 	//std::vector<MatrixType> t;
-	//GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
-	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
+	GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
+	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
 	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
 	
-	geometry.setGeometry(t); //,argv[4],leg); //,GeometryLibraryType::OPTION_PERIODIC);
+	geometry.setGeometry(t,2); //,argv[4],leg); //,GeometryLibraryType::OPTION_PERIODIC);
 
 	std::cerr<<t;
 	ConcurrencyType concurrency(argc,argv);

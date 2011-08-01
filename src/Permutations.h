@@ -131,6 +131,7 @@ namespace FreeFermions {
 
 		size_t operator[](size_t i) const
 		{
+			//if (i>=data_.size()) throw std::runtime_error("Permutations error\n");
 			return data_[i];
 		}
 
