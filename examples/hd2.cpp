@@ -3,11 +3,19 @@
 // Calculates <phi | phi>
 // where 
 // |phi> = c_{p up} exp(iHt) c_{i\sigma} nbar_{i \bar{sigma}} c^dagger_{j sigma'} n_{j \bar{sigma'}} |gs>
+
+typedef double RealType;
 #include <cstdlib>
 #include "unistd.h"
 #include "Engine.h"
 #include "GeometryLibrary.h"
+#ifdef USE_MPI
+#include "ConcurrencyMpi.h"
+typedef PsimagLite::ConcurrencyMpi<RealType> ConcurrencyType;
+#else
 #include "ConcurrencySerial.h"
+typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
+#endif
 #include "TypeToString.h"
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
@@ -16,10 +24,8 @@
 #include "LibraryOperator.h"
 #include "Tokenizer.h" // in PsimagLite
 
-typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef ComplexType FieldType;
-typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
