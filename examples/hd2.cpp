@@ -215,11 +215,15 @@ int main(int argc,char *argv[])
 			}
 		}
 		FieldType sum = 0;
-		for (size_t sigma=0;sigma<4;sigma++)
-			for (size_t sigma2=0;sigma2<4;sigma2++)
-				sum += scalarProduct(*savedVector[sigma],*savedVector[sigma2]);
+		size_t total = savedVector.size()*savedVector.size()/2;
+		for (size_t x=0;x<total;x++) {
+			size_t sigma = (x & 3);
+			size_t sigma2 = (x & 12);
+			sigma2 >>= 2;
+			sum += scalarProduct(*savedVector[sigma],*savedVector[sigma2]);
+		}
 		for (size_t x=0;x<savedVector.size();x++) delete savedVector[x];
 		
-		std::cout<<time<<" "<<sum<<"\n";
+		std::cout<<time<<" "<<(2.0*sum)<<"\n";
 	}
 }
