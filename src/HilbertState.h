@@ -337,6 +337,7 @@ namespace FreeFermions {
 		}
 
 		const EngineType* engine_;
+/*		std::vector<std::vector<size_t> > occupations_;*/
 		std::vector<size_t> ne_;
 		std::vector<size_t> ne2_;
 		bool debug_;

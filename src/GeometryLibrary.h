@@ -97,6 +97,7 @@ namespace FreeFermions {
 				sites_(n),geometryType_(geometryType),hopping_(hopping)
 			{
 			}
+
 			void setGeometry(MatrixType& t,size_t geometryOption=OPTION_NONE)
 			{
 				switch (geometryType_) {

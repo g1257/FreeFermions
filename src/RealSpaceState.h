@@ -82,6 +82,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #ifndef REAL_SPACE_STATE_H
 #define REAL_SPACE_STATE_H
 
+#include <assert.h>
 #include "Complex.h" // in PsimagLite
 #include "TypeToString.h"
 #include "FlavoredState.h"
@@ -196,7 +197,7 @@ namespace FreeFermions {
 		void initTerms(size_t sigma)
 		{
 			assert(engine_->dof()==1);
-			size_t n = engine_->sites();
+			size_t n = engine_->sites()*engine_->edof();
 			std::vector<bool> v(n,false);
 			if (ne_[sigma]==0) {
 				FlavoredStateType fl(engine_->dof(),v.size());
