@@ -112,12 +112,14 @@ namespace FreeFermions {
 		              const IndexGeneratorType& lambda,
 		              const PermutationsType& lambda2,
 		              size_t sigma,
+		              const std::vector<size_t>& occupations,
 		              const std::vector<size_t>& occupations2)
 		: value_(1)
 		{
-			size_t counter=0;
 			size_t counter2=0;
 
+ 			size_t counter = countAtTheFront(occupations);
+			
 			for (size_t i=0;i<opPointers.size();i++) {
 				FreeOperator fo;
 				fo.type = opPointers[i].type;
@@ -140,16 +142,14 @@ namespace FreeFermions {
 				data_.push_back(fo);
 			}
 			
-			addGsAtTheEnd(occupations2);
-			for (size_t i=0;i<occupations2.size();i++) 
-				counter2 += occupations2[i];
+			counter2 += addAtTheBack(occupations2);
 			
 			// if daggers > non-daggers, result is zero
 			if (counter!=counter2) {
 				value_ = 0;
 				return;
 			}
-
+			
 		}
 
 		void removeNonCsOrDs()
@@ -209,17 +209,48 @@ namespace FreeFermions {
 			 return false;
 		 }
 
+		size_t addAtTheFront(const std::vector<size_t>&  occupations)
+		{
+			size_t counter = 0;
+			for (size_t i=0;i<occupations.size();++i) {
+				if (occupations[i]==0) continue;
+				counter++;
+				FreeOperator fo;
+				fo.lambda = i;
+				fo.type = CREATION;
+				data_.push_back(fo);
+			}
+			return counter;
+		}
+
 	private:
 
-		void addGsAtTheEnd(const std::vector<size_t>&  occupations2)
+		size_t addAtTheBack(const std::vector<size_t>&  occupations2)
 		{
+			size_t counter = 0;
 			for (int i=occupations2.size()-1;i>=0;i--) {
 				if (occupations2[i]==0) continue;
+				counter++;
 				FreeOperator fo;
 				fo.lambda = i;
 				fo.type = DESTRUCTION;
 				data_.push_back(fo);
 			}
+			return counter;
+		}
+		 
+		 size_t countAtTheFront(const std::vector<size_t>&  occupations) const
+		 {
+			 size_t counter = 0;
+			 for (size_t i=0;i<occupations.size();++i) {
+				 if (occupations[i]==0) continue;
+				 counter++;
+// 				 FreeOperator fo;
+// 				 fo.lambda = i;
+// 				 fo.type = CREATION;
+// 				 data_.push_back(fo);
+			 }
+			 return counter;
 		 }
 
 		std::vector<FreeOperator> data_;

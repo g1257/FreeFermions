@@ -115,6 +115,7 @@ namespace FreeFermions {
 		   */
 		bool increase()
 		{
+			if (data_.size()==0) return false;
 			int k = largestk();
 			if (k<0) return false;
 

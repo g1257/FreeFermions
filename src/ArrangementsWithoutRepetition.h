@@ -110,6 +110,7 @@ namespace FreeFermions {
 		 */
 		bool increase()
 		{
+			if (data_.size()==0) return false;
 			size_t n = data_.size();
 			size_t i = k_ - 1;
 			++data_[i];

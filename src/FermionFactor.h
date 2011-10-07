@@ -108,9 +108,9 @@ template<typename OperatorType,typename OpPointerType>
 				return;
 			}
 			freeOps.removeNonCsOrDs();
-
 			freeOps.reverse();
-			pairUp(occupations,freeOps);
+			freeOps.addAtTheFront(occupations);
+			pairUp(freeOps);
 		}
 
 		RealType operator()()
@@ -120,7 +120,8 @@ template<typename OperatorType,typename OpPointerType>
 
 	private:
 
-		void pairUp(const std::vector<size_t>& occupations,FreeOperatorsType& freeOps)
+		void pairUp(//const std::vector<size_t>& occupations,
+		            FreeOperatorsType& freeOps)
 		{
 			// pair up daggers with non-daggers
 			value_ = 1;
@@ -131,6 +132,7 @@ template<typename OperatorType,typename OpPointerType>
 				size_t thisLambda = freeOps[0].lambda;
 				// find next operator with same lambda:
 				int x = freeOps.findOpGivenLambda(thisLambda,1);
+				
 				// if types are equal then result is zero, and we're done:
 				if (x<0 || freeOps[0].type == freeOps[x].type) {
 					value_ = 0;
@@ -140,16 +142,16 @@ template<typename OperatorType,typename OpPointerType>
 				// or an anti-occupation
 				// let's deal with the (anti)occupation first:
 
-				bool nNormal = (freeOps[0].type == CREATION) ? true : false;
-				size_t occupationForThisLamda = occupations[thisLambda];
-				if (nNormal && occupationForThisLamda==0) {
-					value_=0;
-					return;
-				}
-				if (!nNormal && occupationForThisLamda==1) {
-					value_=0;
-					return;
-				}
+// 				bool nNormal = (freeOps[0].type == CREATION) ? true : false;
+// 				size_t occupationForThisLamda = 0; //occupations[thisLambda];
+// 				if (nNormal && occupationForThisLamda==0) {
+// 					value_=0;
+// 					return;
+// 				}
+// 				if (!nNormal && occupationForThisLamda==1) {
+// 					value_=0;
+// 					return;
+// 				}
 				// now let's deail with the sign
 				x++;
 				int f = (x&1) ? -1 : 1;

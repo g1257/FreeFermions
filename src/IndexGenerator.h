@@ -94,6 +94,7 @@ namespace FreeFermions {
 
 		bool increase()
 		{
+			if (data_.size()==0) return false;
 			size_t c = 0;
 			while(true) {
 				data_[c]++;
@@ -115,7 +116,7 @@ namespace FreeFermions {
 
 		size_t size() const { return data_.size(); }
 
-		size_t max() const { return ne_; }
+// 		size_t max() const { return ne_; }
 
 	private:
 		std::vector<size_t> data_;

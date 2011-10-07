@@ -33,7 +33,7 @@ print FILE<<EOF;
 
 LDFLAGS =      -llapack    -lm  -lpthread 
 CPPFLAGS = -Werror -Wall -I../PartialPsimag  -I../../PsimagLite/src -I../src
-CXX = g++ -O2 -pg -DNDEBUG
+CXX = g++ -O3 -DNDEBUG
 EXAMPLES = HolonDoublon EasyExciton cicj ninj reducedDensityMatrix
 
 all: $what

@@ -148,17 +148,26 @@ namespace FreeFermions {
 		: engine_(&engine),
 		  debug_(debug),
 		  occupations_(ne.size()),
-		  occupations2_(ne.size()),
 		  opNormalFactory_(engine),
 		  opDiagonalFactory_(engine)
 		{
 			   for (size_t i=0;i<occupations_.size();++i) {
-				   occupations2_[i].resize(engine.size(),0);
 				   occupations_[i].resize(engine.size(),0);
 				   for (size_t j=0;j<ne[i];++j) {
 					   occupations_[i][j] = 1;
 				   }
 			   }
+		}
+
+		HilbertState(const EngineType& engine,
+		             const std::vector<std::vector<size_t> >& occupations,
+		             bool debug = false)
+		: engine_(&engine),
+		  debug_(debug),
+		  occupations_(occupations),
+		  opNormalFactory_(engine),
+		  opDiagonalFactory_(engine)
+		{
 		}
 
 		void pushInto(const CorDOperatorType& op)
@@ -184,6 +193,13 @@ namespace FreeFermions {
 				opPointers_.push_back(opPointer);
 		}
 
+		FieldType pourAndClose(const ThisType& hs)
+		{
+			pour(hs);
+			return close(hs.occupations_);
+		}
+		
+	private:
 		void pour(const ThisType& hs)
 		{
 			if (hs.engine_->size()!=engine_->size()) {
@@ -192,30 +208,28 @@ namespace FreeFermions {
 				                " size2=" + ttos(hs.engine_->size()) + "\n";
 				throw std::runtime_error(s.c_str());
 			}
-			if (hs.occupations_!=occupations_ && !equalZero(occupations_)) {
-				std::string s(__FILE__);
-				s += std::string(" ") + ttos(__LINE__) + " ";
-				s += std::string(__FUNCTION__) + "\n";
-				throw std::runtime_error(s.c_str());
-			}
+// 			if (hs.occupations_!=occupations_ && !equalZero(occupations_)) {
+// 				std::string s(__FILE__);
+// 				s += std::string(" ") + ttos(__LINE__) + " ";
+// 				s += std::string(__FUNCTION__) + "\n";
+// 				throw std::runtime_error(s.c_str());
+// 			}
 
 			pourInternal(hs);
-			if (hs.occupations_!=occupations_) { // occupations_ == 0 here
-				occupations2_ = hs.occupations_;
-			}
 		}
 
-		FieldType close() const
+		FieldType close(const std::vector<std::vector<size_t> >& occupations2) const
 		{
 			//std::cerr<<"DEBUG: closing with weight="<<opPointers_.size()<<"\n";
 			FieldType prod = 1.0;
+			if (occupations_.size()!=occupations2.size())
+				throw std::runtime_error("HilbertState::close()\n");
+
 			for (size_t i=0;i<occupations_.size();i++) {
-				prod *= close(i);
+				prod *= close(i,occupations2[i]);
 			}
 			return prod; // FIXME: NEEDS FERMION SIGN
 		}
-
-	private:
 
 		bool equalZero(const std::vector<std::vector<size_t> >& v) const
 		{
@@ -230,13 +244,13 @@ namespace FreeFermions {
 			return true;
 		}
 
-		FieldType close(size_t sigma) const
+		FieldType close(size_t sigma,const std::vector<size_t>& occupations2) const
 		{
 			size_t m = findCreationGivenSpin(sigma);
 			IndexGeneratorType lambda(m,engine_->size());
 			FieldType sum  = 0;
 			do {
-				sum += compute(lambda,sigma);
+				sum += compute(lambda,sigma,occupations2);
 			} while (lambda.increase());
 			return sum;
 		}
@@ -251,7 +265,9 @@ namespace FreeFermions {
 			return counter;
 		}
 
-		FieldType compute(const IndexGeneratorType& lambda,size_t sigma) const
+		FieldType compute(const IndexGeneratorType& lambda,
+		                  size_t sigma,
+		                  const std::vector<size_t>& occupations2) const
 		{
 
 			PermutationsType lambda2(lambda);
@@ -259,7 +275,7 @@ namespace FreeFermions {
 			do  {
 				FieldType prod = 1;
 				FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2,
-				                                  sigma,occupations2_[sigma]);
+				                   sigma,occupations_[sigma],occupations2);
 				// diag. part need to be done here, because...
 				FieldType dd = 1.0;
 				for (size_t i=0;i<operatorsDiagonal_.size();i++) {
@@ -360,7 +376,6 @@ namespace FreeFermions {
 		const EngineType* engine_;
 		bool debug_;
 		std::vector<std::vector<size_t> > occupations_;
-		std::vector<std::vector<size_t> > occupations2_;
 // 		std::vector<size_t> ne_;
 // 		std::vector<size_t> ne2_;
 		std::vector<const CorDOperatorType*> operatorsCreation_,operatorsDestruction_;
@@ -376,8 +391,7 @@ namespace FreeFermions {
 	      const HilbertState<CorDOperatorType,DiagonalOperatorType>& s2)
 	{
 		HilbertState<CorDOperatorType,DiagonalOperatorType> s3 = s2;
-		s3.pour(s1); // s1 --> s3
-		return s3.close();
+		return s3.pourAndClose(s1);
 	}
 
 } // namespace Dmrg 

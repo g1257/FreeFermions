@@ -13,10 +13,10 @@
 #include "DiagonalOperator.h"
 #include "Tokenizer.h"
 #include "LibraryOperator.h"
+#include "Combinations.h"
 
 typedef double RealType;
-typedef std::complex<double> ComplexType;
-typedef ComplexType FieldType;
+typedef RealType FieldType;
 typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
@@ -37,7 +37,6 @@ int main(int argc,char *argv[])
 	RealType beta = 0;
 	size_t site = 0;
 	bool ladder = false;
-	RealType step = 0;
 	while ((opt = getopt(argc, argv, "n:e:b:s:l")) != -1) {
 		switch (opt) {
 		case 'n':
@@ -85,14 +84,7 @@ int main(int argc,char *argv[])
 	HilbertStateType gs(engine,ne,debug);
 
 	size_t sigma =0;
-	OpNormalFactoryType opNormalFactory(engine);
-	OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,sites[0],sigma);
-	HilbertStateType phi2 = gs;
-	myOp.applyTo(phi2);
-	
-//	FieldType density = scalarProduct(phi2,phi2);
-//	std::cerr<<"density="<<density<<"\n";
-	
+
 	std::cout<<"#site="<<site<<"\n";
 	std::cout<<"#beta="<<beta<<"\n";
 	
@@ -100,16 +92,22 @@ int main(int argc,char *argv[])
 	
 	RealType sum = 0;
 	RealType denominator = 0;
-	for (size_t i = 0; i<basis.size(); it++) {
+	FreeFermions::Combinations combinations(engine.size(),ne[0]);
+	for (size_t i = 0; i<combinations.size(); ++i) {
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		EtoTheBetaHType ebh(beta,engine,0);
 		DiagonalOperatorType& eibOp = opDiagonalFactory(ebh);
-		HilbertStateType phi = basis.state(i);
+		
+		std::vector<size_t> vTmp(engine.size(),0);
+		for (size_t j=0;j<combinations(i).size();++j) vTmp[combinations(i)[j]]=1;
+		std::vector<std::vector<size_t> > occupations(1,vTmp);
+		HilbertStateType thisState(engine,occupations);
+		HilbertStateType phi = thisState;
 		eibOp.applyTo(phi);
-		denominator += scalarProduct(basis.state(i),phi);
+		denominator += scalarProduct(thisState,phi);
 		LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,site,sigma);
 		myOp2.applyTo(phi);
-		sum += scalarProduct(basis.state(i),phi);
+		sum += scalarProduct(thisState,phi);
 	}
 	std::cout<<sum<<" "<<denominator<<" "<<sum/denominator<<"\n";
 }
