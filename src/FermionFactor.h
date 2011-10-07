@@ -109,7 +109,7 @@ template<typename OperatorType,typename OpPointerType>
 			}
 			freeOps.removeNonCsOrDs();
 			freeOps.reverse();
-			freeOps.addAtTheFront(occupations);
+			
 			pairUp(freeOps);
 		}
 
@@ -142,16 +142,16 @@ template<typename OperatorType,typename OpPointerType>
 				// or an anti-occupation
 				// let's deal with the (anti)occupation first:
 
-// 				bool nNormal = (freeOps[0].type == CREATION) ? true : false;
-// 				size_t occupationForThisLamda = 0; //occupations[thisLambda];
-// 				if (nNormal && occupationForThisLamda==0) {
-// 					value_=0;
-// 					return;
-// 				}
-// 				if (!nNormal && occupationForThisLamda==1) {
-// 					value_=0;
-// 					return;
-// 				}
+				bool nNormal = (freeOps[0].type == CREATION) ? true : false;
+				size_t occupationForThisLamda = 0; //occupations[thisLambda];
+				if (nNormal && occupationForThisLamda==0) {
+					value_=0;
+					return;
+				}
+				if (!nNormal && occupationForThisLamda==1) {
+					value_=0;
+					return;
+				}
 				// now let's deail with the sign
 				x++;
 				int f = (x&1) ? -1 : 1;

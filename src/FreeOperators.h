@@ -116,10 +116,9 @@ namespace FreeFermions {
 		              const std::vector<size_t>& occupations2)
 		: value_(1)
 		{
+			size_t counter3 = addAtTheFront(occupations);
 			size_t counter2=0;
-
- 			size_t counter = countAtTheFront(occupations);
-			
+			size_t counter = 0;
 			for (size_t i=0;i<opPointers.size();i++) {
 				FreeOperator fo;
 				fo.type = opPointers[i].type;
@@ -141,6 +140,7 @@ namespace FreeFermions {
 				}
 				data_.push_back(fo);
 			}
+			counter += counter3;
 			
 			counter2 += addAtTheBack(occupations2);
 			
@@ -209,20 +209,6 @@ namespace FreeFermions {
 			 return false;
 		 }
 
-		size_t addAtTheFront(const std::vector<size_t>&  occupations)
-		{
-			size_t counter = 0;
-			for (size_t i=0;i<occupations.size();++i) {
-				if (occupations[i]==0) continue;
-				counter++;
-				FreeOperator fo;
-				fo.lambda = i;
-				fo.type = CREATION;
-				data_.push_back(fo);
-			}
-			return counter;
-		}
-
 	private:
 
 		size_t addAtTheBack(const std::vector<size_t>&  occupations2)
@@ -239,16 +225,16 @@ namespace FreeFermions {
 			return counter;
 		}
 		 
-		 size_t countAtTheFront(const std::vector<size_t>&  occupations) const
+		 size_t addAtTheFront(const std::vector<size_t>&  occupations)
 		 {
 			 size_t counter = 0;
 			 for (size_t i=0;i<occupations.size();++i) {
 				 if (occupations[i]==0) continue;
 				 counter++;
-// 				 FreeOperator fo;
-// 				 fo.lambda = i;
-// 				 fo.type = CREATION;
-// 				 data_.push_back(fo);
+				 FreeOperator fo;
+				 fo.lambda = i;
+				 fo.type = CREATION;
+				 data_.push_back(fo);
 			 }
 			 return counter;
 		 }
