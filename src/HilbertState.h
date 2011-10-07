@@ -145,8 +145,21 @@ namespace FreeFermions {
 		HilbertState(const EngineType& engine,
 		              const std::vector<size_t>& ne,
 		              bool debug = false)
-		:  engine_(&engine),ne_(ne),debug_(debug),
-		   opNormalFactory_(engine),opDiagonalFactory_(engine) {}
+		: engine_(&engine),
+		  debug_(debug),
+		  occupations_(ne.size()),
+		  occupations2_(ne.size()),
+		  opNormalFactory_(engine),
+		  opDiagonalFactory_(engine)
+		{
+			   for (size_t i=0;i<occupations_.size();++i) {
+				   occupations2_[i].resize(engine.size(),0);
+				   occupations_[i].resize(engine.size(),0);
+				   for (size_t j=0;j<ne[i];++j) {
+					   occupations_[i][j] = 1;
+				   }
+			   }
+		}
 
 		void pushInto(const CorDOperatorType& op)
 		{
@@ -179,15 +192,16 @@ namespace FreeFermions {
 				                " size2=" + ttos(hs.engine_->size()) + "\n";
 				throw std::runtime_error(s.c_str());
 			}
-			if (hs.ne_!=ne_ && !equalZero(ne_)) {
-				std::string s = "HilbertState::pour(...)  ne1=" + ttos(ne_) +
-				                " ne2=" + ttos(hs.ne_) + "\n";
+			if (hs.occupations_!=occupations_ && !equalZero(occupations_)) {
+				std::string s(__FILE__);
+				s += std::string(" ") + ttos(__LINE__) + " ";
+				s += std::string(__FUNCTION__) + "\n";
 				throw std::runtime_error(s.c_str());
 			}
 
 			pourInternal(hs);
-			if (hs.ne_!=ne_) { // ne_ == 0 here
-				ne2_ = hs.ne_;
+			if (hs.occupations_!=occupations_) { // occupations_ == 0 here
+				occupations2_ = hs.occupations_;
 			}
 		}
 
@@ -195,7 +209,7 @@ namespace FreeFermions {
 		{
 			//std::cerr<<"DEBUG: closing with weight="<<opPointers_.size()<<"\n";
 			FieldType prod = 1.0;
-			for (size_t i=0;i<ne_.size();i++) {
+			for (size_t i=0;i<occupations_.size();i++) {
 				prod *= close(i);
 			}
 			return prod; // FIXME: NEEDS FERMION SIGN
@@ -203,6 +217,13 @@ namespace FreeFermions {
 
 	private:
 
+		bool equalZero(const std::vector<std::vector<size_t> >& v) const
+		{
+			for (size_t i=0;i<v.size();i++)
+				if (!equalZero(v[i])) return false;
+			return true;
+		}
+		
 		bool equalZero(const std::vector<size_t>& v) const
 		{
 			for (size_t i=0;i<v.size();i++) if (v[i]!=0) return false;
@@ -235,10 +256,10 @@ namespace FreeFermions {
 
 			PermutationsType lambda2(lambda);
 			FieldType sum = 0;
-			size_t ne2 = (ne2_.size()>sigma) ? ne2_[sigma] : 0;
 			do  {
 				FieldType prod = 1;
-				FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2,sigma,ne2);
+				FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2,
+				                                  sigma,occupations2_[sigma]);
 				// diag. part need to be done here, because...
 				FieldType dd = 1.0;
 				for (size_t i=0;i<operatorsDiagonal_.size();i++) {
@@ -247,7 +268,7 @@ namespace FreeFermions {
 				}
 				// ... fermionFactor ctor will modify lambdaOperators
 
-				FermionFactorType fermionFactor(lambdaOperators,ne_[sigma]);
+				FermionFactorType fermionFactor(lambdaOperators,occupations_[sigma]);
 				RealType ff = fermionFactor();
 
 				if (ff==0) continue;
@@ -337,10 +358,11 @@ namespace FreeFermions {
 		}
 
 		const EngineType* engine_;
-/*		std::vector<std::vector<size_t> > occupations_;*/
-		std::vector<size_t> ne_;
-		std::vector<size_t> ne2_;
 		bool debug_;
+		std::vector<std::vector<size_t> > occupations_;
+		std::vector<std::vector<size_t> > occupations2_;
+// 		std::vector<size_t> ne_;
+// 		std::vector<size_t> ne2_;
 		std::vector<const CorDOperatorType*> operatorsCreation_,operatorsDestruction_;
 		std::vector<const DiagonalOperatorType*> operatorsDiagonal_;
 		std::vector<OperatorPointer> opPointers_;

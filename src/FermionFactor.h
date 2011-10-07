@@ -100,7 +100,7 @@ template<typename OperatorType,typename OpPointerType>
 		       DESTRUCTION = OperatorType::DESTRUCTION
 		};
 
-		FermionFactor(FreeOperatorsType& freeOps,size_t ne)
+		FermionFactor(FreeOperatorsType& freeOps,const std::vector<size_t>& occupations)
 		: value_(1)
 		{
 			if (freeOps()==0) {
@@ -110,7 +110,7 @@ template<typename OperatorType,typename OpPointerType>
 			freeOps.removeNonCsOrDs();
 
 			freeOps.reverse();
-			pairUp(ne,freeOps);
+			pairUp(occupations,freeOps);
 		}
 
 		RealType operator()()
@@ -120,7 +120,7 @@ template<typename OperatorType,typename OpPointerType>
 
 	private:
 
-		void pairUp(size_t ne,FreeOperatorsType& freeOps)
+		void pairUp(const std::vector<size_t>& occupations,FreeOperatorsType& freeOps)
 		{
 			// pair up daggers with non-daggers
 			value_ = 1;
@@ -141,11 +141,12 @@ template<typename OperatorType,typename OpPointerType>
 				// let's deal with the (anti)occupation first:
 
 				bool nNormal = (freeOps[0].type == CREATION) ? true : false;
-				if (nNormal && thisLambda>=ne) {
+				size_t occupationForThisLamda = occupations[thisLambda];
+				if (nNormal && occupationForThisLamda==0) {
 					value_=0;
 					return;
 				}
-				if (!nNormal && thisLambda<ne) {
+				if (!nNormal && occupationForThisLamda==1) {
 					value_=0;
 					return;
 				}

@@ -25,7 +25,7 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 int main(int argc,char* argv[])
 {
 	int argce = 3;
-	size_t whatGeometry = GeometryLibraryType::FEAS;
+	size_t whatGeometry = GeometryLibraryType::CHAIN;
 	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
 	if (argc!=argce) throw std::runtime_error(s.c_str());
 	size_t n = atoi(argv[1]); // n. of  sites

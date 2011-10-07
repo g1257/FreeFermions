@@ -109,10 +109,10 @@ namespace FreeFermions {
 		};
 
 		FreeOperators(const OpPointersType& opPointers,
-		                const IndexGeneratorType& lambda,
-		                const PermutationsType& lambda2,
-		                size_t sigma,
-		                size_t ne2)
+		              const IndexGeneratorType& lambda,
+		              const PermutationsType& lambda2,
+		              size_t sigma,
+		              const std::vector<size_t>& occupations2)
 		: value_(1)
 		{
 			size_t counter=0;
@@ -139,10 +139,11 @@ namespace FreeFermions {
 				}
 				data_.push_back(fo);
 			}
-			if (ne2>0) {
-				addGsAtTheEnd(ne2);
-				counter2 += ne2;
-			}
+			
+			addGsAtTheEnd(occupations2);
+			for (size_t i=0;i<occupations2.size();i++) 
+				counter2 += occupations2[i];
+			
 			// if daggers > non-daggers, result is zero
 			if (counter!=counter2) {
 				value_ = 0;
@@ -210,14 +211,15 @@ namespace FreeFermions {
 
 	private:
 
-		 void addGsAtTheEnd(size_t ne2)
-		 {
-			 for (size_t i=0;i<ne2;i++) {
-				 FreeOperator fo;
-				 fo.lambda = ne2-i-1;
-				 fo.type = DESTRUCTION;
-				 data_.push_back(fo);
-			 }
+		void addGsAtTheEnd(const std::vector<size_t>&  occupations2)
+		{
+			for (int i=occupations2.size()-1;i>=0;i--) {
+				if (occupations2[i]==0) continue;
+				FreeOperator fo;
+				fo.lambda = i;
+				fo.type = DESTRUCTION;
+				data_.push_back(fo);
+			}
 		 }
 
 		std::vector<FreeOperator> data_;
