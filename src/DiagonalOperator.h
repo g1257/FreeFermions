@@ -103,16 +103,6 @@ namespace FreeFermions {
 			{
 				return backend_(freeOps,loc);
 			}
-			
-			FieldType front(const std::vector<size_t>& occupations)
-			{
-				return backend_.backOrFront(occupations,BackendType::FRONT);
-			}
-
-			FieldType back(const std::vector<size_t>& occupations)
-			{
-				return backend_.backOrFront(occupations,BackendType::BACK);
-			}
 
 			void transpose() { backend_.transpose(); }
 
