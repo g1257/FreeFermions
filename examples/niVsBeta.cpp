@@ -30,35 +30,74 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
+
+void doOneBeta(const EngineType& engine,
+               std::vector<size_t>& ne,
+			   OpLibFactoryType& opLibFactory,
+			   size_t site,
+			   size_t sigma,
+			   RealType beta)
+{
+	RealType sum = 0;
+	RealType denominator = 0;
+	FreeFermions::Combinations combinations(engine.size(),ne[0]);
+	for (size_t i = 0; i<combinations.size(); ++i) {
+		OpDiagonalFactoryType opDiagonalFactory(engine);
+		EtoTheBetaHType ebh(beta,engine,0);
+		DiagonalOperatorType& eibOp = opDiagonalFactory(ebh);
+		
+		std::vector<size_t> vTmp(engine.size(),0);
+		for (size_t j=0;j<combinations(i).size();++j) vTmp[combinations(i)[j]]=1;
+		std::vector<std::vector<size_t> > occupations(1,vTmp);
+		HilbertStateType thisState(engine,occupations);
+		HilbertStateType phi = thisState;
+		eibOp.applyTo(phi);
+		denominator += scalarProduct(thisState,phi);
+		LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,site,sigma);
+		myOp2.applyTo(phi);
+		sum += scalarProduct(thisState,phi);
+	}
+	std::cout<<beta<<" "<<sum<<" "<<denominator<<" "<<sum/denominator<<"\n";	
+}
+
 int main(int argc,char *argv[])
 {
 	int opt;
-	size_t n =0,electronsUp=0;
-	RealType beta = 0;
+	size_t n =0;
+	size_t electronsUp=0;
+	RealType step = 0;
+	RealType offset=0;
+	size_t total=0;
 	size_t site = 0;
 	bool ladder = false;
-	while ((opt = getopt(argc, argv, "n:e:b:s:l")) != -1) {
+	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:l")) != -1) {
 		switch (opt) {
-		case 'n':
-			n = atoi(optarg);
-			break;
-		case 'e':
-			electronsUp = atoi(optarg);
-			break;
-		case 's':
-			site = atoi(optarg);
-			break;
-		case 'b':
-			beta = atoi(optarg);
-			break;
-		case 'l':
-			ladder = true;
-			break;
-		default: /* '?' */
-			throw std::runtime_error("Wrong usage\n");
+			case 'n':
+				n = atoi(optarg);
+				break;
+			case 'e':
+				electronsUp = atoi(optarg);
+				break;
+			case 's':
+				site = atoi(optarg);
+				break;
+			case 't':
+				total = atoi(optarg);
+				break;
+			case 'i':
+				step = atof(optarg);
+				break;
+			case 'o':
+				offset = atof(optarg);
+				break;
+			case 'l':
+				ladder = true;
+				break;
+			default: /* '?' */
+				throw std::runtime_error("Wrong usage\n");
 		}
 	}
-	if (n==0) throw std::runtime_error("Wrong usage\n");
+	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
 
 	size_t dof = 1; // spinless
 	MatrixType t(n,n);
@@ -86,28 +125,11 @@ int main(int argc,char *argv[])
 	size_t sigma =0;
 
 	std::cout<<"#site="<<site<<"\n";
-	std::cout<<"#beta="<<beta<<"\n";
+	
 	
 	OpLibFactoryType opLibFactory(engine);
-	
-	RealType sum = 0;
-	RealType denominator = 0;
-	FreeFermions::Combinations combinations(engine.size(),ne[0]);
-	for (size_t i = 0; i<combinations.size(); ++i) {
-		OpDiagonalFactoryType opDiagonalFactory(engine);
-		EtoTheBetaHType ebh(beta,engine,0);
-		DiagonalOperatorType& eibOp = opDiagonalFactory(ebh);
-		
-		std::vector<size_t> vTmp(engine.size(),0);
-		for (size_t j=0;j<combinations(i).size();++j) vTmp[combinations(i)[j]]=1;
-		std::vector<std::vector<size_t> > occupations(1,vTmp);
-		HilbertStateType thisState(engine,occupations);
-		HilbertStateType phi = thisState;
-		eibOp.applyTo(phi);
-		denominator += scalarProduct(thisState,phi);
-		LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,site,sigma);
-		myOp2.applyTo(phi);
-		sum += scalarProduct(thisState,phi);
+	for (size_t i=0;i<total;++i) {
+		RealType beta = i*step + offset;
+		doOneBeta(engine,ne,opLibFactory,site,sigma,beta);
 	}
-	std::cout<<sum<<" "<<denominator<<" "<<sum/denominator<<"\n";
 }
