@@ -279,12 +279,12 @@ namespace FreeFermions {
 				// diag. part need to be done here, because...
 				FieldType dd = 1.0;
 				for (size_t i=0;i<operatorsDiagonal_.size();i++) {
-					size_t loc = findLocOfDiagOp(i,sigma);
+					size_t loc = lambdaOperators.findLocOfDiagOp(i);
 					dd *= operatorsDiagonal_[i]->operator()(lambdaOperators,loc);
 				}
 				// ... fermionFactor ctor will modify lambdaOperators
 
-				FermionFactorType fermionFactor(lambdaOperators,occupations_[sigma]);
+				FermionFactorType fermionFactor(lambdaOperators);
 				RealType ff = fermionFactor();
 
 				if (ff==0) continue;
@@ -308,22 +308,6 @@ namespace FreeFermions {
 
 			} while(lambda2.increase());
 			return sum;
-		}
-
-		size_t findLocOfDiagOp(size_t ind,size_t sigma) const
-		{
-			size_t counter = 0;
-			size_t j = 0;
-			for (size_t i=0;i<opPointers_.size();i++) {
-				if (opPointers_[i].type == DIAGONAL) {
-					if (counter==ind) return j;
-					counter++;
-					j++;
-				}
-				if (opPointers_[i].sigma != sigma) continue;
-				j++;
-			}
-			throw std::runtime_error("findLocOfDiagOp\n");
 		}
 
 		int findLocOf(

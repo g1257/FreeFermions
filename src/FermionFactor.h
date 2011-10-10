@@ -100,7 +100,7 @@ template<typename OperatorType,typename OpPointerType>
 		       DESTRUCTION = OperatorType::DESTRUCTION
 		};
 
-		FermionFactor(FreeOperatorsType& freeOps,const std::vector<size_t>& occupations)
+		FermionFactor(FreeOperatorsType& freeOps)
 		: value_(1)
 		{
 			if (freeOps()==0) {

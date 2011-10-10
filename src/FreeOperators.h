@@ -105,8 +105,8 @@ namespace FreeFermions {
 		typedef std::vector<OpPointerType> OpPointersType;
 
 		enum {CREATION = OperatorType::CREATION,
-		       DESTRUCTION = OperatorType::DESTRUCTION
-		};
+		      DESTRUCTION = OperatorType::DESTRUCTION,
+		      DIAGONAL};
 
 		FreeOperators(const OpPointersType& opPointers,
 		              const IndexGeneratorType& lambda,
@@ -149,7 +149,21 @@ namespace FreeFermions {
 				value_ = 0;
 				return;
 			}
-			
+		}
+		
+		size_t findLocOfDiagOp(size_t ind) const
+		{
+			size_t counter = 0;
+			size_t j = 0;
+			for (size_t i=0;i<data_.size();i++) {
+				if (data_[i].type == DIAGONAL) {
+					if (counter==ind) return j;
+					counter++;
+					j++;
+				}
+				j++;
+			}
+			throw std::runtime_error("findLocOfDiagOp\n");
 		}
 
 		void removeNonCsOrDs()

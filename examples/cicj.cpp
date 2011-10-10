@@ -47,7 +47,9 @@ int main(int argc,char* argv[])
 			geometry.setGeometry(t,2);
 			break;
 	}
-	
+	std::vector<RealType> v(n,0);
+	v[4]=0.8;
+	geometry.addPotential(t,v);
 	std::cerr<<t;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);

@@ -30,13 +30,12 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
-
 void doOneBeta(const EngineType& engine,
                std::vector<size_t>& ne,
-			   OpLibFactoryType& opLibFactory,
-			   size_t site,
-			   size_t sigma,
-			   RealType beta)
+               OpLibFactoryType& opLibFactory,
+               size_t site,
+               size_t sigma,
+               RealType beta)
 {
 	RealType sum = 0;
 	RealType denominator = 0;
@@ -70,16 +69,36 @@ int main(int argc,char *argv[])
 	size_t total=0;
 	size_t site = 0;
 	bool ladder = false;
-	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:l")) != -1) {
+	std::vector<RealType> v;
+	std::vector<std::string> str;
+
+	while ((opt = getopt(argc, argv, "n:e:b:s:p:t:o:i:l")) != -1) {
 		switch (opt) {
 			case 'n':
 				n = atoi(optarg);
+				v.resize(n,0);
 				break;
 			case 'e':
 				electronsUp = atoi(optarg);
 				break;
 			case 's':
 				site = atoi(optarg);
+				break;
+			case 'p':
+				if (v.size()==0) {
+					std::string s(argv[0]);
+					s += "-p must come after -n\n";
+					throw std::runtime_error(s.c_str());
+				}
+				PsimagLite::tokenizer(optarg,str,",");
+				if (str.size() & 1) {
+					std::string s(argv[0]);
+					s += " Expecting pairs for -p\n";
+					throw std::runtime_error(s.c_str());
+				}
+				for (size_t i=0;i<str.size();i+=2) {
+					v[atoi(str[i].c_str())] = atof(str[i+1].c_str());
+				}
 				break;
 			case 't':
 				total = atoi(optarg);
@@ -112,9 +131,10 @@ int main(int argc,char *argv[])
 		for (size_t ii=0;ii<n;ii+=2)
 			t(ii,ii+1) = t(ii+1,ii) = 0.5;
 	}
+	geometry->addPotential(t,v);
 	delete geometry;
 	std::cerr<<t;
-	
+
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(t,concurrency,dof,true);
 
@@ -125,8 +145,7 @@ int main(int argc,char *argv[])
 	size_t sigma =0;
 
 	std::cout<<"#site="<<site<<"\n";
-	
-	
+
 	OpLibFactoryType opLibFactory(engine);
 	for (size_t i=0;i<total;++i) {
 		RealType beta = i*step + offset;

@@ -82,7 +82,6 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #ifndef E_TO_THE_BETA_H_H
 #define E_TO_THE_BETA_H_H
 
-
 namespace FreeFermions {
 	// All interactions == 0
 	template<typename EngineType_>
@@ -106,18 +105,20 @@ namespace FreeFermions {
 			{
 				RealType sum = 0;
 				for (size_t i=0;i<loc;i++) {
-					if (freeOps[i].type != FreeOperatorsType::CREATION &&
-						freeOps[i].type != FreeOperatorsType::DESTRUCTION)
-						   continue;
-					int sign =  (freeOps[i].type ==
-							       FreeOperatorsType::CREATION) ? -1 : 1;
-					sum += engine_.eigenvalue(freeOps[i].lambda)*sign;
+// 					if (freeOps[i].type != FreeOperatorsType::CREATION &&
+// 						freeOps[i].type != FreeOperatorsType::DESTRUCTION)
+// 						   continue;
+// 					int sign =  (freeOps[i].type ==
+// 							       FreeOperatorsType::CREATION) ? -1 : 1;
+					if (freeOps[i].type != FreeOperatorsType::CREATION) continue;
+					sum += engine_.eigenvalue(freeOps[i].lambda); //*sign;
 				}
 
 				RealType exponent = -beta_*sum;
 				return exp(exponent);
 			}
 
+			
 			void transpose() { }
 
 		private:
