@@ -148,8 +148,8 @@ namespace FreeFermions {
 				std::vector<VectorType> psiVv(states);
 				RealType sum = 0;
 				PsimagLite::Loop<ConcurrencyType> loop(concurrency_,states);
-				size_t i=0;
-				do {
+				for (;!loop.end();loop.next()) {
+					size_t i = loop.index();
 					if (i%each ==0 && concurrency_.name()=="serial") {
 						std::cerr<<"Done "<<(i*10/each)<<"%\n";
 						std::cerr.flush();
@@ -175,7 +175,7 @@ namespace FreeFermions {
 					psiVv[i]=psiV;
 					sum += psiV*psiV;
 					//std::cout<<"\n";
-				} while (loop.next(i));
+				}
 				concurrency_.gather(psiVv);
 				concurrency_.gather(sum);
 				std::cerr<<"sum="<<sum<<"\n";
