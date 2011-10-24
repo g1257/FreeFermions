@@ -87,7 +87,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "GeometryLibrary.h"
 #include "CanonicalStates.h"
 #include "CreationOrDestructionOp.h"
-//#include "HilbertState.h"
+#include "Loop.h"
 #include "RealSpaceState.h"
 #include "BLAS.h"
 
@@ -144,12 +144,12 @@ namespace FreeFermions {
 				
 				std::cout<<"#psi of size"<<states<<"x"<<states<<"\n";
 				size_t each = states/10;
-				concurrency_.loopCreate(states);
 				VectorType psiV(states);
 				std::vector<VectorType> psiVv(states);
 				RealType sum = 0;
+				PsimagLite::Loop<ConcurrencyType> loop(concurrency_,states);
 				size_t i=0;
-				while(concurrency_.loop(i)) {
+				do {
 					if (i%each ==0 && concurrency_.name()=="serial") {
 						std::cerr<<"Done "<<(i*10/each)<<"%\n";
 						std::cerr.flush();
@@ -175,7 +175,7 @@ namespace FreeFermions {
 					psiVv[i]=psiV;
 					sum += psiV*psiV;
 					//std::cout<<"\n";
-				}	
+				} while (loop.next(i));
 				concurrency_.gather(psiVv);
 				concurrency_.gather(sum);
 				std::cerr<<"sum="<<sum<<"\n";
