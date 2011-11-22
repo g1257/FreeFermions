@@ -28,7 +28,7 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 int main(int argc,char* argv[])
 {
 	int argce = 3;
-	size_t whatGeometry = GeometryLibraryType::FEAS; //CHAIN;
+	size_t whatGeometry = GeometryLibraryType::KTWONIFFOUR; // FEAS; //CHAIN;
 	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
 	if (argc<argce) throw std::runtime_error(s.c_str());
 	size_t n = atoi(argv[1]); // n. of  sites
@@ -38,7 +38,7 @@ int main(int argc,char* argv[])
 	geometryParams.type =whatGeometry;
 	if (whatGeometry==GeometryLibraryType::LADDER || whatGeometry==GeometryLibraryType::FEAS)
 		geometryParams.leg = 2;
-	if (whatGeometry==GeometryLibraryType::FEAS)
+	if (whatGeometry==GeometryLibraryType::FEAS || whatGeometry==GeometryLibraryType::KTWONIFFOUR)
 		geometryParams.filename = argv[3];
 
 	GeometryLibraryType geometry(geometryParams);

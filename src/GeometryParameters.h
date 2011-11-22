@@ -87,8 +87,11 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 
-	template<typename RealType>
+	template<typename RealType_>
 	struct GeometryParameters {
+
+		typedef RealType_ RealType;
+
 		enum {OPTION_NONE,OPTION_PERIODIC};
 		
 		GeometryParameters() : hopping(1,1.0),option(OPTION_NONE) {}

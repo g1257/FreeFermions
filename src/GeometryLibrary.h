@@ -84,6 +84,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "IoSimple.h" // in psimaglite
 #include "Matrix.h" // in psimaglite
 #include <cassert>
+#include "KTwoNiFFour.h"
 
 namespace FreeFermions {
 	template<typename MatrixType,typename GeometryParamsType>
@@ -196,17 +197,8 @@ namespace FreeFermions {
 
 		void setGeometryKniffour()
 		{
-// 			size_t edof = 2; // 2 orbitals
-// 			std::vector<RealType> oneSiteHoppings;
-// 			readOneSiteHoppings(oneSiteHoppings,filename);
-// 
-// 			t.clear();
-// 			for (size_t i=0;i<edof*edof;i++) { // 4 cases: aa ab ba and bb
-// 				MatrixType oneT(sites_,sites_);
-// 				setGeometryKniffour(oneT,i,oneSiteHoppings,leg,geometryOption);
-// 				assert(isHermitian(oneT,true));
-// 				t.push_back(oneT);
-// 			}
+			KTwoNiFFour<GeometryParamsType,MatrixType> ktwoniffour(geometryParams_);
+			ktwoniffour.fillMatrix(t_);
 		}
 
 		void setGeometryChain()
