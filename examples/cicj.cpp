@@ -28,23 +28,27 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 int main(int argc,char* argv[])
 {
 	int argce = 3;
-	size_t whatGeometry = GeometryLibraryType::CHAIN;
+	size_t whatGeometry = GeometryLibraryType::FEAS; //CHAIN;
 	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
-	if (argc!=argce) throw std::runtime_error(s.c_str());
+	if (argc<argce) throw std::runtime_error(s.c_str());
 	size_t n = atoi(argv[1]); // n. of  sites
 	size_t dof = 1; // spinless
 	GeometryParamsType geometryParams;
 	geometryParams.sites = n;
 	geometryParams.type =whatGeometry;
-	if (whatGeometry==GeometryLibraryType::LADDER) geometryParams.leg = 2;
+	if (whatGeometry==GeometryLibraryType::LADDER || whatGeometry==GeometryLibraryType::FEAS)
+		geometryParams.leg = 2;
+	if (whatGeometry==GeometryLibraryType::FEAS)
+		geometryParams.filename = argv[3];
+
 	GeometryLibraryType geometry(geometryParams);
 	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
 	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
 	
 
-	std::vector<RealType> v(n,0);
-	v[4]=0.8;
-	geometry.addPotential(v);
+// 	std::vector<RealType> v(n,0);
+// 	v[4]=0.8;
+// 	geometry.addPotential(v);
 	std::cerr<<geometry.matrix();
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
