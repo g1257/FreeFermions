@@ -197,7 +197,7 @@ namespace FreeFermions {
 		void initTerms(size_t sigma)
 		{
 			assert(engine_->dof()==1);
-			size_t n = engine_->sites()*engine_->edof();
+			size_t n = engine_->size();
 			std::vector<bool> v(n,false);
 			if (ne_[sigma]==0) {
 				FlavoredStateType fl(engine_->dof(),v.size());

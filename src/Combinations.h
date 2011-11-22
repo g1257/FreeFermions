@@ -3,7 +3,7 @@
 Copyright (c) 2009 , UT-Battelle, LLC
 All rights reserved
 
-[FreeFermions, Version 1.0.0]
+[DMRG++, Version 2.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -74,89 +74,82 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file Engine.h
+/*! \file Combinations.h
  *
- * Raw computations for a free Hubbard model
+ *  Algorithm by Donald Knuth.
  *
  */
-#ifndef ENGINE_H
-#define ENGINE_H
-#include "Matrix.h"
-#include "Vector.h"
+#ifndef COMBINATIONS_H_H
+#define COMBINATIONS_H_H
+
+#include <vector>
 
 namespace FreeFermions {
-	// All interactions == 0
-	template<typename GeometryLibraryType_,typename FieldType_,typename ConcurrencyType_>
-	class Engine {
-			
-			typedef PsimagLite::Matrix<FieldType_> MatrixType;
-	
-		public:
+	class Combinations {
+	public:
 
-			typedef GeometryLibraryType_ GeometryLibraryType;
-			typedef ConcurrencyType_ ConcurrencyType;
-			typedef typename GeometryLibraryType::RealType RealType;
-			typedef FieldType_ FieldType;
-			
-			Engine(const GeometryLibraryType& geometry,ConcurrencyType& concurrency,size_t dof,bool verbose=false)
-			: concurrency_(concurrency),
-			  dof_(dof),
-			  verbose_(verbose),
-			  eigenvectors_(geometry.matrix())
-			{
-				diagonalize();
-				//MatrixType tmp = eigenvectors_;
-				//eigenvectors_ = transposeConjugate(tmp);
-				if (verbose_) {
-					std::cerr<<"#Created core "<<eigenvectors_.n_row();
-					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
-				}
-			}
-
-			FieldType energy(size_t ne) const
-			{
-				RealType sum = 0;
-				for (size_t i=0;i<ne;i++) sum += eigenvalues_[i];
-				return sum;
-			}
-
-			const RealType& eigenvalue(size_t i) const { return eigenvalues_[i]; }
-
-			const FieldType& eigenvector(size_t i,size_t j) const
-			{
-				return eigenvectors_(i,j);
-			}
-
-			size_t dof() const { return dof_; }
-	
-			size_t size() const { return eigenvalues_.size(); }
-
-			ConcurrencyType& concurrency() { return concurrency_; }
-
-		private:
+		Combinations(size_t n,size_t k)
+		: k_(k)
+		{
+			if (k==0 || n<k) throw std::runtime_error(
+			  "Combinations::ctor\n");
+			mainLoop(n);
+		}
 		
-			void diagonalize()
-			{
-				if (!isHermitian(eigenvectors_,true)) throw std::runtime_error("Matrix not hermitian\n");
+		const std::vector<size_t>& operator()(size_t i) const
+		{
+			return data_[i];
+		}
+		
+		size_t size() const { return data_.size(); }
 
-				diag(eigenvectors_,eigenvalues_,'V');
-					
-				if (verbose_) {
-					std::cerr<<"eigenvalues\n";
-					std::cerr<<eigenvalues_;
-					std::cerr<<"*************\n";
-					std::cerr<<"Eigenvectors:\n";
-					std::cerr<<eigenvectors_;
-				}
+	private:
+		void mainLoop(size_t n)
+		{
+			std::vector<int> c(k_+3);
+			std::vector<size_t> tmpVec(k_);
+			int x = 0;
+			for (int i=1; i <= int(k_); i++) c[i] = i;
+			c[k_+1] = n+1;
+			c[k_+2] = 0;
+			int j = k_;
+visit:
+			size_t counter = 0;
+			for (int i=k_; i >= 1; i--)
+				tmpVec[counter++] = c[i]-1;
+			data_.push_back(tmpVec);
+
+			if (j > 0) {x = j+1; goto incr;}
+			if (c[1] + 1 < c[2]) {
+				c[1] += 1;
+				goto visit;
 			}
+			j = 2;
+do_more:
+			c[j-1] = j-1;
+			x = c[j] + 1;
+			if (x == c[j+1]) {j++; goto do_more;}
+			if (j > int(k_)) return;
+incr:
+			c[j] = x;
+			j--;
+			goto visit;
+		}
 
-			ConcurrencyType& concurrency_;
-			size_t dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
-			bool verbose_;
-			PsimagLite::Matrix<FieldType> eigenvectors_;
-			std::vector<RealType> eigenvalues_;
-	}; // Engine
-} // namespace FreeFermions 
+		size_t k_;
+		std::vector<std::vector<size_t> > data_;
+	}; // Combinations
+	
+	std::ostream& operator<<(std::ostream& os,const Combinations& ig)
+	{
+		for (size_t i=0;i<ig.size();++i) {
+			for (size_t j=0;j<ig(i).size();++j)
+				os<<ig(i)[j]<<" ";
+			os<<"\n";
+		}
+		return os;
+	}
+} // namespace Dmrg 
 
 /*@}*/
-#endif
+#endif // COMBINATIONS_H_H

@@ -104,7 +104,7 @@ namespace FreeFermions {
 		typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 //		typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 		typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
-		typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
+		typedef typename EngineType::GeometryLibraryType GeometryLibraryType;
 		typedef typename OperatorType::FactoryType OpNormalFactoryType;
 
 		enum {CREATION = OperatorType::CREATION,

@@ -16,15 +16,18 @@
 #include "DiagonalOperator.h"
 #include "LibraryOperator.h"
 #include "Tokenizer.h" // in PsimagLite
+#include "GeometryParameters.h"
+#include "Range.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef ComplexType FieldType;
 typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
-typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
+typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
+typedef FreeFermions::Engine<GeometryLibraryType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
-typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
@@ -122,24 +125,26 @@ int main(int argc,char *argv[])
 	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
 
 	size_t dof = 2; // spin up and down
-	
-	MatrixType t(n,n);
-	GeometryLibraryType *geometry;
-	if (!ladder) {
-		geometry = new GeometryLibraryType(n,GeometryLibraryType::CHAIN);
-		geometry->setGeometry(t);
-	} else {
-		geometry = new GeometryLibraryType(n,GeometryLibraryType::LADDER);
-		geometry->setGeometry(t,2);
+	GeometryParamsType geometryParams;
+	geometryParams.sites = n;
+	GeometryLibraryType* geometry;
 
-		for (size_t ii=0;ii<n;ii+=2)
-			t(ii,ii+1) = t(ii+1,ii) = 0.5;
+	if (!ladder) {
+		geometryParams.type = GeometryLibraryType::CHAIN;
+		geometry = new GeometryLibraryType(geometryParams);
+	} else {
+		geometryParams.type = GeometryLibraryType::LADDER;
+		geometryParams.leg = 2;
+		geometryParams.hopping.resize(2);
+		geometryParams.hopping[0] = 1.0;
+		geometryParams.hopping[1] = 0.5;
+		geometry = new GeometryLibraryType(geometryParams);
 	}
-	delete geometry;
-	std::cerr<<t;
+
+	std::cerr<<geometry->matrix();
 	
 	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(t,concurrency,dof,false);
+	EngineType engine(*geometry,concurrency,dof,false);
 	
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
@@ -152,10 +157,11 @@ int main(int argc,char *argv[])
 	std::cout<<"#superdensity="<<superdensity<<"\n";
 	std::cout<<"#site="<<sites[0]<<" site2="<<sites[1]<<"\n";
 
-	concurrency.loopCreate(total);
-	size_t it = 0;
+	PsimagLite::Range<ConcurrencyType> range(0,total,concurrency);
+	
+	while(!range.end()) {
+		size_t it = range.index();
 
-	while(concurrency.loop(it)) {
 		OpNormalFactoryType opNormalFactory(engine);
 		OpLibFactoryType opLibFactory(engine);
 		OpDiagonalFactoryType opDiagonalFactory(engine);
@@ -210,5 +216,7 @@ int main(int argc,char *argv[])
 		}
 		sum += 2*real(savedValue);
 		std::cout<<time<<" "<<real(sum)<<"\n";
+		range.next();
 	}
+	delete geometry;
 }

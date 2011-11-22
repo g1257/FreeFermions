@@ -83,7 +83,7 @@ int main(int argc,char *argv[])
 		geometryParams.leg = 2;
 		geometryParams.hopping.resize(2);
 		geometryParams.hopping[0] = 1.0;
-		geometryParams.hopping[0] = 0.5;
+		geometryParams.hopping[1] = 0.5;
 		geometry = new GeometryLibraryType(geometryParams);
 	}
 

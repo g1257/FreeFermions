@@ -9,16 +9,18 @@
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
 #include "LibraryOperator.h"
+#include "GeometryParameters.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef RealType FieldType;
 typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
-typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
+typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
+typedef FreeFermions::Engine<GeometryLibraryType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
-typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
@@ -30,13 +32,16 @@ int main(int argc,char* argv[])
 	size_t dof = 1; // spinless
 	MatrixType t(n,n);
 	//GeometryLibraryType geometry(n,GeometryLibraryType::LADDER);
-	GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
-	geometry.setGeometry(t); //,2);
+	GeometryParamsType geometryParams;
+	geometryParams.sites = n;
+	geometryParams.type = GeometryLibraryType::CHAIN;
+	GeometryLibraryType geometry(geometryParams);
+// 	geometry.setGeometry(t); //,2);
 	//t(3,5) = t(5,3) = 0;
 	//t(2,4) = t(4,2) = 2.0;
 
 	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(t,concurrency,dof,true);
+	EngineType engine(geometry,concurrency,dof,true);
 
 	std::vector<size_t> ne(dof,atoi(argv[2])); // 8 up and 8 down
 	bool debug = false;

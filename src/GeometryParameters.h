@@ -3,7 +3,7 @@
 Copyright (c) 2009 , UT-Battelle, LLC
 All rights reserved
 
-[FreeFermions, Version 1.0.0]
+[DMRG++, Version 2.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -74,89 +74,33 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file Engine.h
+/*! \file GeometryParameters.h
  *
  * Raw computations for a free Hubbard model
  *
  */
-#ifndef ENGINE_H
-#define ENGINE_H
-#include "Matrix.h"
-#include "Vector.h"
+#ifndef GEOMETRY_PARAMS_H
+#define GEOMETRY_PARAMS_H
+
+#include <assert.h>
+#include <string>
 
 namespace FreeFermions {
-	// All interactions == 0
-	template<typename GeometryLibraryType_,typename FieldType_,typename ConcurrencyType_>
-	class Engine {
-			
-			typedef PsimagLite::Matrix<FieldType_> MatrixType;
-	
-		public:
 
-			typedef GeometryLibraryType_ GeometryLibraryType;
-			typedef ConcurrencyType_ ConcurrencyType;
-			typedef typename GeometryLibraryType::RealType RealType;
-			typedef FieldType_ FieldType;
-			
-			Engine(const GeometryLibraryType& geometry,ConcurrencyType& concurrency,size_t dof,bool verbose=false)
-			: concurrency_(concurrency),
-			  dof_(dof),
-			  verbose_(verbose),
-			  eigenvectors_(geometry.matrix())
-			{
-				diagonalize();
-				//MatrixType tmp = eigenvectors_;
-				//eigenvectors_ = transposeConjugate(tmp);
-				if (verbose_) {
-					std::cerr<<"#Created core "<<eigenvectors_.n_row();
-					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
-				}
-			}
-
-			FieldType energy(size_t ne) const
-			{
-				RealType sum = 0;
-				for (size_t i=0;i<ne;i++) sum += eigenvalues_[i];
-				return sum;
-			}
-
-			const RealType& eigenvalue(size_t i) const { return eigenvalues_[i]; }
-
-			const FieldType& eigenvector(size_t i,size_t j) const
-			{
-				return eigenvectors_(i,j);
-			}
-
-			size_t dof() const { return dof_; }
-	
-			size_t size() const { return eigenvalues_.size(); }
-
-			ConcurrencyType& concurrency() { return concurrency_; }
-
-		private:
+	template<typename RealType>
+	struct GeometryParameters {
+		enum {OPTION_NONE,OPTION_PERIODIC};
 		
-			void diagonalize()
-			{
-				if (!isHermitian(eigenvectors_,true)) throw std::runtime_error("Matrix not hermitian\n");
+		GeometryParameters() : hopping(1,1.0),option(OPTION_NONE) {}
 
-				diag(eigenvectors_,eigenvalues_,'V');
-					
-				if (verbose_) {
-					std::cerr<<"eigenvalues\n";
-					std::cerr<<eigenvalues_;
-					std::cerr<<"*************\n";
-					std::cerr<<"Eigenvectors:\n";
-					std::cerr<<eigenvectors_;
-				}
-			}
-
-			ConcurrencyType& concurrency_;
-			size_t dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
-			bool verbose_;
-			PsimagLite::Matrix<FieldType> eigenvectors_;
-			std::vector<RealType> eigenvalues_;
-	}; // Engine
-} // namespace FreeFermions 
+		size_t type;
+		size_t sites;
+		size_t leg;
+		std::vector<RealType> hopping;
+		size_t option;
+		std::string filename;
+	}; // struct GeometryParameters
+} // namespace Dmrg 
 
 /*@}*/
-#endif
+#endif //GEOMETRY_PARAMS_H

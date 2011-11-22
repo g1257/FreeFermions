@@ -6,6 +6,8 @@
 #include "ConcurrencySerial.h"
 #endif
 
+#include "GeometryParameters.h"
+
 // TBW FIXME
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -17,11 +19,12 @@ typedef PsimagLite::ConcurrencyMpi<RealType> ConcurrencyType;
 #endif
 
 typedef PsimagLite::Matrix<RealType> MatrixType;
-typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
+typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
+typedef FreeFermions::Engine<GeometryLibraryType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 //typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
-typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 
 
@@ -32,19 +35,21 @@ int main(int argc,char* argv[])
 	size_t nup =  atoi(argv[2]); 
 	typedef FreeFermions::ReducedDensityMatrix<EngineType> ReducedDensityMatrixType;
 	ConcurrencyType concurrency(argc,argv);
-	MatrixType t(2*n,2*n);
-	size_t geometryType = GeometryLibraryType::CHAIN;
-	size_t leg = GeometryLibraryType::OPTION_NONE;
+	
+	GeometryParamsType geometryParams;
+	geometryParams.type = GeometryLibraryType::CHAIN;
+	geometryParams.sites = 2*n;
 	if (argc>=4) {
-		leg = atoi(argv[3]);
-		if (leg>0) geometryType = GeometryLibraryType::LADDER;
+		geometryParams.leg = atoi(argv[3]);
+		if (geometryParams.leg>0) 
+			  geometryParams.type = GeometryLibraryType::LADDER;
 	}
-	GeometryLibraryType geometry(2*n,geometryType);
-	geometry.setGeometry(t,leg);
-	if (concurrency.root()) std::cerr<<t;
+
+	GeometryLibraryType geometry(geometryParams);
+	if (concurrency.root()) std::cerr<<geometry.matrix();
 	
 	size_t dof = 1;
-	EngineType engine(t,concurrency,dof,false);
+	EngineType engine(geometry,concurrency,dof,false);
 	
 	ReducedDensityMatrixType reducedDensityMatrix(engine,n,nup);
 	
