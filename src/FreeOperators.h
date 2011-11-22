@@ -150,7 +150,7 @@ namespace FreeFermions {
 				return;
 			}
 		}
-		
+
 		size_t findLocOfDiagOp(size_t ind) const
 		{
 			size_t counter = 0;

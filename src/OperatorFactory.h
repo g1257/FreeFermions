@@ -93,9 +93,8 @@ namespace FreeFermions {
 	public:
 
 			OperatorFactory(const EngineType& engine) : engine_(&engine)
-			{
-			}
-			
+			{}
+
 			~OperatorFactory()
 			{
 				for (size_t i=0;i<garbage_.size();i++)
@@ -125,18 +124,6 @@ namespace FreeFermions {
 			}
 
 		private:
-
-//			OperatorFactory(const ThisType& x)
-//			{
-//				throw std::runtime_error(
-//						"OperatorFactory::copyCtor: Don't even think of coming here\n");
-//			}
-//
-//			ThisType& operator=(const ThisType& x)
-//			{
-//				throw std::runtime_error(
-//						"OperatorFactory::assignmentOp: Don't even think of coming here\n");
-//			}
 
 			const EngineType* engine_;
 			std::vector<OpType*> garbage_;

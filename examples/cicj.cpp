@@ -9,16 +9,19 @@
 #include "TypeToString.h"
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
+#include "GeometryParameters.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef RealType FieldType;
 typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
-typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
+typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
+typedef FreeFermions::Engine<GeometryLibraryType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
-typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
+
 typedef OperatorType::FactoryType OpNormalFactoryType;
 
 
@@ -30,29 +33,21 @@ int main(int argc,char* argv[])
 	if (argc!=argce) throw std::runtime_error(s.c_str());
 	size_t n = atoi(argv[1]); // n. of  sites
 	size_t dof = 1; // spinless
-	MatrixType t(n,n);
-	//std::vector<MatrixType> t;
-	GeometryLibraryType geometry(n,whatGeometry);
+	GeometryParamsType geometryParams;
+	geometryParams.sites = n;
+	geometryParams.type =whatGeometry;
+	if (whatGeometry==GeometryLibraryType::LADDER) geometryParams.leg = 2;
+	GeometryLibraryType geometry(geometryParams);
 	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
 	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
 	
-	switch (whatGeometry) {
-// 		case GeometryLibraryType::FEAS:
-// 			geometry.setGeometry(t,"feasHoppings.inp",2); //,GeometryLibraryType::OPTION_PERIODIC);
-// 			break;
-		case GeometryLibraryType::CHAIN:
-			geometry.setGeometry(t);
-			break;
-		case GeometryLibraryType::LADDER:
-			geometry.setGeometry(t,2);
-			break;
-	}
+
 	std::vector<RealType> v(n,0);
 	v[4]=0.8;
-	geometry.addPotential(t,v);
-	std::cerr<<t;
+	geometry.addPotential(v);
+	std::cerr<<geometry.matrix();
 	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(t,concurrency,dof,true);
+	EngineType engine(geometry,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;

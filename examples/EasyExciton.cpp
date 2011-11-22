@@ -12,15 +12,17 @@
 #include "EtoTheIhTime.h"
 #include "DiagonalOperator.h"
 #include "Tokenizer.h"
+#include "GeometryParameters.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef ComplexType FieldType;
 typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
-typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
+typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
+typedef FreeFermions::Engine<GeometryLibraryType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
-typedef FreeFermions::GeometryLibrary<MatrixType> GeometryLibraryType;
 typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
@@ -68,23 +70,27 @@ int main(int argc,char *argv[])
 	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
 
 	size_t dof = 1; // spinless
-	MatrixType t(n,n);
 
+	GeometryParamsType geometryParams;
+	geometryParams.sites = n;
 	GeometryLibraryType* geometry;
+
 	if (!ladder) {
-		geometry = new GeometryLibraryType(n,GeometryLibraryType::CHAIN);
-		geometry->setGeometry(t);
+		geometryParams.type = GeometryLibraryType::CHAIN;
+		geometry = new GeometryLibraryType(geometryParams);
 	} else {
-		geometry = new GeometryLibraryType(n,GeometryLibraryType::LADDER);
-		geometry->setGeometry(t,2);
-		for (size_t ii=0;ii<n;ii+=2)
-			t(ii,ii+1) = t(ii+1,ii) = 0.5;
+		geometryParams.type = GeometryLibraryType::LADDER;
+		geometryParams.leg = 2;
+		geometryParams.hopping.resize(2);
+		geometryParams.hopping[0] = 1.0;
+		geometryParams.hopping[0] = 0.5;
+		geometry = new GeometryLibraryType(geometryParams);
 	}
-	delete geometry;
-	std::cerr<<t;
+
+	std::cerr<<geometry->matrix();
 	
 	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(t,concurrency,dof,true);
+	EngineType engine(*geometry,concurrency,dof,true);
 
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
@@ -113,4 +119,6 @@ int main(int argc,char *argv[])
 		myOp2.applyTo(phi);
 		std::cout<<time<<" "<<scalarProduct(phi,phi)<<"\n";
 	}
+	
+	delete geometry;
 }

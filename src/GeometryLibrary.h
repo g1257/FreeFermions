@@ -83,261 +83,319 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define GEOMETRY_LIB_H
 #include "IoSimple.h" // in psimaglite
 #include "Matrix.h" // in psimaglite
+#include <cassert>
 
 namespace FreeFermions {
-	template<typename MatrixType>
+	template<typename MatrixType,typename GeometryParamsType>
 	class GeometryLibrary {
-			typedef typename MatrixType::value_type FieldType;
-		public:
-			enum {CHAIN,LADDER,FEAS};
-			enum {OPTION_NONE,OPTION_PERIODIC};
-			enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
-			
-			GeometryLibrary(size_t n,size_t geometryType,FieldType hopping = 1.0) :
-				sites_(n),geometryType_(geometryType),hopping_(hopping)
-			{
-			}
-
-			void setGeometry(MatrixType& t,size_t geometryOption=OPTION_NONE)
-			{
-				switch (geometryType_) {
-					case CHAIN:
-						setGeometryChain(t,geometryOption);
-						break;
-					case LADDER:
-						setGeometryLadder(t,geometryOption);
-						break;
-					default:
-						throw std::runtime_error("GeometryLibrary:: Unknown geometry type\n");
-				}
-			}
-			
-			void setGeometry(std::vector<MatrixType>& t,const std::string& filename,size_t leg,size_t geometryOption=OPTION_NONE)
-			{
-				if (geometryType_!=FEAS) throw std::runtime_error("Unsupported\n");
-				size_t edof = 2; // 2 orbitals
-				std::vector<FieldType> oneSiteHoppings;
-				readOneSiteHoppings(oneSiteHoppings,filename);
 	
-				t.clear();
-				for (size_t i=0;i<edof*edof;i++) { // 4 cases: aa ab ba and bb
-					MatrixType oneT(sites_,sites_);
-					setGeometryFeAs(oneT,i,oneSiteHoppings,leg,geometryOption);
-					reorderLadderX(oneT,leg);
-					if (!isHermitian(oneT,true)) throw std::runtime_error("Hopping matrix not hermitian\n");
-					t.push_back(oneT);
-				}
-			}
+	public:
 
-			void bathify(MatrixType& t,const std::vector<FieldType>& tb)
-			{
-				if (sites_!=t.n_row() || sites_!=t.n_col())
-					throw std::runtime_error("GeometryLibrary::bathify(...)\n");
-				size_t nb = tb.size();
-				size_t nnew = sites_*(1+nb);
-				MatrixType tnew(nnew,nnew);
-				for (size_t i=0;i<t.n_row();i++)
-				{
-					for (size_t j=0;j<t.n_col();j++)
-						tnew(i,j) = t(i,j);
-					for (size_t j=0;j<nb;j++) {
-						size_t k = sites_ + j + nb*i;
-						tnew(i,k) = tnew(k,i) = tb[j];
-					}
-				}
-				t = tnew;
-				sites_ = nnew;
-			}
-			
-			template<typename SomeRealType>
-			void addPotential(MatrixType &t,const std::vector<SomeRealType>& p)
-			{
-				for (size_t i=0;i<p.size();i++) t(i,i) = p[i];
-			}	
-			
-			template<typename ComplexFieldType>
-			void fourierTransform(std::vector<ComplexFieldType>& dest,const MatrixType& src,size_t leg) const
-			{
-				
-				size_t n = src.n_row();
-				if (n!=sites_) throw std::runtime_error("src must have the same number of sites as lattice\n");
-				PsimagLite::Matrix<ComplexFieldType> B(n,n);
-				getFourierMatrix(B,leg);
-				for (size_t k=0;k<n;k++) {
-					ComplexFieldType sum = 0.0;
-					for (size_t i=0;i<n;i++) {
-						for (size_t j=0;j<n;j++) {
-							sum += std::conj(B(i,k)) * src(i,j) * B(j,k);
-						}
-					}
-					dest[k] = sum;
-				}
-				 
-			}
-			
-			size_t sites() const { return sites_; }
-			
-		private:
-			void setGeometryChain(MatrixType& t,size_t geometryOption)
-			{
-				for (size_t i=0;i<sites_;i++) {
-					for (size_t j=0;j<sites_;j++) {
-						if (i-j==1 || j-i==1) t(i,j) = hopping_;
-					}
-				}
-				if (geometryOption==OPTION_PERIODIC) t(0,sites_-1) = t(sites_-1,0) = hopping_;
-			}
-			
-			void setGeometryLadder(MatrixType& t,size_t leg)
-			{
-				if (leg<2) throw std::runtime_error("GeometryLibrary:: ladder must have leg>1\n");
-				for (size_t i=0;i<sites_;i++) {
-					std::vector<size_t> v;
-					ladderFindNeighbors(v,i,leg);
-					for (size_t k=0;k<v.size();k++) {
-						size_t j = v[k];
-						t(i,j) = t(j,i) = hopping_;
-					}
-				}
-			}
-			
-			void ladderFindNeighbors(std::vector<size_t>& v,size_t i,size_t leg)
-			{
-				v.clear();
-				size_t k = i + 1;
-				if (k<sites_ && ladderSameColumn(k,i,leg)) v.push_back(k);
-				k = i + leg;
-				if (k<sites_)  v.push_back(k);
-				
-				// careful with substracting because i and k are unsigned!
-				if (i==0) return;
-				k = i-1;
-				if (ladderSameColumn(i,k,leg)) v.push_back(k);
-				
-				if (i<leg) return;
-				k= i-leg;
-				v.push_back(k);
-			}
-			
-			bool ladderSameColumn(size_t i,size_t k,size_t leg)
-			{
-				size_t i1 = i/leg;
-				size_t k1 = k/leg;
-				if (i1 == k1) return true;
-				return false;
-			}
-			
-			// only 2 orbitals supported
-			void setGeometryFeAs(MatrixType& t,size_t orborb,const std::vector<FieldType>& oneSiteHoppings,
-						size_t leg,size_t geometryOption)
-			{
-				FieldType tx = oneSiteHoppings[orborb+DIRECTION_X*4];
-				size_t lengthx  = sites_/leg;
-				if (sites_%leg!=0) throw std::runtime_error("Leg must divide number of sites.\n");
-				for (size_t j=0;j<leg;j++) {
-					for (size_t i=0;i<lengthx;i++) {
-						if (i+1<lengthx) t(i+1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+j*lengthx) = tx;
-						if (i>0) t(i-1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i-1+j*lengthx) = tx;
-					}
-					if (geometryOption==OPTION_PERIODIC) 
-						t(j*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,j*lengthx) = tx;
-				}
+		typedef typename MatrixType::value_type RealType;
 
-				FieldType ty = oneSiteHoppings[orborb+DIRECTION_Y*4];
-				for (size_t i=0;i<lengthx;i++) {
-					for (size_t j=0;j<leg;j++) {
-						if (j>0) t(i+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j-1)*lengthx) = ty;
-						if (j+1<leg) t(i+(j+1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j+1)*lengthx) = ty;
-					}
-					if (geometryOption==OPTION_PERIODIC)  t(i,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i) = ty;
-				}
-				FieldType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*4];
-				FieldType txmy = oneSiteHoppings[orborb+DIRECTION_XMY*4];
-				for (size_t i=0;i<lengthx;i++) {
-					for (size_t j=0;j<leg;j++) {
-						if (j+1<leg && i+1<lengthx)
-							t(i+1+(j+1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+(j+1)*lengthx) = txpy;
-						if (i+1<lengthx && j>0)
-							t(i+1+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+(j-1)*lengthx) = txmy;
-						if (geometryOption!=OPTION_PERIODIC || i>0) continue;
-						if (j+1<leg)
-							t((j+1)*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,(j+1)*lengthx) = txpy;
-						if (j>0)
-							t((j-1)*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,(j-1)*lengthx) = txmy;
-					}
-					if (geometryOption!=OPTION_PERIODIC) continue;
-					if (i+1<lengthx) {
-						t(i+1,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i+1) = txpy;
-						t(i+1+(leg-1)*lengthx,i) = t(i,i+1+(leg-1)*lengthx) = txmy;
-					}
-					if (i>0) continue;
-					t(0,lengthx-1+(leg-1)*lengthx) = t(lengthx-1+(leg-1)*lengthx,0) = txpy;
-					t(0+(leg-1)*lengthx,lengthx-1) = t(lengthx-1,0+(leg-1)*lengthx) = txmy;
-				}
-				
-			}
+		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR};
 
-			// from 0--1--2--...
-			//      N-N+1-N+2--..
-			// into:
-			//      0--2--4--
-			//      1--3--5--
-			//
-			void reorderLadderX(MatrixType& told,size_t leg)
-			{
-				MatrixType tnew(told.n_row(),told.n_col());
-				for (size_t i=0;i<sites_;i++) {
-					for (size_t j=0;j<sites_;j++) {
-						size_t i2 = reorderLadderX(i,leg);
-						size_t j2 = reorderLadderX(j,leg);
-						tnew(i2,j2) = told(i,j); 
-					}
-				}
-				told = tnew;
+		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
+		
+		GeometryLibrary(GeometryParamsType& geometryParams) 
+		: geometryParams_(geometryParams)
+		{
+			switch (geometryParams.type) {
+				case CHAIN:
+					setGeometryChain();
+					break;
+				case LADDER:
+					setGeometryLadder();
+					break;
+				case FEAS:
+					setGeometryFeAs();
+					break;
+				case KTWONIFFOUR:
+					setGeometryKniffour();
+					break;
+				default:
+					assert(false);
 			}
+		}
 
-			size_t reorderLadderX(size_t i,size_t leg)
+		void bathify(const std::vector<RealType>& tb)
+		{
+			size_t sites = geometryParams_.sites;
+			assert(t_.size()!=1);
+			if (sites!=t_.n_row() || sites!=t_.n_col())
+				throw std::runtime_error("GeometryLibrary::bathify(...)\n");
+			size_t nb = tb.size();
+			size_t nnew = sites*(1+nb);
+			MatrixType tnew(nnew,nnew);
+			for (size_t i=0;i<t_.n_row();i++)
 			{
-				size_t lengthx  = sites_/leg;
-				// i = x + y*lengthx;
-				size_t x = i%lengthx;
-				size_t y = i/lengthx;
-				return y + x*leg;
+				for (size_t j=0;j<t_.n_col();j++)
+					tnew(i,j) = t_(i,j);
+				for (size_t j=0;j<nb;j++) {
+					size_t k = sites + j + nb*i;
+					tnew(i,k) = tnew(k,i) = tb[j];
+				}
 			}
+			t_ = tnew;
+		}
+
+		template<typename SomeRealType>
+		void addPotential(const std::vector<SomeRealType>& p)
+		{
+			for (size_t i=0;i<p.size();i++) t_(i,i) = p[i];
+		}	
+
+		template<typename ComplexType>
+		void fourierTransform(std::vector<ComplexType>& dest,const MatrixType& src,size_t leg) const
+		{
 			
-			void readOneSiteHoppings(std::vector<FieldType>& v,
-							const std::string& filename)
-			{
-				typename PsimagLite::IoSimple::In io(filename);
-				io.read(v,"hoppings");
-			}
-			
-			template<typename MatrixComplexType>
-			void getFourierMatrix(MatrixComplexType& B,size_t leg) const
-			{
-				typedef typename MatrixComplexType::value_type ComplexType;
-				if (geometryType_!=FEAS) throw std::runtime_error("getFourierMatrix: unsupported\n");
-				size_t n = B.n_row();
-				size_t lengthx = n/leg;
-				if (n%leg !=0) throw std::runtime_error("Leg must divide number of sites for FEAS\n");
+			size_t n = src.n_row();
+			if (n!=geometryParams_.sites) throw std::runtime_error("src must have the same number of sites as lattice\n");
+			PsimagLite::Matrix<ComplexType> B(n,n);
+			getFourierMatrix(B,leg);
+			for (size_t k=0;k<n;k++) {
+				ComplexType sum = 0.0;
 				for (size_t i=0;i<n;i++) {
-					size_t rx = i % lengthx;
-					size_t ry = i/lengthx;
-					for (size_t k=0;k<n;k++) {
-						size_t kx = k % lengthx;
-						size_t ky = k / lengthx;
-						FieldType tmpx = rx*kx*2.0*M_PI/lengthx;
-						FieldType tmpy = ry*ky*2.0*M_PI/leg;
-						FieldType tmp1 = cos(tmpx+tmpy);
-						FieldType tmp2 = sin(tmpx+tmpy);
-						B(i,k) = ComplexType(tmp1,tmp2);
+					for (size_t j=0;j<n;j++) {
+						sum += std::conj(B(i,k)) * src(i,j) * B(j,k);
 					}
 				}
+				dest[k] = sum;
+			}
+			 
+		}
+
+		const MatrixType& matrix() const { return t_; }
+
+	private:
+
+		void setGeometryFeAs()
+		{
+			std::vector<MatrixType> t;
+			size_t edof = 2; // 2 orbitals
+			std::vector<RealType> oneSiteHoppings;
+			readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename);
+
+			size_t sites = geometryParams_.sites;
+			for (size_t i=0;i<edof*edof;i++) { // 4 cases: aa ab ba and bb
+				MatrixType oneT(sites,sites);
+				setGeometryFeAs(oneT,i,oneSiteHoppings);
+				reorderLadderX(oneT,geometryParams_.leg);
+				assert(isHermitian(oneT,true));
+				t.push_back(oneT);
+			}
+			resizeAndZeroOut(edof*sites,edof*sites);
+			for (size_t orbitalPair=0;orbitalPair<edof*edof;orbitalPair++) {
+				size_t orb1 = (orbitalPair & 1);
+				size_t orb2 = orbitalPair/2;
+				for (size_t i=0;i<sites;i++)
+					for (size_t j=0;j<sites;j++)
+						t_(i+orb1*sites,j+orb2*sites) += t[orbitalPair](i,j);
+			}
+		}
+
+		void setGeometryKniffour()
+		{
+// 			size_t edof = 2; // 2 orbitals
+// 			std::vector<RealType> oneSiteHoppings;
+// 			readOneSiteHoppings(oneSiteHoppings,filename);
+// 
+// 			t.clear();
+// 			for (size_t i=0;i<edof*edof;i++) { // 4 cases: aa ab ba and bb
+// 				MatrixType oneT(sites_,sites_);
+// 				setGeometryKniffour(oneT,i,oneSiteHoppings,leg,geometryOption);
+// 				assert(isHermitian(oneT,true));
+// 				t.push_back(oneT);
+// 			}
+		}
+
+		void setGeometryChain()
+		{
+			size_t sites = geometryParams_.sites;
+			resizeAndZeroOut(sites,sites);
+			for (size_t i=0;i<sites;i++) {
+				for (size_t j=0;j<sites;j++) {
+					if (i-j==1 || j-i==1) t_(i,j) = geometryParams_.hopping[0];
+				}
+			}
+			if (geometryParams_.option==GeometryParamsType::OPTION_PERIODIC)
+				t_(0,sites-1) = t_(sites-1,0) = geometryParams_.hopping[0];
+		}
+		
+		void setGeometryLadder()
+		{
+			size_t leg = geometryParams_.leg;
+			if (leg<2)
+				throw std::runtime_error("GeometryLibrary:: ladder must have leg>1\n");
+			
+			size_t sites = geometryParams_.sites;
+			resizeAndZeroOut(sites,sites);
+			for (size_t i=0;i<sites;i++) {
+				std::vector<size_t> v;
+				ladderFindNeighbors(v,i,leg);
+				for (size_t k=0;k<v.size();k++) {
+					size_t j = v[k];
+					RealType tmp = (ladderSameColumn(i,j,leg))? 
+					    geometryParams_.hopping[1] : geometryParams_.hopping[0];
+					t_(i,j) = t_(j,i) = tmp; 
+				}
+			}
+		}
+		
+		void ladderFindNeighbors(std::vector<size_t>& v,size_t i,size_t leg)
+		{
+			size_t sites = geometryParams_.sites;
+			v.clear();
+			size_t k = i + 1;
+			if (k<sites && ladderSameColumn(k,i,leg)) v.push_back(k);
+			k = i + leg;
+			if (k<sites)  v.push_back(k);
+			
+			// careful with substracting because i and k are unsigned!
+			if (i==0) return;
+			k = i-1;
+			if (ladderSameColumn(i,k,leg)) v.push_back(k);
+			
+			if (i<leg) return;
+			k= i-leg;
+			v.push_back(k);
+		}
+
+		bool ladderSameColumn(size_t i,size_t k,size_t leg)
+		{
+			size_t i1 = i/leg;
+			size_t k1 = k/leg;
+			if (i1 == k1) return true;
+			return false;
+		}
+
+		// only 2 orbitals supported
+		void setGeometryFeAs(MatrixType& t,size_t orborb,const std::vector<RealType>& oneSiteHoppings)
+		{
+			size_t sites = geometryParams_.sites;
+			size_t leg = geometryParams_.leg;
+			size_t geometryOption = geometryParams_.option;
+			RealType tx = oneSiteHoppings[orborb+DIRECTION_X*4];
+			size_t lengthx  = sites/leg;
+			if (sites%leg!=0) throw std::runtime_error("Leg must divide number of sites.\n");
+			for (size_t j=0;j<leg;j++) {
+				for (size_t i=0;i<lengthx;i++) {
+					if (i+1<lengthx) t(i+1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+j*lengthx) = tx;
+					if (i>0) t(i-1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i-1+j*lengthx) = tx;
+				}
+				if (geometryOption==GeometryParamsType::OPTION_PERIODIC) 
+					t(j*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,j*lengthx) = tx;
+			}
+
+			RealType ty = oneSiteHoppings[orborb+DIRECTION_Y*4];
+			for (size_t i=0;i<lengthx;i++) {
+				for (size_t j=0;j<leg;j++) {
+					if (j>0) t(i+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j-1)*lengthx) = ty;
+					if (j+1<leg) t(i+(j+1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j+1)*lengthx) = ty;
+				}
+				if (geometryOption==GeometryParamsType::OPTION_PERIODIC)
+					t(i,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i) = ty;
+			}
+			RealType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*4];
+			RealType txmy = oneSiteHoppings[orborb+DIRECTION_XMY*4];
+			for (size_t i=0;i<lengthx;i++) {
+				for (size_t j=0;j<leg;j++) {
+					if (j+1<leg && i+1<lengthx)
+						t(i+1+(j+1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+(j+1)*lengthx) = txpy;
+					if (i+1<lengthx && j>0)
+						t(i+1+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+(j-1)*lengthx) = txmy;
+					if (geometryOption!=GeometryParamsType::OPTION_PERIODIC || i>0)
+						continue;
+					if (j+1<leg)
+						t((j+1)*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,(j+1)*lengthx) = txpy;
+					if (j>0)
+						t((j-1)*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,(j-1)*lengthx) = txmy;
+				}
+				if (geometryOption!=GeometryParamsType::OPTION_PERIODIC)
+					continue;
+				if (i+1<lengthx) {
+					t(i+1,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i+1) = txpy;
+					t(i+1+(leg-1)*lengthx,i) = t(i,i+1+(leg-1)*lengthx) = txmy;
+				}
+				if (i>0) continue;
+				t(0,lengthx-1+(leg-1)*lengthx) = t(lengthx-1+(leg-1)*lengthx,0) = txpy;
+				t(0+(leg-1)*lengthx,lengthx-1) = t(lengthx-1,0+(leg-1)*lengthx) = txmy;
 			}
 			
-			size_t sites_;
-			size_t geometryType_;
-			FieldType hopping_;
+		}
+
+		// from 0--1--2--...
+		//      N-N+1-N+2--..
+		// into:
+		//      0--2--4--
+		//      1--3--5--
+		//
+		void reorderLadderX(MatrixType& told,size_t leg)
+		{
+			size_t sites = geometryParams_.sites;
+			MatrixType tnew(told.n_row(),told.n_col());
+			for (size_t i=0;i<sites;i++) {
+				for (size_t j=0;j<sites;j++) {
+					size_t i2 = reorderLadderX(i,leg);
+					size_t j2 = reorderLadderX(j,leg);
+					tnew(i2,j2) = told(i,j); 
+				}
+			}
+			told = tnew;
+		}
+
+		size_t reorderLadderX(size_t i,size_t leg)
+		{
+			size_t sites = geometryParams_.sites;
+			size_t lengthx  = sites/leg;
+			// i = x + y*lengthx;
+			size_t x = i%lengthx;
+			size_t y = i/lengthx;
+			return y + x*leg;
+		}
+		
+		void readOneSiteHoppings(std::vector<RealType>& v,
+						const std::string& filename)
+		{
+			typename PsimagLite::IoSimple::In io(filename);
+			io.read(v,"hoppings");
+		}
+		
+		template<typename MatrixComplexType>
+		void getFourierMatrix(MatrixComplexType& B,size_t leg) const
+		{
+			typedef typename MatrixComplexType::value_type ComplexType;
+			if (geometryParams_.geometryType!=FEAS)
+				throw std::runtime_error("getFourierMatrix: unsupported\n");
+			size_t n = B.n_row();
+			size_t lengthx = n/leg;
+			if (n%leg !=0) throw std::runtime_error("Leg must divide number of sites for FEAS\n");
+			for (size_t i=0;i<n;i++) {
+				size_t rx = i % lengthx;
+				size_t ry = i/lengthx;
+				for (size_t k=0;k<n;k++) {
+					size_t kx = k % lengthx;
+					size_t ky = k / lengthx;
+					RealType tmpx = rx*kx*2.0*M_PI/lengthx;
+					RealType tmpy = ry*ky*2.0*M_PI/leg;
+					RealType tmp1 = cos(tmpx+tmpy);
+					RealType tmp2 = sin(tmpx+tmpy);
+					B(i,k) = ComplexType(tmp1,tmp2);
+				}
+			}
+		}
+
+		void resizeAndZeroOut(size_t nrow,size_t ncol)
+		{
+			t_.resize(nrow,ncol);
+			for (size_t i=0;i<nrow;i++)
+				for(size_t j=0;j<ncol;j++)
+					t_(i,j)=0;
+		}
+
+		const GeometryParamsType& geometryParams_;
+		MatrixType t_;
+
 	}; // GeometryLibrary
 } // namespace FreeFermions
 

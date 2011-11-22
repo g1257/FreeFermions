@@ -86,24 +86,22 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename RealType_,typename FieldType_,typename ConcurrencyType_>
+	template<typename GeometryLibraryType,typename FieldType_,typename ConcurrencyType_>
 	class Engine {
 			
 			typedef PsimagLite::Matrix<FieldType_> MatrixType;
 	
 		public:
 			typedef ConcurrencyType_ ConcurrencyType;
-			typedef RealType_ RealType;
+			typedef typename GeometryLibraryType::RealType RealType;
 			typedef FieldType_ FieldType;
 			
-			Engine(const MatrixType& t,ConcurrencyType& concurrency,size_t dof,bool verbose=false) :
-					concurrency_(concurrency),sites_(t.n_row()),edof_(1),dof_(dof),
-					verbose_(verbose),eigenvectors_(sites_,sites_),
-				       eigenvalues_(sites_),needsDelete_(true)
+			Engine(const GeometryLibraryType& geometry,ConcurrencyType& concurrency,size_t dof,bool verbose=false)
+			: concurrency_(concurrency),
+			  dof_(dof),
+			  verbose_(verbose),
+			  eigenvectors_(geometry.matrix())
 			{
-				std::vector<MatrixType>* tt = new std::vector<MatrixType>(1);
-				(*tt)[0] = t;
-				t_ = tt;
 				diagonalize();
 				//MatrixType tmp = eigenvectors_;
 				//eigenvectors_ = transposeConjugate(tmp);
@@ -111,25 +109,6 @@ namespace FreeFermions {
 					std::cerr<<"#Created core "<<eigenvectors_.n_row();
 					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
 				}
-			}
-
-			Engine(const std::vector<MatrixType>& t,ConcurrencyType& concurrency,size_t dof,bool verbose=false) :
-				concurrency_(concurrency),t_(&t),sites_(t[0].n_row()),edof_(size_t(sqrt(t.size()))),
-				dof_(dof),verbose_(verbose),
-				    eigenvectors_(sites_*edof_,sites_*edof_),eigenvalues_(sites_*edof_),needsDelete_(false)
-			{
-				if ((edof_) * (edof_) != t.size()) 
-					throw std::runtime_error("t.size must be a perfect square\n");
-				diagonalize();
-				if (verbose_) {
-					std::cerr<<"#Created core "<<eigenvectors_.n_row();
-					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
-				}
-			}
-
-			~Engine()
-			{
-				if (needsDelete_) delete  t_;
 			}
 
 			FieldType energy(size_t ne) const
@@ -147,26 +126,17 @@ namespace FreeFermions {
 			}
 
 			size_t dof() const { return dof_; }
-
-			size_t edof() const { return edof_; }
 	
 			size_t size() const { return eigenvalues_.size(); }
 
-			size_t sites() const { return sites_; }
-
 			ConcurrencyType& concurrency() { return concurrency_; }
-			
+
 		private:
 		
 			void diagonalize()
 			{
-				for (size_t i=0;i<edof_*edof_;i++) 
-					sumHoppings(i);
-
 				if (!isHermitian(eigenvectors_,true)) throw std::runtime_error("Matrix not hermitian\n");
-				if (verbose_) {
-					std::cerr<<eigenvectors_;
-				}	
+
 				diag(eigenvectors_,eigenvalues_,'V');
 					
 				if (verbose_) {
@@ -177,26 +147,12 @@ namespace FreeFermions {
 					std::cerr<<eigenvectors_;
 				}
 			}
-			
-			void sumHoppings(size_t orbitalPair)
-			{
-				size_t orb1 = (orbitalPair & 1);
-				size_t orb2 = orbitalPair/2;
-				for (size_t i=0;i<sites_;i++)
-					for (size_t j=0;j<sites_;j++)
-						eigenvectors_(i+orb1*sites_,j+orb2*sites_) += (*t_)[orbitalPair](i,j);
-			}
-			
+
 			ConcurrencyType& concurrency_;
-			const std::vector<MatrixType>* t_;
-			size_t sites_;
-			size_t edof_; // degrees of freedom that are coupled (feas : = 2 , orbitals)
 			size_t dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
-					// feas =2 spin
 			bool verbose_;
 			PsimagLite::Matrix<FieldType> eigenvectors_;
 			std::vector<RealType> eigenvalues_;
-			bool needsDelete_;
 	}; // Engine
 } // namespace FreeFermions 
 
