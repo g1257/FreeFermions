@@ -108,17 +108,21 @@ namespace FreeFermions {
 			io.readMatrix(ooHoppingsXMY_,"Connectors");
 		}
 
-		void fillMatrix(MatrixType& t)
+		void fillMatrix(MatrixType& t) const
 		{
 			size_t sites = geometryParams_.sites;
 			
+			resizeAndZeroOutMatrix(t);
 			for (size_t i=0;i<sites;i++) {
 				size_t type1 = findTypeOfSite(i).first;
 				for (size_t j=0;j<sites;j++) {
 					if (!connected(i,j)) continue;
 					size_t type2 = findTypeOfSite(j).first;
 					if (type1==type2 && type1==TYPE_C) continue;
-					if (type1==type2 && type1==TYPE_O) orbitalsForO(t,i,j);
+					if (type1==type2 && type1==TYPE_O) {
+						orbitalsForO(t,i,j);
+						continue;
+					}
 					size_t newi = (type1==TYPE_C) ? i : j;
 					size_t newj = (type1==TYPE_C) ? j : i;
 					orbitalsForCO(t,newi,newj);
@@ -127,6 +131,33 @@ namespace FreeFermions {
 		}
 
 	private:
+
+		void resizeAndZeroOutMatrix(MatrixType& t) const
+		{
+			size_t rank = matrixRank();
+			resizeAndZeroOut(t,rank,rank);
+		}
+		
+		void resizeAndZeroOut(MatrixType& t,size_t nrow,size_t ncol) const
+		{
+			t.resize(nrow,ncol);
+			for (size_t i=0;i<nrow;i++)
+				for(size_t j=0;j<ncol;j++)
+					t(i,j)=0;
+		}
+		
+		size_t matrixRank() const
+		{
+			size_t sites = geometryParams_.sites;
+			size_t no = 0;
+			size_t nc = 0;
+			for (size_t i=0;i<sites;i++) {
+				size_t type1 = findTypeOfSite(i).first;
+				if (type1==TYPE_C) nc++;
+				else no++;
+			}
+			return 2*no+nc;
+		}
 
 		bool connected(size_t i1,size_t i2) const
 		{
@@ -159,7 +190,7 @@ namespace FreeFermions {
 			return false;
 		}
 
-		void orbitalsForO(MatrixType& t,size_t i1,size_t i2)
+		void orbitalsForO(MatrixType& t,size_t i1,size_t i2) const
 		{
 			size_t dir = calcDir(i1,i2);
 			for (size_t orb1=0;orb1<2;orb1++) {
@@ -169,11 +200,11 @@ namespace FreeFermions {
 			}
 		}
 
-		void orbitalsForCO(MatrixType& t,size_t i1,size_t i2)
+		void orbitalsForCO(MatrixType& t,size_t i1,size_t i2) const
 		{
 			size_t dir = calcDir(i1,i2);
 			for (size_t orb=0;orb<2;orb++)
-				t(index(i1,orb),index(i2)) = coOrbitals(dir,orb);
+				t(index(i2,orb),index(i1)) = t(index(i1),index(i2,orb)) = coOrbitals(dir,orb);
 		}
 
 		size_t index(size_t i,size_t orb) const
