@@ -85,7 +85,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "IoSimple.h"
 
 namespace FreeFermions {
-	
+
 	template<typename GeometryParamsType,typename MatrixType>
 	class KTwoNiFFour  {
 
@@ -99,9 +99,15 @@ namespace FreeFermions {
 	public:
 
 		KTwoNiFFour(const GeometryParamsType& geometryParams) 
-		: geometryParams_(geometryParams) 
+		: geometryParams_(geometryParams),signChange_(1)
 		{
 			PsimagLite::IoSimple::In io(geometryParams.filename);
+			try {
+				io.readline(signChange_,"SignChange=");
+			} catch (std::exception& e) {
+				io.rewind();
+			}
+
 			io.readMatrix(coHoppingsX_,"Connectors");
 			io.readMatrix(coHoppingsY_,"Connectors");
 			io.readMatrix(ooHoppingsXPY_,"Connectors");
@@ -111,7 +117,7 @@ namespace FreeFermions {
 		void fillMatrix(MatrixType& t) const
 		{
 			size_t sites = geometryParams_.sites;
-			
+
 			resizeAndZeroOutMatrix(t);
 			for (size_t i=0;i<sites;i++) {
 				size_t type1 = findTypeOfSite(i).first;
@@ -137,7 +143,7 @@ namespace FreeFermions {
 			size_t rank = matrixRank();
 			resizeAndZeroOut(t,rank,rank);
 		}
-		
+
 		void resizeAndZeroOut(MatrixType& t,size_t nrow,size_t ncol) const
 		{
 			t.resize(nrow,ncol);
@@ -145,7 +151,7 @@ namespace FreeFermions {
 				for(size_t j=0;j<ncol;j++)
 					t(i,j)=0;
 		}
-		
+
 		size_t matrixRank() const
 		{
 			size_t sites = geometryParams_.sites;
@@ -193,9 +199,10 @@ namespace FreeFermions {
 		void orbitalsForO(MatrixType& t,size_t i1,size_t i2) const
 		{
 			size_t dir = calcDir(i1,i2);
+			int sign = signChange(i1,i2);
 			for (size_t orb1=0;orb1<2;orb1++) {
 				for (size_t orb2=0;orb2<2;orb2++) {
-					t(index(i1,orb1),index(i2,orb2))=ooOrbitals(dir,orb1,orb2);
+					t(index(i1,orb1),index(i2,orb2))=ooOrbitals(dir,orb1,orb2)*sign;
 				}
 			}
 		}
@@ -203,8 +210,9 @@ namespace FreeFermions {
 		void orbitalsForCO(MatrixType& t,size_t i1,size_t i2) const
 		{
 			size_t dir = calcDir(i1,i2);
+			int sign = signChange(i1,i2);
 			for (size_t orb=0;orb<2;orb++)
-				t(index(i2,orb),index(i1)) = t(index(i1),index(i2,orb)) = coOrbitals(dir,orb);
+				t(index(i2,orb),index(i1)) = t(index(i1),index(i2,orb)) = coOrbitals(dir,orb)*sign;
 		}
 
 		size_t index(size_t i,size_t orb) const
@@ -220,12 +228,23 @@ namespace FreeFermions {
 		{
 			return i;
 		}
+		
+		int signChange(size_t i1,size_t i2) const
+		{
+			return (isInverted(i1) || isInverted(i2)) ? signChange_ : 1;
+		}
+
+		bool isInverted(size_t i) const
+		{
+			size_t j = i+4;
+			return ((j%8)==0);
+		}
 
 		RealType ooOrbitals(size_t dir,size_t orb1,size_t orb2) const
 		{
 			return (dir==DIR_XPY) ? ooHoppingsXPY_(orb1,orb2) : ooHoppingsXMY_(orb1,orb2);
 		}
-		
+
 		RealType coOrbitals(size_t dir,size_t orb) const
 		{
 			return (dir==DIR_X) ? coHoppingsX_(orb,0) : coHoppingsY_(orb,0);
@@ -271,8 +290,9 @@ namespace FreeFermions {
 			if (r==1) return PairType(TYPE_O,SUBTYPE_X);
 			return PairType(TYPE_O,SUBTYPE_Y);
 		}
-		
+
 		const GeometryParamsType& geometryParams_;
+		int signChange_;
 		MatrixType ooHoppingsXPY_,ooHoppingsXMY_;
 		MatrixType coHoppingsX_,coHoppingsY_;
 	}; // class KTwoNiFFour

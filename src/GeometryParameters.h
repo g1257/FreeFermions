@@ -3,7 +3,7 @@
 Copyright (c) 2009 , UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -93,7 +93,7 @@ namespace FreeFermions {
 		typedef RealType_ RealType;
 
 		enum {OPTION_NONE,OPTION_PERIODIC};
-		
+
 		GeometryParameters() : hopping(1,1.0),option(OPTION_NONE) {}
 
 		size_t type;

@@ -144,7 +144,7 @@ namespace FreeFermions {
 		void addPotential(const std::vector<SomeRealType>& p)
 		{
 			for (size_t i=0;i<p.size();i++) t_(i,i) = p[i];
-		}	
+		}
 
 		template<typename ComplexType>
 		void fourierTransform(std::vector<ComplexType>& dest,const MatrixType& src,size_t leg) const
@@ -213,7 +213,7 @@ namespace FreeFermions {
 			if (geometryParams_.option==GeometryParamsType::OPTION_PERIODIC)
 				t_(0,sites-1) = t_(sites-1,0) = geometryParams_.hopping[0];
 		}
-		
+
 		void setGeometryLadder()
 		{
 			size_t leg = geometryParams_.leg;
@@ -233,7 +233,7 @@ namespace FreeFermions {
 				}
 			}
 		}
-		
+
 		void ladderFindNeighbors(std::vector<size_t>& v,size_t i,size_t leg)
 		{
 			size_t sites = geometryParams_.sites;
@@ -345,14 +345,14 @@ namespace FreeFermions {
 			size_t y = i/lengthx;
 			return y + x*leg;
 		}
-		
+
 		void readOneSiteHoppings(std::vector<RealType>& v,
 						const std::string& filename)
 		{
 			typename PsimagLite::IoSimple::In io(filename);
 			io.read(v,"hoppings");
 		}
-		
+
 		template<typename MatrixComplexType>
 		void getFourierMatrix(MatrixComplexType& B,size_t leg) const
 		{

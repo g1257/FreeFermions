@@ -1,9 +1,9 @@
 // BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009 , UT-Battelle, LLC
+Copyright (c) 2011 , UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -86,9 +86,10 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Sort.h" // in PsimagLite
 #include "Permutations.h"
 #include "IndexGenerator.h"
+#include <cassert>
 
 namespace FreeFermions {
-	
+
 	struct FreeOperator {
 		FreeOperator() : lambda(0),type(0) {}
 		size_t lambda;
@@ -163,7 +164,8 @@ namespace FreeFermions {
 				}
 				j++;
 			}
-			throw std::runtime_error("findLocOfDiagOp\n");
+			assert(false);
+			return 0;
 		}
 
 		void removeNonCsOrDs()
@@ -238,7 +240,7 @@ namespace FreeFermions {
 			}
 			return counter;
 		}
-		 
+
 		 size_t addAtTheFront(const std::vector<size_t>&  occupations)
 		 {
 			 size_t counter = 0;
@@ -256,7 +258,6 @@ namespace FreeFermions {
 		std::vector<FreeOperator> data_;
 		RealType value_;
 	}; // FreeOperators
-
 } // namespace Dmrg 
 
 /*@}*/
