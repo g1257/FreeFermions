@@ -86,27 +86,22 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename GeometryLibraryType_,typename FieldType_,typename ConcurrencyType_>
+	template<typename RealType_,typename FieldType_,typename ConcurrencyType_>
 	class Engine {
-			
-			typedef PsimagLite::Matrix<FieldType_> MatrixType;
 	
 		public:
 
-			typedef GeometryLibraryType_ GeometryLibraryType;
-			typedef ConcurrencyType_ ConcurrencyType;
-			typedef typename GeometryLibraryType::RealType RealType;
+			typedef RealType_ RealType;
 			typedef FieldType_ FieldType;
-			
-			Engine(const GeometryLibraryType& geometry,ConcurrencyType& concurrency,size_t dof,bool verbose=false)
+			typedef ConcurrencyType_ ConcurrencyType;
+
+			Engine(const PsimagLite::Matrix<FieldType>& geometry,ConcurrencyType& concurrency,size_t dof,bool verbose=false)
 			: concurrency_(concurrency),
 			  dof_(dof),
 			  verbose_(verbose),
-			  eigenvectors_(geometry.matrix())
+			  eigenvectors_(geometry)
 			{
 				diagonalize();
-				//MatrixType tmp = eigenvectors_;
-				//eigenvectors_ = transposeConjugate(tmp);
 				if (verbose_) {
 					std::cerr<<"#Created core "<<eigenvectors_.n_row();
 					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";

@@ -18,7 +18,7 @@ typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
-typedef FreeFermions::Engine<GeometryLibraryType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 
@@ -41,6 +41,14 @@ int main(int argc,char* argv[])
 	if (whatGeometry==GeometryLibraryType::FEAS || whatGeometry==GeometryLibraryType::KTWONIFFOUR)
 		geometryParams.filename = argv[3];
 
+	MatrixType t(4,4);
+	std::vector<RealType> tHop(3);
+	tHop[0] = 0.1;
+	tHop[1] = 0.5; 
+	tHop[2] = 1.3;
+	t(0,1) = t(1,0) = tHop[0];
+	t(1,2) = t(2,1) = tHop[1];
+	t(2,3) = t(3,2) = tHop[2];
 	GeometryLibraryType geometry(geometryParams);
 	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
 	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
@@ -49,7 +57,7 @@ int main(int argc,char* argv[])
 // 	std::vector<RealType> v(n,0);
 // 	v[4]=0.8;
 // 	geometry.addPotential(v);
-	std::cerr<<geometry.matrix();
+	std::cerr<<t;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)

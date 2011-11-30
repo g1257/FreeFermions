@@ -166,7 +166,16 @@ namespace FreeFermions {
 			 
 		}
 
-		const MatrixType& matrix() const { return t_; }
+		size_t rank() const
+		{
+			assert(t_.n_row()==t_.n_col());
+			return t_.n_row();
+		}
+
+		const RealType& operator()(size_t i,size_t j) const
+		{
+			return t_(i,j);
+		}
 
 	private:
 

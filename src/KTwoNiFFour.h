@@ -172,9 +172,11 @@ namespace FreeFermions {
 			PairType type2 = findTypeOfSite(i2);
 			//! 4 possibilities
 			//! c-c
-			if (type1.first == type2.first && type1.first == TYPE_C) return false;
+			if (type1.first == type2.first && type1.first == TYPE_C)
+				return false;
 			//! o-o
-			if (type1.first == type2.first && type1.first == TYPE_O) {
+			if (type1.first == type2.first) {
+				assert(type1.first == TYPE_O);
 				if (type1.second==type2.second) return false;
 				size_t newi1 = (type1.second==SUBTYPE_X) ? i1 : i2;
 				size_t newi2 = (type1.second==SUBTYPE_X) ? i2 : i1;
@@ -212,7 +214,8 @@ namespace FreeFermions {
 			size_t dir = calcDir(i1,i2);
 			int sign = signChange(i1,i2);
 			for (size_t orb=0;orb<2;orb++)
-				t(index(i2,orb),index(i1)) = t(index(i1),index(i2,orb)) = coOrbitals(dir,orb)*sign;
+				t(index(i2,orb),index(i1)) = t(index(i1),index(i2,orb)) = 
+				                             coOrbitals(dir,orb)*sign;
 		}
 
 		size_t index(size_t i,size_t orb) const
@@ -228,7 +231,7 @@ namespace FreeFermions {
 		{
 			return i;
 		}
-		
+
 		int signChange(size_t i1,size_t i2) const
 		{
 			return (isInverted(i1) || isInverted(i2)) ? signChange_ : 1;
@@ -242,7 +245,8 @@ namespace FreeFermions {
 
 		RealType ooOrbitals(size_t dir,size_t orb1,size_t orb2) const
 		{
-			return (dir==DIR_XPY) ? ooHoppingsXPY_(orb1,orb2) : ooHoppingsXMY_(orb1,orb2);
+			return (dir==DIR_XPY) ? ooHoppingsXPY_(orb1,orb2) 
+			                      : ooHoppingsXMY_(orb1,orb2);
 		}
 
 		RealType coOrbitals(size_t dir,size_t orb) const
