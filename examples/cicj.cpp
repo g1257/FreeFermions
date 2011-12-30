@@ -54,10 +54,11 @@ int main(int argc,char* argv[])
 	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
 	
 
-// 	std::vector<RealType> v(n,0);
-// 	v[4]=0.8;
-// 	geometry.addPotential(v);
-	std::cerr<<t;
+ 	std::vector<RealType> v(n,0);
+ 	for (size_t i=0;i<n/4;i++)
+		v[4*i+3] = 0.0;
+ 	geometry.addPotential(v);
+	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
 	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)

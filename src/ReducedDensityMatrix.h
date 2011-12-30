@@ -90,6 +90,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Range.h"
 #include "RealSpaceState.h"
 #include "BLAS.h"
+#include "GeometryParameters.h"
 
 namespace FreeFermions {
 	template<typename EngineType>
@@ -104,7 +105,8 @@ namespace FreeFermions {
 		typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 //		typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 		typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
-		typedef typename EngineType::GeometryLibraryType GeometryLibraryType;
+		typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
+		typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
 		typedef typename OperatorType::FactoryType OpNormalFactoryType;
 
 		enum {CREATION = OperatorType::CREATION,

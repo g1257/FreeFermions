@@ -149,7 +149,6 @@ namespace FreeFermions {
 		template<typename ComplexType>
 		void fourierTransform(std::vector<ComplexType>& dest,const MatrixType& src,size_t leg) const
 		{
-			
 			size_t n = src.n_row();
 			if (n!=geometryParams_.sites) throw std::runtime_error("src must have the same number of sites as lattice\n");
 			PsimagLite::Matrix<ComplexType> B(n,n);
@@ -163,7 +162,6 @@ namespace FreeFermions {
 				}
 				dest[k] = sum;
 			}
-			 
 		}
 
 		size_t rank() const
@@ -176,6 +174,10 @@ namespace FreeFermions {
 		{
 			return t_(i,j);
 		}
+		
+		template<typename MType,typename PType>
+		friend std::ostream& operator<<(std::ostream& os,
+	                                    const GeometryLibrary<MType,PType>& gl);
 
 	private:
 
@@ -355,8 +357,7 @@ namespace FreeFermions {
 			return y + x*leg;
 		}
 
-		void readOneSiteHoppings(std::vector<RealType>& v,
-						const std::string& filename)
+		void readOneSiteHoppings(std::vector<RealType>& v,const std::string& filename)
 		{
 			typename PsimagLite::IoSimple::In io(filename);
 			io.read(v,"hoppings");
@@ -398,6 +399,14 @@ namespace FreeFermions {
 		MatrixType t_;
 
 	}; // GeometryLibrary
+
+	template<typename MatrixType,typename ParamsType>
+	std::ostream& operator<<(std::ostream& os,
+	                         const GeometryLibrary<MatrixType,ParamsType>& gl)
+	{
+		os<<gl.t_;
+		return os;
+	}
 } // namespace FreeFermions
 
 /*@}*/

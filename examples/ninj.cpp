@@ -2,6 +2,7 @@
 // < n_i n_j >
 
 #include <cstdlib>
+#include <vector>
 #include "Engine.h"
 #include "GeometryLibrary.h"
 #include "ConcurrencySerial.h"
@@ -18,11 +19,12 @@ typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
-typedef FreeFermions::Engine<GeometryLibraryType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
+
 
 int main(int argc,char* argv[])
 {

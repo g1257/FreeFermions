@@ -26,7 +26,7 @@ typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
-typedef FreeFermions::Engine<GeometryLibraryType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
@@ -141,7 +141,7 @@ int main(int argc,char *argv[])
 		geometry = new GeometryLibraryType(geometryParams);
 	}
 
-	std::cerr<<geometry->matrix();
+	std::cerr<<geometry;
 	
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(*geometry,concurrency,dof,false);

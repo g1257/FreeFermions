@@ -21,7 +21,7 @@ typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
-typedef FreeFermions::Engine<GeometryLibraryType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
@@ -38,7 +38,7 @@ int main(int argc,char *argv[])
 	std::vector<std::string> str;
 	bool ladder = false;
 	RealType step = 0;
-	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:l")) != -1) {
+	while ((opt = getopt(argc, argv, "n:e:s:t:o:i:l")) != -1) {
 		switch (opt) {
 		case 'n':
 			n = atoi(optarg);
@@ -87,7 +87,7 @@ int main(int argc,char *argv[])
 		geometry = new GeometryLibraryType(geometryParams);
 	}
 
-	std::cerr<<geometry->matrix();
+	std::cerr<<geometry;
 	
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(*geometry,concurrency,dof,true);

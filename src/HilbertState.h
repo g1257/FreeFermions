@@ -85,6 +85,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Complex.h" // in PsimagLite
 #include "FermionFactor.h"
 #include "TypeToString.h"
+#include <vector>
 
 namespace FreeFermions {
 	struct OperatorPointer {
@@ -287,7 +288,7 @@ namespace FreeFermions {
 				FermionFactorType fermionFactor(lambdaOperators);
 				RealType ff = fermionFactor();
 
-				if (ff==0) continue;
+				if (fabs(ff)<1e-6) continue;
 				for (size_t i=0;i<lambda.size();i++) {
 					int loc = findLocOf(operatorsCreation_,i,sigma);
 					if (loc<0) continue;

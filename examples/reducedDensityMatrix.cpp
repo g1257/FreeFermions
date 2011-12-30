@@ -6,8 +6,6 @@
 #include "ConcurrencySerial.h"
 #endif
 
-#include "GeometryParameters.h"
-
 // TBW FIXME
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -21,7 +19,7 @@ typedef PsimagLite::ConcurrencyMpi<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
-typedef FreeFermions::Engine<GeometryLibraryType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 //typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
@@ -46,7 +44,7 @@ int main(int argc,char* argv[])
 	}
 
 	GeometryLibraryType geometry(geometryParams);
-	if (concurrency.root()) std::cerr<<geometry.matrix();
+	if (concurrency.root()) std::cerr<<geometry;
 	
 	size_t dof = 1;
 	EngineType engine(geometry,concurrency,dof,false);
