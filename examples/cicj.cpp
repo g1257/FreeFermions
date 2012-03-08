@@ -28,7 +28,7 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 int main(int argc,char* argv[])
 {
 	int argce = 3;
-	size_t whatGeometry = GeometryLibraryType::KTWONIFFOUR; // FEAS; //CHAIN;
+	size_t whatGeometry = GeometryLibraryType::CHAIN; // FEAS; //CHAIN; // KTWONIFFOUR;
 	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
 	if (argc<argce) throw std::runtime_error(s.c_str());
 	size_t n = atoi(argv[1]); // n. of  sites
@@ -41,22 +41,31 @@ int main(int argc,char* argv[])
 	if (whatGeometry==GeometryLibraryType::FEAS || whatGeometry==GeometryLibraryType::KTWONIFFOUR)
 		geometryParams.filename = argv[3];
 
-	MatrixType t(4,4);
-	std::vector<RealType> tHop(3);
-	tHop[0] = 0.1;
-	tHop[1] = 0.5; 
-	tHop[2] = 1.3;
-	t(0,1) = t(1,0) = tHop[0];
-	t(1,2) = t(2,1) = tHop[1];
-	t(2,3) = t(3,2) = tHop[2];
+// 	MatrixType t(4,4);
+// 	std::vector<RealType> tHop(3);
+// 	tHop[0] = 0.1;
+// 	tHop[1] = 0.5; 
+// 	tHop[2] = 1.3;
+// 	t(0,1) = t(1,0) = tHop[0];
+// 	t(1,2) = t(2,1) = tHop[1];
+// 	t(2,3) = t(3,2) = tHop[2];
 	GeometryLibraryType geometry(geometryParams);
 	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
 	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
 	
 
- 	std::vector<RealType> v(n,0);
- 	for (size_t i=0;i<n/4;i++)
-		v[4*i+3] = 0.0;
+ 	std::vector<RealType> w;
+	PsimagLite::IoSimple::In io(argv[3]);
+	try {
+		io.read(w,"PotentialT");
+	} catch (std::exception& e) {
+		std::cerr<<"No PotentialT in file "<<argv[3]<<"\n";
+	}
+	io.rewind();
+	std::vector<RealType> v;
+	io.read(v,"potentialV");
+	for (size_t i=0;i<v.size();i++) v[i] += w[i];
+
  	geometry.addPotential(v);
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
