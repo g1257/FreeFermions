@@ -54,7 +54,7 @@ int main(int argc,char* argv[])
 	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
 	
 
- 	std::vector<RealType> w;
+ 	/* std::vector<RealType> w;
 	PsimagLite::IoSimple::In io(argv[3]);
 	try {
 		io.read(w,"PotentialT");
@@ -66,7 +66,7 @@ int main(int argc,char* argv[])
 	io.read(v,"potentialV");
 	for (size_t i=0;i<v.size();i++) v[i] += w[i];
 
- 	geometry.addPotential(v);
+ 	geometry.addPotential(v);*/
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
