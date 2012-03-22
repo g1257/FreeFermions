@@ -10,37 +10,46 @@
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
 #include "GeometryParameters.h"
+#include "EtoTheIhTime.h"
+#include "DiagonalOperator.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
-typedef RealType FieldType;
+typedef ComplexType FieldType;
 typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
 typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
-typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
-
+typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
+typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
+typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
+typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 
 
 // <phi| n_p | phi>
-RealType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,size_t siteP,const std::vector<size_t>& sites,size_t sigma)
+FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,size_t siteP,const std::vector<size_t>& sites,size_t sigma,DiagonalOperatorType& eihOp)
 {
-	RealType sum = 0;
+	FieldType sum = 0;
 	OperatorType& cdaggerP = opNormalFactory(OperatorType::CREATION,siteP,sigma);
 	OperatorType& cP = opNormalFactory(OperatorType::DESTRUCTION,siteP,sigma);
 	for (size_t i = 0;i<sites.size();i++) {
 		HilbertStateType backvector = gs;
 		OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],sigma);
 		cdaggerI.applyTo(backvector);
+		eihOp.applyTo(backvector);
+
 		cP.applyTo(backvector);
 		cdaggerP.applyTo(backvector);
+
 		for (size_t j = 0;j<sites.size();j++) {
 				HilbertStateType tmp = gs; 
 				OperatorType& cdaggerJ = opNormalFactory(OperatorType::CREATION,sites[j],sigma);
 				cdaggerJ.applyTo(tmp);
+				eihOp.applyTo(tmp);
+
 				sum += scalarProduct(backvector,tmp);
 		}
 	}
@@ -48,18 +57,19 @@ RealType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& g
 }
 
 // <phi| n_p | phi>
-RealType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const std::vector<size_t>& sites,size_t sigma)
+FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const std::vector<size_t>& sites,size_t sigma,DiagonalOperatorType& eihOp)
 {
-	RealType sum = 0;
+	FieldType sum = 0;
 	for (size_t i = 0;i<sites.size();i++) {
 		HilbertStateType backvector = gs;
 		OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],sigma);
 		cdaggerI.applyTo(backvector);
-		
+		eihOp.applyTo(backvector);
 		for (size_t j = 0;j<sites.size();j++) {
 				HilbertStateType tmp = gs; 
 				OperatorType& cdaggerJ = opNormalFactory(OperatorType::CREATION,sites[j],sigma);
 				cdaggerJ.applyTo(tmp);
+				eihOp.applyTo(tmp);
 				sum += scalarProduct(backvector,tmp);
 		}
 	}
@@ -68,7 +78,7 @@ RealType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,
 
 int main(int argc,char* argv[])
 {
-	int argce = 3;
+	int argce = 5;
 	size_t whatGeometry = GeometryLibraryType::CHAIN; // FEAS; //CHAIN; // KTWONIFFOUR;
 	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
 	if (argc<argce) throw std::runtime_error(s.c_str());
@@ -81,6 +91,8 @@ int main(int argc,char* argv[])
 		geometryParams.leg = 2;
 	if (whatGeometry==GeometryLibraryType::FEAS || whatGeometry==GeometryLibraryType::KTWONIFFOUR)
 		geometryParams.filename = argv[3];
+	RealType timeMax =atof(argv[3]);
+	RealType timeStep=atof(argv[4]);
 
 	GeometryLibraryType geometry(geometryParams);
 	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
@@ -113,20 +125,31 @@ int main(int argc,char* argv[])
 	OpNormalFactoryType opNormalFactory(engine);
 	
 	//MatrixType cicj(n,n);
-	size_t norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
+	//size_t norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
 	std::vector<size_t> sites(3);
-	sites[0]=3; sites[1]=4; sites[2]=5;
-	RealType denominator = phiPhi(opNormalFactory,gs,sites,sigma);
-	std::cout<<"site\tvalue\tnumerator\tdenominator\n";
-	for (size_t orbital=0; orbital<norb; orbital++) {
-		RealType total = 0;
+	sites[0]=4; sites[1]=5; sites[2]=3;
+//	std::cout<<"site\tvalue\tnumerator\tdenominator\n";
+	std::cout<<"time ";
+	for (size_t site = 0; site<n ; site++) std::cout<<site<<" ";
+	std::cout<<"\n";
+	for (RealType time=0;time<timeMax;time+=timeStep)  {
+		FieldType total = 0;
+		OpDiagonalFactoryType opDiagonalFactory(engine);
+		EtoTheIhTimeType eih(time,engine,0);
+		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
+		FieldType denominator = phiPhi(opNormalFactory,gs,sites,sigma,eihOp);
+		std::cout<<time<<" ";
 		for (size_t site = 0; site<n ; site++) {
-			RealType numerator = phiNpPhi(opNormalFactory,gs,site,sites,sigma);
-			RealType value = numerator/denominator;
-			std::cout<<site<<" "<<value<<" "<<numerator<<" "<<denominator<<"\n";
+			FieldType numerator = phiNpPhi(opNormalFactory,gs,site,sites,sigma,eihOp);
+			FieldType value = numerator/denominator;
+			//std::cout<<site<<" "<<value<<" "<<numerator<<" "<<denominator<<"\n";
+			RealType valueReal = std::real(value);
+			assert(fabs(std::imag(value))<1e-6);
+			std::cout<<valueReal<<" ";
 			total += value;
 		}
-		std::cout<<"total value="<<total<<"         -------------------------------------------\n";
+		RealType totalReal = std::real(total);
+		std::cout<<totalReal<<"\n";
 	}
 }
 
