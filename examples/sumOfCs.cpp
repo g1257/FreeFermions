@@ -30,7 +30,7 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 
 
 // <phi| n_p | phi>
-FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,size_t siteP,const std::vector<size_t>& sites,size_t sigma,DiagonalOperatorType& eihOp)
+FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,size_t siteP,const std::vector<size_t>& sites,size_t sigma,DiagonalOperatorType& eihOp,const std::vector<ComplexType>& weights)
 {
 	FieldType sum = 0;
 	OperatorType& cdaggerP = opNormalFactory(OperatorType::CREATION,siteP,sigma);
@@ -50,14 +50,14 @@ FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& 
 				cdaggerJ.applyTo(tmp);
 				eihOp.applyTo(tmp);
 
-				sum += scalarProduct(backvector,tmp);
+				sum += scalarProduct(backvector,tmp)*weights[i]*weights[j];
 		}
 	}
 	return sum;
 }
 
-// <phi| n_p | phi>
-FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const std::vector<size_t>& sites,size_t sigma,DiagonalOperatorType& eihOp)
+// <phi| | phi>
+FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const std::vector<size_t>& sites,size_t sigma,DiagonalOperatorType& eihOp,const std::vector<ComplexType>& weights)
 {
 	FieldType sum = 0;
 	for (size_t i = 0;i<sites.size();i++) {
@@ -70,7 +70,7 @@ FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs
 				OperatorType& cdaggerJ = opNormalFactory(OperatorType::CREATION,sites[j],sigma);
 				cdaggerJ.applyTo(tmp);
 				eihOp.applyTo(tmp);
-				sum += scalarProduct(backvector,tmp);
+				sum += scalarProduct(backvector,tmp)*weights[i]*weights[j];
 		}
 	}
 	return sum;
@@ -78,6 +78,7 @@ FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs
 
 int main(int argc,char* argv[])
 {
+	enum {SPIN_UP,SPIN_DOWN};
 	int argce = 5;
 	size_t whatGeometry = GeometryLibraryType::CHAIN; // FEAS; //CHAIN; // KTWONIFFOUR;
 	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
@@ -120,14 +121,20 @@ int main(int argc,char* argv[])
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
-	size_t sigma = 0;
 	
 	OpNormalFactoryType opNormalFactory(engine);
 	
 	//MatrixType cicj(n,n);
 	//size_t norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
-	std::vector<size_t> sites(3);
-	sites[0]=4; sites[1]=5; sites[2]=3;
+	std::vector<size_t> sites(n-2);
+	std::vector<ComplexType> weights(n-2);
+	for (size_t i=1;i<n-1;i++) {
+		sites[i-1]=i;
+		RealType tmp123 = (i-n/2)*(i-n/2)/8.;
+		weights[i-1] = exp(-tmp123);
+		std::cout<<"WEIGHT["<<(i-1)<<"]="<<weights[i-1]<<" "<<tmp123<<" <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
+	}
+
 //	std::cout<<"site\tvalue\tnumerator\tdenominator\n";
 	std::cout<<"time ";
 	for (size_t site = 0; site<n ; site++) std::cout<<site<<" ";
@@ -137,10 +144,12 @@ int main(int argc,char* argv[])
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		EtoTheIhTimeType eih(time,engine,0);
 		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
-		FieldType denominator = phiPhi(opNormalFactory,gs,sites,sigma,eihOp);
+		FieldType denominator = phiPhi(opNormalFactory,gs,sites,SPIN_UP,eihOp,weights)+
+			                phiPhi(opNormalFactory,gs,sites,SPIN_UP+SPIN_DOWN,eihOp,weights);
 		std::cout<<time<<" ";
 		for (size_t site = 0; site<n ; site++) {
-			FieldType numerator = phiNpPhi(opNormalFactory,gs,site,sites,sigma,eihOp);
+			FieldType numerator = phiNpPhi(opNormalFactory,gs,site,sites,SPIN_UP,eihOp,weights)+
+				              phiNpPhi(opNormalFactory,gs,site,sites,SPIN_DOWN,eihOp,weights);
 			FieldType value = numerator/denominator;
 			//std::cout<<site<<" "<<value<<" "<<numerator<<" "<<denominator<<"\n";
 			RealType valueReal = std::real(value);

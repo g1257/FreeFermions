@@ -75,6 +75,7 @@ int main(int argc,char* argv[])
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
+	std::cout.precision(20);
 	//MatrixType cicj(n,n);
 	size_t norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
 	for (size_t orbital1=0; orbital1<norb; orbital1++) {
