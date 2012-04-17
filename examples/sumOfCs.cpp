@@ -29,6 +29,8 @@ typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 
 
+enum {SPIN_UP,SPIN_DOWN};
+
 // <phi| n_p | phi>
 FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,size_t siteP,const std::vector<size_t>& sites,size_t sigma,DiagonalOperatorType& eihOp,const std::vector<ComplexType>& weights)
 {
@@ -37,7 +39,7 @@ FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& 
 	OperatorType& cP = opNormalFactory(OperatorType::DESTRUCTION,siteP,sigma);
 	for (size_t i = 0;i<sites.size();i++) {
 		HilbertStateType backvector = gs;
-		OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],sigma);
+		OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],SPIN_UP);
 		cdaggerI.applyTo(backvector);
 		eihOp.applyTo(backvector);
 
@@ -46,7 +48,7 @@ FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& 
 
 		for (size_t j = 0;j<sites.size();j++) {
 				HilbertStateType tmp = gs; 
-				OperatorType& cdaggerJ = opNormalFactory(OperatorType::CREATION,sites[j],sigma);
+				OperatorType& cdaggerJ= opNormalFactory(OperatorType::CREATION,sites[j],SPIN_UP);
 				cdaggerJ.applyTo(tmp);
 				eihOp.applyTo(tmp);
 
@@ -62,12 +64,12 @@ FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs
 	FieldType sum = 0;
 	for (size_t i = 0;i<sites.size();i++) {
 		HilbertStateType backvector = gs;
-		OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],sigma);
+		OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],SPIN_UP);
 		cdaggerI.applyTo(backvector);
 		eihOp.applyTo(backvector);
 		for (size_t j = 0;j<sites.size();j++) {
 				HilbertStateType tmp = gs; 
-				OperatorType& cdaggerJ = opNormalFactory(OperatorType::CREATION,sites[j],sigma);
+				OperatorType& cdaggerJ = opNormalFactory(OperatorType::CREATION,sites[j],SPIN_UP);
 				cdaggerJ.applyTo(tmp);
 				eihOp.applyTo(tmp);
 				sum += scalarProduct(backvector,tmp)*weights[i]*weights[j];
@@ -78,7 +80,6 @@ FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs
 
 int main(int argc,char* argv[])
 {
-	enum {SPIN_UP,SPIN_DOWN};
 	int argce = 5;
 	size_t whatGeometry = GeometryLibraryType::CHAIN; // FEAS; //CHAIN; // KTWONIFFOUR;
 	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
@@ -144,12 +145,10 @@ int main(int argc,char* argv[])
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		EtoTheIhTimeType eih(time,engine,0);
 		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
-		FieldType denominator = phiPhi(opNormalFactory,gs,sites,SPIN_UP,eihOp,weights)+
-			                phiPhi(opNormalFactory,gs,sites,SPIN_UP+SPIN_DOWN,eihOp,weights);
+		FieldType denominator = phiPhi(opNormalFactory,gs,sites,SPIN_UP,eihOp,weights);
 		std::cout<<time<<" ";
 		for (size_t site = 0; site<n ; site++) {
-			FieldType numerator = phiNpPhi(opNormalFactory,gs,site,sites,SPIN_UP,eihOp,weights)+
-				              phiNpPhi(opNormalFactory,gs,site,sites,SPIN_DOWN,eihOp,weights);
+			FieldType numerator = phiNpPhi(opNormalFactory,gs,site,sites,SPIN_UP,eihOp,weights);
 			FieldType value = numerator/denominator;
 			//std::cout<<site<<" "<<value<<" "<<numerator<<" "<<denominator<<"\n";
 			RealType valueReal = std::real(value);
