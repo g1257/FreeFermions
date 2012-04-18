@@ -31,6 +31,26 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 
 enum {SPIN_UP,SPIN_DOWN};
 
+// <phi | H |phi>
+FieldType phiHPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const std::vector<size_t>& sites,DiagonalOperatorType& h,const std::vector<ComplexType>& weights)
+{
+	FieldType sum = 0;
+	for (size_t i = 0;i<sites.size();i++) {
+		 HilbertStateType backvector = gs;
+		 OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],SPIN_UP);
+		 cdaggerI.applyTo(backvector);
+		 h.applyTo(backvector);
+		 for (size_t j = 0;j<sites.size();j++) {
+			 HilbertStateType tmp = gs;
+			 OperatorType& cdaggerJ = opNormalFactory(OperatorType::CREATION,sites[j],SPIN_UP);
+			 cdaggerJ.applyTo(tmp);
+			 sum += scalarProduct(backvector,tmp)*weights[i]*weights[j];
+		 }
+	}
+	return sum;
+
+}
+
 // <phi| n_p | phi>
 FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,size_t siteP,const std::vector<size_t>& sites,size_t sigma,DiagonalOperatorType& eihOp,const std::vector<ComplexType>& weights)
 {
@@ -41,7 +61,7 @@ FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& 
 		HilbertStateType backvector = gs;
 		OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],SPIN_UP);
 		cdaggerI.applyTo(backvector);
-		eihOp.applyTo(backvector);
+		//eihOp.applyTo(backvector);
 
 		cP.applyTo(backvector);
 		cdaggerP.applyTo(backvector);
@@ -50,7 +70,7 @@ FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& 
 				HilbertStateType tmp = gs; 
 				OperatorType& cdaggerJ= opNormalFactory(OperatorType::CREATION,sites[j],SPIN_UP);
 				cdaggerJ.applyTo(tmp);
-				eihOp.applyTo(tmp);
+				//eihOp.applyTo(tmp);
 
 				sum += scalarProduct(backvector,tmp)*weights[i]*weights[j];
 		}
@@ -66,12 +86,12 @@ FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs
 		HilbertStateType backvector = gs;
 		OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],SPIN_UP);
 		cdaggerI.applyTo(backvector);
-		eihOp.applyTo(backvector);
+		//eihOp.applyTo(backvector);
 		for (size_t j = 0;j<sites.size();j++) {
 				HilbertStateType tmp = gs; 
 				OperatorType& cdaggerJ = opNormalFactory(OperatorType::CREATION,sites[j],SPIN_UP);
 				cdaggerJ.applyTo(tmp);
-				eihOp.applyTo(tmp);
+				//eihOp.applyTo(tmp);
 				sum += scalarProduct(backvector,tmp)*weights[i]*weights[j];
 		}
 	}
@@ -129,11 +149,11 @@ int main(int argc,char* argv[])
 	//size_t norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
 	std::vector<size_t> sites(n-2);
 	std::vector<ComplexType> weights(n-2);
-	for (size_t i=1;i<n-1;i++) {
+	for (size_t i=8;i<13;i++) {
 		sites[i-1]=i;
-		RealType tmp123 = (i-n/2)*(i-n/2)/8.;
+		RealType tmp123 = 0.0; //(i-n/2)*(i-n/2)/8.;
 		weights[i-1] = exp(-tmp123);
-		std::cout<<"WEIGHT["<<(i-1)<<"]="<<weights[i-1]<<" "<<tmp123<<" <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
+		std::cout<<"WEIGHT["<<i<<"]="<<weights[i-1]<<" "<<tmp123<<" <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
 	}
 
 //	std::cout<<"site\tvalue\tnumerator\tdenominator\n";
@@ -156,8 +176,12 @@ int main(int argc,char* argv[])
 			std::cout<<valueReal<<" ";
 			total += value;
 		}
+
 		RealType totalReal = std::real(total);
-		std::cout<<totalReal<<"\n";
+		std::cout<<totalReal<<" ";
+		EtoTheIhTimeType hh(2000.0,engine,0);
+		DiagonalOperatorType& h = opDiagonalFactory(hh);
+		std::cout<<phiHPhi(opNormalFactory,gs,sites,h,weights)<<"\n";
 	}
 }
 

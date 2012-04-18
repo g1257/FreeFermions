@@ -1,6 +1,5 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright  2009 , UT-Battelle, LLC
+Copyright 2009-2012, UT-Battelle, LLC
 All rights reserved
 
 [DMRG++, Version 2.0.0]
@@ -70,7 +69,6 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 
 */
-// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
@@ -113,7 +111,7 @@ namespace FreeFermions {
 							       FreeOperatorsType::CREATION) ? -1 : 1;
 					sum += engine_.eigenvalue(freeOps[i].lambda)*sign;
 				}
-
+				if (fabs(time_)>1000.0) return sum; 
 				RealType exponent = -time_*sum;
 				return FieldType(cos(exponent),sin(exponent));
 			}
