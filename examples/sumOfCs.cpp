@@ -149,9 +149,9 @@ int main(int argc,char* argv[])
 	//size_t norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
 	std::vector<size_t> sites(n-2);
 	std::vector<ComplexType> weights(n-2);
-	for (size_t i=8;i<13;i++) {
+	for (size_t i=1;i<15;i++) {
 		sites[i-1]=i;
-		RealType tmp123 = 0.0; //(i-n/2)*(i-n/2)/8.;
+		RealType tmp123 = (i-n/2)*(i-n/2)/8.;
 		weights[i-1] = exp(-tmp123);
 		std::cout<<"WEIGHT["<<i<<"]="<<weights[i-1]<<" "<<tmp123<<" <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n";
 	}
@@ -171,7 +171,7 @@ int main(int argc,char* argv[])
 			FieldType numerator = phiNpPhi(opNormalFactory,gs,site,sites,SPIN_UP,eihOp,weights);
 			FieldType value = numerator/denominator;
 			//std::cout<<site<<" "<<value<<" "<<numerator<<" "<<denominator<<"\n";
-			RealType valueReal = std::real(value);
+			RealType valueReal = std::real(value)+0.5;
 			assert(fabs(std::imag(value))<1e-6);
 			std::cout<<valueReal<<" ";
 			total += value;
