@@ -10,6 +10,7 @@
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
 #include "GeometryParameters.h"
+#include "Tokenizer.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -24,60 +25,126 @@ typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 
 typedef OperatorType::FactoryType OpNormalFactoryType;
 
-
-int main(int argc,char* argv[])
+void usage(const std::string& thisFile)
 {
-	int argce = 3;
-	size_t whatGeometry = GeometryLibraryType::FEAS; //CHAIN; // FEAS; //CHAIN; // KTWONIFFOUR;
-	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
-	if (argc<argce) throw std::runtime_error(s.c_str());
-	size_t n = atoi(argv[1]); // n. of  sites
-	size_t dof = 1; // spinless
-	GeometryParamsType geometryParams;
-	geometryParams.sites = n;
-	geometryParams.type =whatGeometry;
-	if (whatGeometry==GeometryLibraryType::LADDER || whatGeometry==GeometryLibraryType::FEAS)
-		geometryParams.leg = 2;
-	if (whatGeometry==GeometryLibraryType::FEAS || whatGeometry==GeometryLibraryType::KTWONIFFOUR)
-		geometryParams.filename = argv[3];
-
-// 	MatrixType t(4,4);
-// 	std::vector<RealType> tHop(3);
-// 	tHop[0] = 0.1;
-// 	tHop[1] = 0.5; 
-// 	tHop[2] = 1.3;
-// 	t(0,1) = t(1,0) = tHop[0];
-// 	t(1,2) = t(2,1) = tHop[1];
-// 	t(2,3) = t(3,2) = tHop[2];
-	GeometryLibraryType geometry(geometryParams);
-	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
-	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
+	std::cout<<thisFile<<": USAGE IS "<<thisFile<<" ";
+	std::cout<<" -n sites -e electronsUp -g geometry,[leg,filename]\n";
+}
 	
-
- 	/* std::vector<RealType> w;
-	PsimagLite::IoSimple::In io(argv[3]);
+void readPotential(std::vector<RealType>& v,const std::string& filename)
+{
+	std::vector<RealType> w;
+	PsimagLite::IoSimple::In io(filename);
 	try {
 		io.read(w,"PotentialT");
 	} catch (std::exception& e) {
-		std::cerr<<"No PotentialT in file "<<argv[3]<<"\n";
+		std::cerr<<"INFO: No PotentialT in file "<<filename<<"\n";
 	}
 	io.rewind();
-	std::vector<RealType> v;
+	
 	io.read(v,"potentialV");
-	for (size_t i=0;i<v.size();i++) v[i] += w[i];
+	if (v.size()>w.size()) v.resize(w.size());
+	for (size_t i=0;i<w.size();i++) v[i] += w[i];
+}
 
- 	geometry.addPotential(v);*/
+void setMyGeometry(GeometryParamsType& geometryParams,const std::vector<std::string>& vstr)
+{
+	// default value
+	geometryParams.type = GeometryLibraryType::CHAIN;
+		
+	if (vstr.size()<2) {
+		// assume chain
+		return;
+	}
+
+	std::string gName = vstr[0];
+	if (gName == "chain") {
+		throw std::runtime_error("setMyGeometry: -g chain takes no further arguments\n");
+	}
+	
+	geometryParams.leg = atoi(vstr[1].c_str());
+	
+	if (gName == "ladder") {
+		if (vstr.size()!=2) {
+			usage("setMyGeometry");
+			throw std::runtime_error("setMyGeometry: usage is: -g ladder leg \n");
+		}
+		geometryParams.type = GeometryLibraryType::LADDER;
+		return;
+	}
+	
+	if (vstr.size()!=3) {
+			usage("setMyGeometry");
+			throw std::runtime_error("setMyGeometry: usage is: -g {feas | ktwoniffour} leg filename\n");
+	}
+
+	geometryParams.filename = vstr[2];
+
+	if (gName == "feas") {
+		geometryParams.type = GeometryLibraryType::FEAS;
+		return;
+	}
+	
+	if (gName == "feas") {
+		geometryParams.type = GeometryLibraryType::KTWONIFFOUR;
+		return;
+	}
+}
+
+int main(int argc,char* argv[])
+{
+	size_t n = 0;
+	size_t electronsUp = 0;
+	std::vector<RealType> v;
+	GeometryParamsType geometryParams;
+	std::vector<std::string> str;
+	int opt = 0;
+	
+	geometryParams.type = GeometryLibraryType::CHAIN;
+	
+	while ((opt = getopt(argc, argv, "n:e:g:p")) != -1) {
+		switch (opt) {
+			case 'n':
+				n = atoi(optarg);
+				v.resize(n,0);
+				geometryParams.sites = n;
+				break;
+			case 'e':
+				electronsUp = atoi(optarg);
+				break;
+			case 'g':
+				PsimagLite::tokenizer(optarg,str,",");
+				setMyGeometry(geometryParams,str);
+				break;
+			case 'p':
+				readPotential(v,optarg);
+				break;
+			default: /* '?' */
+				usage("setMyGeometry");
+				throw std::runtime_error("Wrong usage\n");
+		}
+	}
+	if (n==0 || geometryParams.sites==0 || v.size()!=n) {
+		usage("setMyGeometry");
+		throw std::runtime_error("Wrong usage\n");
+	}
+
+	size_t dof = 1; // spinless
+
+	GeometryLibraryType geometry(geometryParams);
+
+ 	geometry.addPotential(v);
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
-	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
+	std::vector<size_t> ne(dof,electronsUp); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
 	size_t sigma = 0;
 	//MatrixType cicj(n,n);
-	size_t norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
+	size_t norb = (geometryParams.type == GeometryLibraryType::FEAS) ? 2 : 1;
 	for (size_t orbital=0; orbital<norb; orbital++) {
 		for (size_t site = 0; site<n ; site++) {
 			OpNormalFactoryType opNormalFactory(engine);

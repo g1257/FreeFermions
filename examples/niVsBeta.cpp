@@ -40,9 +40,10 @@ void doOneBeta(const EngineType& engine,
                RealType beta)
 {
 	RealType sum = 0;
+	RealType sum2 = 0;
 	RealType denominator = 0;
 	FreeFermions::Combinations combinations(engine.size(),ne[0]);
-	size_t factorToMakeItSmaller = 1e6;
+	size_t factorToMakeItSmaller = 1;
 	for (size_t i = 0; i<combinations.size(); ++i) {
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		EtoTheBetaHType ebh(beta,engine,0);
@@ -58,8 +59,10 @@ void doOneBeta(const EngineType& engine,
 		LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,site,sigma);
 		myOp2.applyTo(phi);
 		sum += scalarProduct(thisState,phi)*factorToMakeItSmaller;
+		myOp2.applyTo(phi);
+		sum2 += scalarProduct(thisState,phi)*factorToMakeItSmaller;
 	}
-	std::cout<<beta<<" "<<sum<<" "<<denominator<<" "<<sum/denominator<<"\n";	
+	std::cout<<beta<<" "<<sum<<" "<<denominator<<" "<<sum/denominator<<" "<<sum2/denominator<<"\n";	
 }
 
 int main(int argc,char *argv[])
@@ -75,7 +78,7 @@ int main(int argc,char *argv[])
 	std::vector<RealType> v;
 	std::vector<std::string> str;
 
-	while ((opt = getopt(argc, argv, "n:e:b:s:p:t:o:i:l")) != -1) {
+	while ((opt = getopt(argc, argv, "n:e:s:p:t:o:i:l")) != -1) {
 		switch (opt) {
 			case 'n':
 				n = atoi(optarg);
@@ -137,10 +140,10 @@ int main(int argc,char *argv[])
 	}
 	geometry->addPotential(v);
 	
-	std::cerr<<geometry;
+	std::cerr<<v;
 
 	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(*geometry,concurrency,dof,true);
+	EngineType engine(*geometry,concurrency,dof,false);
 
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
