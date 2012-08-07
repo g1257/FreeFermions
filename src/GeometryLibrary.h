@@ -233,6 +233,7 @@ namespace FreeFermions {
 
 		void setGeometryLadder()
 		{
+			assert(geometryParams_.hopping.size()==2);
 			size_t leg = geometryParams_.leg;
 			if (leg<2)
 				throw std::runtime_error("GeometryLibrary:: ladder must have leg>1\n");

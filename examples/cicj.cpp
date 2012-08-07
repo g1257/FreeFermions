@@ -70,6 +70,8 @@ void setMyGeometry(GeometryParamsType& geometryParams,const std::vector<std::str
 			throw std::runtime_error("setMyGeometry: usage is: -g ladder leg \n");
 		}
 		geometryParams.type = GeometryLibraryType::LADDER;
+		geometryParams.hopping.resize(2);
+		geometryParams.hopping[0] =  geometryParams.hopping[1]  = 1.0;
 		return;
 	}
 	
