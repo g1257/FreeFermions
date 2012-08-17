@@ -235,14 +235,15 @@ namespace FreeFermions {
 		{
 			assert(geometryParams_.hopping.size()==2);
 			size_t leg = geometryParams_.leg;
+			bool isPeriodicY = geometryParams_.isPeriodicY;
 			if (leg<2)
 				throw std::runtime_error("GeometryLibrary:: ladder must have leg>1\n");
-			
+			assert(!isPeriodicY || leg>2);
 			size_t sites = geometryParams_.sites;
 			resizeAndZeroOut(sites,sites);
 			for (size_t i=0;i<sites;i++) {
 				std::vector<size_t> v;
-				ladderFindNeighbors(v,i,leg);
+				ladderFindNeighbors(v,i,leg,isPeriodicY);
 				for (size_t k=0;k<v.size();k++) {
 					size_t j = v[k];
 					RealType tmp = (ladderSameColumn(i,j,leg))? 
@@ -252,7 +253,7 @@ namespace FreeFermions {
 			}
 		}
 
-		void ladderFindNeighbors(std::vector<size_t>& v,size_t i,size_t leg)
+		void ladderFindNeighbors(std::vector<size_t>& v,size_t i,size_t leg,bool isPeriodicY)
 		{
 			size_t sites = geometryParams_.sites;
 			v.clear();
@@ -260,7 +261,14 @@ namespace FreeFermions {
 			if (k<sites && ladderSameColumn(k,i,leg)) v.push_back(k);
 			k = i + leg;
 			if (k<sites)  v.push_back(k);
-			
+		
+			if (leg>2 && isPeriodicY) {
+				if (i == 0 || i % leg == 0) {
+					k = i +leg -1;
+					if (k<sites) v.push_back(k);
+				}
+			}
+	
 			// careful with substracting because i and k are unsigned!
 			if (i==0) return;
 			k = i-1;

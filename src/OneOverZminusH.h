@@ -1,8 +1,8 @@
 /*
-Copyright (c) 2009-2012, UT-Battelle, LLC
+Copyright 2009-2012, UT-Battelle, LLC
 All rights reserved
 
-[FreeFermions, Version 1.0.0]
+[DMRG++, Version 2.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -67,49 +67,63 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
+
 */
 /** \ingroup DMRG */
 /*@{*/
 
-/*! \file GeometryParameters.h
+/*! \file OneOverZminusH.h
  *
- * Raw computations for a free Hubbard model
+ * 
  *
  */
-#ifndef GEOMETRY_PARAMS_H
-#define GEOMETRY_PARAMS_H
+#ifndef ONE_OVER_Z_MINUS_H_H
+#define ONE_OVER_Z_MINUS_H_H
 
-#include <assert.h>
-#include <string>
 
 namespace FreeFermions {
+	// All interactions == 0
+	template<typename EngineType_>
+	class OneOverZminusH {
+	public:
+			typedef EngineType_ EngineType;
+			typedef typename EngineType::RealType RealType;
+			typedef typename EngineType::FieldType FieldType;
 
-	template<typename RealType_>
-	struct GeometryParameters {
+			OneOverZminusH(FieldType z,
+						   int sign,
+						  const EngineType& engine)
+			: z_(z),
+			  sign_(sign),
+			  engine_(engine)
+			{}
 
-		typedef RealType_ RealType;
+			template<typename FreeOperatorsType>
+			FieldType operator()(const FreeOperatorsType& freeOps,
+			                      size_t loc) const
+			{
+				RealType sum = 0;
+				for (size_t i=0;i<loc;i++) {
+					if (freeOps[i].type != FreeOperatorsType::CREATION &&
+						freeOps[i].type != FreeOperatorsType::DESTRUCTION)
+						   continue;
+					int sign =  (freeOps[i].type ==
+							       FreeOperatorsType::CREATION) ? -1 : 1;
+					sum += engine_.eigenvalue(freeOps[i].lambda)*sign;
+				}
+				//if (fabs(time_)>1000.0) return sum;
+				return 1.0/(z_-sign_*sum);
+			}
 
-		enum {OPTION_NONE,OPTION_PERIODIC};
+			void transpose() { z_ = std::conj(z_); }
 
-		GeometryParameters() 
-		: type(0),
-		  sites(0),
-		  leg(0),
-		  isPeriodicY(false),
-		  hopping(1,1.0),
-		  option(OPTION_NONE),
-	          filename("")
-		{}
-
-		size_t type;
-		size_t sites;
-		size_t leg;
-		bool isPeriodicY;
-		std::vector<RealType> hopping;
-		size_t option;
-		std::string filename;
-	}; // struct GeometryParameters
+		private:
+			
+			FieldType z_;
+			int sign_;
+			const EngineType& engine_;
+	}; // OneOverZminusH
 } // namespace Dmrg 
 
 /*@}*/
-#endif //GEOMETRY_PARAMS_H
+#endif

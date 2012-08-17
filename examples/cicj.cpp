@@ -65,13 +65,14 @@ void setMyGeometry(GeometryParamsType& geometryParams,const std::vector<std::str
 	geometryParams.leg = atoi(vstr[1].c_str());
 	
 	if (gName == "ladder") {
-		if (vstr.size()!=2) {
+		if (vstr.size()!=3) {
 			usage("setMyGeometry");
-			throw std::runtime_error("setMyGeometry: usage is: -g ladder leg \n");
+			throw std::runtime_error("setMyGeometry: usage is: -g ladder,leg,isPeriodic \n");
 		}
 		geometryParams.type = GeometryLibraryType::LADDER;
 		geometryParams.hopping.resize(2);
 		geometryParams.hopping[0] =  geometryParams.hopping[1]  = 1.0;
+		geometryParams.isPeriodicY = (atoi(vstr[2].c_str())>0);
 		return;
 	}
 	
