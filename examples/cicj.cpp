@@ -43,6 +43,7 @@ void readPotential(std::vector<RealType>& v,const std::string& filename)
 	io.rewind();
 	
 	io.read(v,"potentialV");
+	if (w.size()==0) return;
 	if (v.size()>w.size()) v.resize(w.size());
 	for (size_t i=0;i<w.size();i++) v[i] += w[i];
 }
@@ -88,7 +89,7 @@ void setMyGeometry(GeometryParamsType& geometryParams,const std::vector<std::str
 		return;
 	}
 	
-	if (gName == "feas") {
+	if (gName == "kniffour") {
 		geometryParams.type = GeometryLibraryType::KTWONIFFOUR;
 		return;
 	}
@@ -105,7 +106,7 @@ int main(int argc,char* argv[])
 	
 	geometryParams.type = GeometryLibraryType::CHAIN;
 	
-	while ((opt = getopt(argc, argv, "n:e:g:p")) != -1) {
+	while ((opt = getopt(argc, argv, "n:e:g:p:")) != -1) {
 		switch (opt) {
 			case 'n':
 				n = atoi(optarg);

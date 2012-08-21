@@ -29,6 +29,20 @@ typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertSta
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 
+enum {DYN_TYPE_0,DYN_TYPE_1};
+
+void findZandSign(ComplexType& z,int& sign,RealType Eg,RealType omega,RealType epsilon,size_t dynType)
+{
+	if (dynType == DYN_TYPE_1) {
+		z = ComplexType(Eg+omega,epsilon);
+		sign = -1;
+		return;
+	}
+	
+	z = ComplexType(-Eg-omega,epsilon);
+	sign = 1;
+}
+
 void usage(const std::string& thisFile)
 {
 	std::cout<<thisFile<<": USAGE IS "<<thisFile<<" ";
@@ -76,7 +90,7 @@ void setMyGeometry(GeometryParamsType& geometryParams,const std::vector<std::str
 		return;
 	}
 
-	if (gName == "feas") {
+	if (gName == "kniffour") {
 		geometryParams.type = GeometryLibraryType::KTWONIFFOUR;
 		return;
 	}
@@ -91,10 +105,11 @@ int main(int argc,char *argv[])
 	std::vector<std::string> str;
 	RealType step = 0;
 	GeometryParamsType geometryParams;
-
+	size_t dynType = DYN_TYPE_0;
+	
 	geometryParams.type = GeometryLibraryType::CHAIN;
 
-	while ((opt = getopt(argc, argv, "n:e:s:t:o:i:g:")) != -1) {
+	while ((opt = getopt(argc, argv, "n:e:s:t:o:i:g:d")) != -1) {
 		switch (opt) {
 		case 'n':
 			n = atoi(optarg);
@@ -121,6 +136,9 @@ int main(int argc,char *argv[])
 			str.clear();
 			PsimagLite::tokenizer(optarg,str,",");
 			setMyGeometry(geometryParams,str);
+			break;
+		case 'd':
+			dynType = DYN_TYPE_1;
 			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
@@ -151,7 +169,8 @@ int main(int argc,char *argv[])
 
 	size_t sigma =0;
 	OpNormalFactoryType opNormalFactory(engine);
-	OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,sites[0],sigma);
+	size_t creatOrDest = (dynType == DYN_TYPE_1) ? OperatorType::CREATION : OperatorType::DESTRUCTION;
+	OperatorType& myOp = opNormalFactory(creatOrDest,sites[0],sigma);
 
 	HilbertStateType phi2 = gs;
 	myOp.applyTo(phi2);
@@ -166,8 +185,9 @@ int main(int argc,char *argv[])
 	for (size_t it = 0; it<total; it++) {
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		RealType omega = it * step + offset;
-		ComplexType z = ComplexType(Eg+omega,epsilon);
-		int sign = -1;
+		ComplexType z = 0;
+		int sign = 0;
+		findZandSign(z,sign,Eg,omega,epsilon,dynType);
 		OneOverZminusHType eih(z,sign,engine);
 		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
 		HilbertStateType phi3 = phi2;
