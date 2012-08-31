@@ -31,18 +31,6 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 
 enum {DYN_TYPE_0,DYN_TYPE_1};
 
-void findZandSign(ComplexType& z,int& sign,RealType Eg,RealType omega,RealType epsilon,size_t dynType)
-{
-	if (dynType == DYN_TYPE_1) {
-		z = ComplexType(Eg+omega,epsilon);
-		sign = -1;
-		return;
-	}
-	
-	z = ComplexType(-Eg-omega,epsilon);
-	sign = 1;
-}
-
 void usage(const std::string& thisFile)
 {
 	std::cout<<thisFile<<": USAGE IS "<<thisFile<<" ";
@@ -185,15 +173,14 @@ int main(int argc,char *argv[])
 	for (size_t it = 0; it<total; it++) {
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		RealType omega = it * step + offset;
-		ComplexType z = 0;
-		int sign = 0;
-		findZandSign(z,sign,Eg,omega,epsilon,dynType);
-		OneOverZminusHType eih(z,sign,engine);
+		ComplexType z = ComplexType(omega,epsilon);
+		int sign = (dynType== DYN_TYPE_1) ? -1 : 1;
+		OneOverZminusHType eih(z,sign,Eg,engine);
 		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
 		HilbertStateType phi3 = phi2;
 		eihOp.applyTo(phi3);
 		FieldType tmpC = scalarProduct(phi2,phi3);
 
-		std::cout<<omega<<" "<<std::real(tmpC)<<" "<<std::imag(tmpC)<<"\n";
+		std::cout<<omega<<" "<<std::imag(tmpC)<<" "<<std::real(tmpC)<<"\n";
 	}
 }

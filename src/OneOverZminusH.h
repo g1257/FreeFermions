@@ -91,10 +91,12 @@ namespace FreeFermions {
 			typedef typename EngineType::FieldType FieldType;
 
 			OneOverZminusH(FieldType z,
-						   int sign,
-						  const EngineType& engine)
+			               int sign,
+				       const RealType& offset,
+			               const EngineType& engine)
 			: z_(z),
 			  sign_(sign),
+			  offset_(offset),
 			  engine_(engine)
 			{}
 
@@ -112,7 +114,7 @@ namespace FreeFermions {
 					sum += engine_.eigenvalue(freeOps[i].lambda)*sign;
 				}
 				//if (fabs(time_)>1000.0) return sum;
-				return 1.0/(z_-sign_*sum);
+				return 1.0/(z_-sign_*(sum+offset_));
 			}
 
 			void transpose() { z_ = std::conj(z_); }
@@ -121,6 +123,7 @@ namespace FreeFermions {
 			
 			FieldType z_;
 			int sign_;
+			RealType offset_;
 			const EngineType& engine_;
 	}; // OneOverZminusH
 } // namespace Dmrg 
