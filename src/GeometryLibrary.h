@@ -1,6 +1,5 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright  2009 , UT-Battelle, LLC
+Copyright  2009-2012, UT-Battelle, LLC
 All rights reserved
 
 [FreeFermions, Version 1.0.0]
@@ -68,9 +67,8 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
+
 /** \ingroup DMRG */
 /*@{*/
 
@@ -179,6 +177,28 @@ namespace FreeFermions {
 		const RealType& operator()(size_t i,size_t j) const
 		{
 			return t_(i,j);
+		}
+
+		std::string name() const
+		{
+
+			switch (geometryParams_.type) {
+			case CHAIN:
+				return "chain";
+				break;
+			case LADDER:
+				return "ladder";
+				break;
+			case FEAS:
+				return "feas";
+				break;
+			case KTWONIFFOUR:
+				return "kniffour";
+				break;
+			default:
+				assert(false);
+			}
+			return "unknown";
 		}
 		
 		template<typename MType,typename PType>
@@ -420,6 +440,7 @@ namespace FreeFermions {
 	                         const GeometryLibrary<MatrixType,ParamsType>& gl)
 	{
 		os<<gl.t_;
+		os<<"GeometryName="<<gl.name()<<"\n";
 		return os;
 	}
 } // namespace FreeFermions
