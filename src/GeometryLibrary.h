@@ -141,6 +141,13 @@ namespace FreeFermions {
 		template<typename SomeRealType>
 		void addPotential(const std::vector<SomeRealType>& p)
 		{
+			if (p.size()!=t_.n_row()) {
+				std::string str(__FILE__);
+				str += " " + ttos(__LINE__) + "\n";
+				str += "addPotential(...): expecting " + ttos(t_.n_row());
+				str += " numbers but " + ttos(p.size()) + " found instead.\n";
+				throw std::runtime_error(str.c_str());
+			}
 			for (size_t i=0;i<p.size();i++) t_(i,i) = p[i];
 		}
 

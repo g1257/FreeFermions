@@ -3,6 +3,7 @@
 // SAmple of how to use FreeFermions core engine to calculate
 // <c^\dagger_i c_j >
 #include <cstdlib>
+#include <unistd.h>
 #include "Engine.h"
 #include "GeometryLibrary.h"
 #include "ConcurrencySerial.h"
@@ -128,7 +129,10 @@ int main(int argc,char* argv[])
 				throw std::runtime_error("Wrong usage\n");
 		}
 	}
-	if (n==0 || geometryParams.sites==0 || v.size()!=n) {
+	if (v.size()==4*n) {
+		v.resize(2*n);
+	}
+	if (n==0 || geometryParams.sites==0) {
 		usage("setMyGeometry");
 		throw std::runtime_error("Wrong usage\n");
 	}
