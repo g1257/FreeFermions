@@ -134,9 +134,37 @@ namespace FreeFermions {
 					orbitalsForCO(t,newi,newj);
 				}
 			}
+			addPeriodicConnections(t);
 		}
 
 	private:
+
+		void addPeriodicConnections(MatrixType& t) const
+		{
+			if (!geometryParams_.isPeriodicY) return;
+		
+			size_t n = geometryParams_.sites;
+
+			// 0 --> N-1 Cu-O
+			for (size_t orb=0;orb<2;orb++)
+				t(orb*n,n-1) = t(n-1,orb*n) = coOrbitals(DIR_X,orb);
+
+			// 0 --> N-2 O-O
+			for (size_t orb1=0;orb1<2;orb1++) {
+				for (size_t orb2=0;orb2<2;orb2++) {
+					t(index(0,orb1),index(n-2,orb2))=ooOrbitals(DIR_XPY,orb1,orb2);
+					t(index(n-2,orb2),index(0,orb1))=ooOrbitals(DIR_XPY,orb1,orb2);
+				}
+			}
+
+			// 0 --> N-3 O-O
+			for (size_t orb1=0;orb1<2;orb1++) {
+				for (size_t orb2=0;orb2<2;orb2++) {
+					t(index(0,orb1),index(n-3,orb2))=ooOrbitals(DIR_XMY,orb1,orb2);
+					t(index(n-3,orb2),index(0,orb1))=ooOrbitals(DIR_XMY,orb1,orb2);
+				}
+			}
+		}
 
 		void resizeAndZeroOutMatrix(MatrixType& t) const
 		{

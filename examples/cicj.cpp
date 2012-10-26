@@ -92,6 +92,7 @@ void setMyGeometry(GeometryParamsType& geometryParams,const std::vector<std::str
 	
 	if (gName == "kniffour") {
 		geometryParams.type = GeometryLibraryType::KTWONIFFOUR;
+		geometryParams.isPeriodicY = geometryParams.leg;
 		return;
 	}
 }
@@ -141,7 +142,16 @@ int main(int argc,char* argv[])
 
 	GeometryLibraryType geometry(geometryParams);
 
- 	geometry.addPotential(v);
+ 	if (geometryParams.type!=GeometryLibraryType::KTWONIFFOUR) {
+		geometry.addPotential(v);
+	} /*else {
+		v.clear();
+		size_t blocks = size_t(n/4);
+		v.resize(7*blocks);
+		for (size_t i=0;i<blocks;i++) v[7*i+6]= -10.0;
+		geometry.addPotential(v);
+	}*/
+
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
