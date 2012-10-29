@@ -88,6 +88,76 @@ FieldType calcSuperDensity(size_t site,
 	return sum;
 }
 
+void readPotential(std::vector<RealType>& v,const std::string& filename)
+{
+	std::vector<RealType> w;
+	PsimagLite::IoSimple::In io(filename);
+	try {
+		io.read(w,"PotentialT");
+	} catch (std::exception& e) {
+		std::cerr<<"INFO: No PotentialT in file "<<filename<<"\n";
+	}
+	io.rewind();
+
+	io.read(v,"potentialV");
+	if (w.size()==0) return;
+	if (v.size()>w.size()) v.resize(w.size());
+	for (size_t i=0;i<w.size();i++) v[i] += w[i];
+}
+
+void usage(const std::string& thisFile)
+{
+	std::cout<<thisFile<<": USAGE IS "<<thisFile<<" ";
+	std::cout<<" -n sites -e electronsUp -g geometry,[leg,filename]\n";
+}
+
+void setMyGeometry(GeometryParamsType& geometryParams,const std::vector<std::string>& vstr)
+{
+	// default value
+	geometryParams.type = GeometryLibraryType::CHAIN;
+
+	if (vstr.size()<2) {
+		// assume chain
+		return;
+	}
+
+	std::string gName = vstr[0];
+	if (gName == "chain") {
+		throw std::runtime_error("setMyGeometry: -g chain takes no further arguments\n");
+	}
+
+	geometryParams.leg = atoi(vstr[1].c_str());
+
+	if (gName == "ladder") {
+		if (vstr.size()!=3) {
+			usage("setMyGeometry");
+			throw std::runtime_error("setMyGeometry: usage is: -g ladder,leg,isPeriodic \n");
+		}
+		geometryParams.type = GeometryLibraryType::LADDER;
+		geometryParams.hopping.resize(2);
+		geometryParams.hopping[0] =  geometryParams.hopping[1]  = 1.0;
+		geometryParams.isPeriodicY = (atoi(vstr[2].c_str())>0);
+		return;
+	}
+
+	if (vstr.size()!=3) {
+			usage("setMyGeometry");
+			throw std::runtime_error("setMyGeometry: usage is: -g {feas | ktwoniffour} leg filename\n");
+	}
+
+	geometryParams.filename = vstr[2];
+
+	if (gName == "feas") {
+		geometryParams.type = GeometryLibraryType::FEAS;
+		return;
+	}
+
+	if (gName == "kniffour") {
+		geometryParams.type = GeometryLibraryType::KTWONIFFOUR;
+		geometryParams.isPeriodicY = geometryParams.leg;
+		return;
+	}
+}
 
 int main(int argc,char *argv[])
 {
@@ -96,9 +166,11 @@ int main(int argc,char *argv[])
 	RealType offset = 0;
 	std::vector<size_t> sites;
 	std::vector<std::string> str;
-	bool ladder = false;
 	RealType step = 0;
-	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:l")) != -1) {
+	GeometryParamsType geometryParams;
+	std::vector<RealType> v;
+
+	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:g:p:")) != -1) {
 		switch (opt) {
 			case 'n':
 				n = atoi(optarg);
@@ -120,8 +192,12 @@ int main(int argc,char *argv[])
 			case 'o':
 				offset = atof(optarg);
 				break;
-			case 'l':
-				ladder = true;
+			case 'g':
+				PsimagLite::tokenizer(optarg,str,",");
+				setMyGeometry(geometryParams,str);
+				break;
+			case 'p':
+				readPotential(v,optarg);
 				break;
 			default: /* '?' */
 				throw std::runtime_error("Wrong usage\n");
@@ -130,26 +206,17 @@ int main(int argc,char *argv[])
 	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
 	
 	size_t dof = 2; // spin up and down
-	GeometryParamsType geometryParams;
 	geometryParams.sites = n;
-	GeometryLibraryType* geometry;
+	GeometryLibraryType geometry(geometryParams);
 
-	if (!ladder) {
-		geometryParams.type = GeometryLibraryType::CHAIN;
-		geometry = new GeometryLibraryType(geometryParams);
-	} else {
-		geometryParams.type = GeometryLibraryType::LADDER;
-		geometryParams.leg = 2;
-		geometryParams.hopping.resize(2);
-		geometryParams.hopping[0] = 1.0;
-		geometryParams.hopping[1] = 0.5;
-		geometry = new GeometryLibraryType(geometryParams);
+	if (geometryParams.type!=GeometryLibraryType::KTWONIFFOUR) {
+		geometry.addPotential(v);
 	}
 
 	std::cerr<<geometry;
 	
 	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(*geometry,concurrency,dof,false);
+	EngineType engine(geometry,concurrency,dof,false);
 	
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
@@ -177,7 +244,7 @@ int main(int argc,char *argv[])
 		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
 		
 // 		HilbertStateType savedVector = gs;
-		FieldType savedValue = 0;
+//		FieldType savedValue = 0;
 // 		FieldType sum = 0;
 		std::vector<HilbertStateType*> savedVector(4);
 		
@@ -239,6 +306,4 @@ int main(int argc,char *argv[])
 		std::cout<<time<<" "<<(2.0*sum)<<"\n";
 		range.next();
 	}
-	
-	delete geometry;
 }

@@ -133,6 +133,10 @@ int main(int argc,char* argv[])
 	if (v.size()==4*n) {
 		v.resize(2*n);
 	}
+	if (v.size()==2*n && geometryParams.type == GeometryLibraryType::LADDER) {
+		v.resize(n);
+	}
+
 	if (n==0 || geometryParams.sites==0) {
 		usage("setMyGeometry");
 		throw std::runtime_error("Wrong usage\n");
