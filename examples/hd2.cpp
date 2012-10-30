@@ -25,6 +25,7 @@ typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 #include "Tokenizer.h" // in PsimagLite
 #include "GeometryParameters.h"
 #include "Range.h"
+#include "DriverHelper.h"
 
 typedef std::complex<double> ComplexType;
 typedef ComplexType FieldType;
@@ -40,6 +41,7 @@ typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
+typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 
 FieldType calcSuperDensity(size_t site,
 						   size_t site2,
@@ -88,76 +90,6 @@ FieldType calcSuperDensity(size_t site,
 	return sum;
 }
 
-void readPotential(std::vector<RealType>& v,const std::string& filename)
-{
-	std::vector<RealType> w;
-	PsimagLite::IoSimple::In io(filename);
-	try {
-		io.read(w,"PotentialT");
-	} catch (std::exception& e) {
-		std::cerr<<"INFO: No PotentialT in file "<<filename<<"\n";
-	}
-	io.rewind();
-
-	io.read(v,"potentialV");
-	if (w.size()==0) return;
-	if (v.size()>w.size()) v.resize(w.size());
-	for (size_t i=0;i<w.size();i++) v[i] += w[i];
-}
-
-void usage(const std::string& thisFile)
-{
-	std::cout<<thisFile<<": USAGE IS "<<thisFile<<" ";
-	std::cout<<" -n sites -e electronsUp -g geometry,[leg,filename]\n";
-}
-
-void setMyGeometry(GeometryParamsType& geometryParams,const std::vector<std::string>& vstr)
-{
-	// default value
-	geometryParams.type = GeometryLibraryType::CHAIN;
-
-	if (vstr.size()<2) {
-		// assume chain
-		return;
-	}
-
-	std::string gName = vstr[0];
-	if (gName == "chain") {
-		throw std::runtime_error("setMyGeometry: -g chain takes no further arguments\n");
-	}
-
-	geometryParams.leg = atoi(vstr[1].c_str());
-
-	if (gName == "ladder") {
-		if (vstr.size()!=3) {
-			usage("setMyGeometry");
-			throw std::runtime_error("setMyGeometry: usage is: -g ladder,leg,isPeriodic \n");
-		}
-		geometryParams.type = GeometryLibraryType::LADDER;
-		geometryParams.hopping.resize(2);
-		geometryParams.hopping[0] =  geometryParams.hopping[1]  = 1.0;
-		geometryParams.isPeriodicY = (atoi(vstr[2].c_str())>0);
-		return;
-	}
-
-	if (vstr.size()!=3) {
-			usage("setMyGeometry");
-			throw std::runtime_error("setMyGeometry: usage is: -g {feas | ktwoniffour} leg filename\n");
-	}
-
-	geometryParams.filename = vstr[2];
-
-	if (gName == "feas") {
-		geometryParams.type = GeometryLibraryType::FEAS;
-		return;
-	}
-
-	if (gName == "kniffour") {
-		geometryParams.type = GeometryLibraryType::KTWONIFFOUR;
-		geometryParams.isPeriodicY = geometryParams.leg;
-		return;
-	}
-}
 
 int main(int argc,char *argv[])
 {
@@ -197,10 +129,10 @@ int main(int argc,char *argv[])
 		case 'g':
 			str.clear();
 			PsimagLite::tokenizer(optarg,str,",");
-			setMyGeometry(geometryParams,str);
+			DriverHelperType::setMyGeometry(geometryParams,str);
 			break;
 		case 'p':
-			readPotential(v,optarg);
+			DriverHelperType::readPotential(v,optarg);
 			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
@@ -209,7 +141,6 @@ int main(int argc,char *argv[])
 	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
 	
 	size_t dof = 2; // spin up and down
-	geometryParams.sites = n;
 	GeometryLibraryType geometry(geometryParams);
 
 	if (geometryParams.type!=GeometryLibraryType::KTWONIFFOUR) {
@@ -225,9 +156,11 @@ int main(int argc,char *argv[])
 	bool debug = false;
 	bool verbose = false;
 	HilbertStateType gs(engine,ne,debug);
-	
-// 	size_t sigma3 = 0;
-	
+
+	RealType sum = 0;
+	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
+	std::cerr<<"Energy="<<dof*sum<<"\n";
+
 	FieldType superdensity = calcSuperDensity(sites[0],sites[1],gs,engine);
 	std::cout<<"#superdensity="<<superdensity<<"\n";
 	std::cout<<"#site="<<sites[0]<<" site2="<<sites[1]<<"\n";

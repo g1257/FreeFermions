@@ -18,6 +18,7 @@
 #include "Tokenizer.h" // in PsimagLite
 #include "GeometryParameters.h"
 #include "Range.h"
+#include "DriverHelper.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -35,6 +36,7 @@ typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
+typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 
 FieldType calcSuperDensity(size_t site,
                              size_t site2,
@@ -91,7 +93,9 @@ int main(int argc,char *argv[])
 	RealType offset = 0;
 	std::vector<size_t> sites;
 	std::vector<std::string> str;
-	bool ladder = false;
+	GeometryParamsType geometryParams;
+	std::vector<RealType> v;
+
 	RealType step = 0;
 	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:l")) != -1) {
 		switch (opt) {
@@ -115,8 +119,13 @@ int main(int argc,char *argv[])
 		case 'o':
 			offset = atof(optarg);
 			break;
-		case 'l':
-			ladder = true;
+		case 'g':
+			str.clear();
+			PsimagLite::tokenizer(optarg,str,",");
+			DriverHelperType::setMyGeometry(geometryParams,str);
+			break;
+		case 'p':
+			DriverHelperType::readPotential(v,optarg);
 			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
@@ -125,26 +134,17 @@ int main(int argc,char *argv[])
 	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
 
 	size_t dof = 2; // spin up and down
-	GeometryParamsType geometryParams;
-	geometryParams.sites = n;
-	GeometryLibraryType* geometry;
 
-	if (!ladder) {
-		geometryParams.type = GeometryLibraryType::CHAIN;
-		geometry = new GeometryLibraryType(geometryParams);
-	} else {
-		geometryParams.type = GeometryLibraryType::LADDER;
-		geometryParams.leg = 2;
-		geometryParams.hopping.resize(2);
-		geometryParams.hopping[0] = 1.0;
-		geometryParams.hopping[1] = 0.5;
-		geometry = new GeometryLibraryType(geometryParams);
+	GeometryLibraryType geometry(geometryParams);
+
+	if (geometryParams.type!=GeometryLibraryType::KTWONIFFOUR) {
+		geometry.addPotential(v);
 	}
 
 	std::cerr<<geometry;
 	
 	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(*geometry,concurrency,dof,false);
+	EngineType engine(geometry,concurrency,dof,false);
 	
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
@@ -218,5 +218,4 @@ int main(int argc,char *argv[])
 		std::cout<<time<<" "<<real(sum)<<"\n";
 		range.next();
 	}
-	delete geometry;
 }

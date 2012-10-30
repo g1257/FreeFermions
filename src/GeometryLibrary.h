@@ -85,11 +85,12 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "KTwoNiFFour.h"
 
 namespace FreeFermions {
-	template<typename MatrixType,typename GeometryParamsType>
+	template<typename MatrixType,typename GeometryParamsType_>
 	class GeometryLibrary {
 	
 	public:
 
+		typedef GeometryParamsType_ GeometryParamsType;
 		typedef typename MatrixType::value_type RealType;
 
 		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR};

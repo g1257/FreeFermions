@@ -276,6 +276,10 @@ namespace FreeFermions {
 				 }
 				 if (opPointers[i].sigma!=sigma) continue;
 
+				 if (typeOfRun==DRY_RUN) {
+					 loc_++;
+					 continue;
+				 }
 				 if (fo.type==CREATION) {
 					 if (counter<lambda.size()) fo.lambda = lambda[counter];
 					 counter++;
@@ -285,8 +289,7 @@ namespace FreeFermions {
 				 } else {
 					 fo.lambda = 0;
 				 }
-				 if (typeOfRun==NORMAL_RUN) data_[loc_++]=fo;
-				 else loc_++;
+				 data_[loc_++]=fo;
 			 }
 		 }
 
