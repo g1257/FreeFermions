@@ -98,7 +98,11 @@ namespace FreeFermions {
 
 	template<typename OperatorType,typename OpPointerType>
 	class FreeOperators {
+
+		enum {DRY_RUN,NORMAL_RUN};
+
 	public:
+
 		typedef typename OperatorType::RealType RealType;
 		typedef typename OperatorType::FieldType FieldType;
 		typedef IndexGenerator IndexGeneratorType;
@@ -115,36 +119,26 @@ namespace FreeFermions {
 		              size_t sigma,
 		              const std::vector<size_t>& occupations,
 		              const std::vector<size_t>& occupations2)
-		: value_(1)
+			: value_(1),loc_(0)
 		{
-			size_t counter3 = addAtTheFront(occupations);
+			size_t counter3 = addAtTheFront(occupations,DRY_RUN);
 			size_t counter2=0;
 			size_t counter = 0;
-			for (size_t i=0;i<opPointers.size();i++) {
-				FreeOperator fo;
-				fo.type = opPointers[i].type;
-				if (notCreationOrDestruction(fo.type)) {
-					fo.lambda = 0;
-					data_.push_back(fo);
-					continue;
-				}
-				if (opPointers[i].sigma!=sigma) continue;
-
-				if (fo.type==CREATION) {
-					if (counter<lambda.size()) fo.lambda = lambda[counter];
-					counter++;
-				} else if (fo.type==DESTRUCTION) {
-					if (counter2<lambda2.size()) fo.lambda = lambda2[counter2];
-					counter2++;
-				} else {
-					fo.lambda = 0;
-				}
-				data_.push_back(fo);
-			}
+			addAtTheMiddle(counter,counter2,opPointers,lambda,lambda2,sigma,DRY_RUN);
 			counter += counter3;
 			
-			counter2 += addAtTheBack(occupations2);
-			
+			counter2 += addAtTheBack(occupations2,DRY_RUN);
+
+
+			data_.resize(loc_);
+			loc_=0;
+
+			addAtTheFront(occupations,NORMAL_RUN);
+			size_t counter4=0;
+			size_t counter5=0;
+			addAtTheMiddle(counter4,counter5,opPointers,lambda,lambda2,sigma,NORMAL_RUN);
+			addAtTheBack(occupations2,NORMAL_RUN);
+
 			// if daggers > non-daggers, result is zero
 			if (counter!=counter2) {
 				value_ = 0;
@@ -227,36 +221,78 @@ namespace FreeFermions {
 
 	private:
 
-		size_t addAtTheBack(const std::vector<size_t>&  occupations2)
+		size_t addAtTheBack(const std::vector<size_t>&  occupations2,size_t typeOfRun)
 		{
 			size_t counter = 0;
 			for (int i=occupations2.size()-1;i>=0;i--) {
 				if (occupations2[i]==0) continue;
 				counter++;
+				if (typeOfRun==DRY_RUN) {
+					loc_++;
+					continue;
+				}
 				FreeOperator fo;
 				fo.lambda = i;
 				fo.type = DESTRUCTION;
-				data_.push_back(fo);
+				data_[loc_++]=fo;
 			}
 			return counter;
 		}
 
-		 size_t addAtTheFront(const std::vector<size_t>&  occupations)
+		 size_t addAtTheFront(const std::vector<size_t>&  occupations,size_t typeOfRun)
 		 {
 			 size_t counter = 0;
 			 for (size_t i=0;i<occupations.size();++i) {
 				 if (occupations[i]==0) continue;
 				 counter++;
+				 if (typeOfRun==DRY_RUN) {
+					 loc_++;
+					 continue;
+				 }
 				 FreeOperator fo;
 				 fo.lambda = i;
 				 fo.type = CREATION;
-				 data_.push_back(fo);
+				 data_[loc_++]=fo;
 			 }
 			 return counter;
 		 }
 
+		 void addAtTheMiddle(size_t& counter,
+							 size_t& counter2,
+							 const OpPointersType& opPointers,
+							 const IndexGeneratorType& lambda,
+							 const PermutationsType& lambda2,
+							 size_t sigma,
+							 size_t typeOfRun)
+		 {
+			 for (size_t i=0;i<opPointers.size();i++) {
+				 FreeOperator fo;
+				 fo.type = opPointers[i].type;
+				 if (notCreationOrDestruction(fo.type)) {
+					 fo.lambda = 0;
+					 if (typeOfRun==NORMAL_RUN) data_[loc_++]=fo;
+					 else loc_++;
+					 continue;
+				 }
+				 if (opPointers[i].sigma!=sigma) continue;
+
+				 if (fo.type==CREATION) {
+					 if (counter<lambda.size()) fo.lambda = lambda[counter];
+					 counter++;
+				 } else if (fo.type==DESTRUCTION) {
+					 if (counter2<lambda2.size()) fo.lambda = lambda2[counter2];
+					 counter2++;
+				 } else {
+					 fo.lambda = 0;
+				 }
+				 if (typeOfRun==NORMAL_RUN) data_[loc_++]=fo;
+				 else loc_++;
+			 }
+		 }
+
 		std::vector<FreeOperator> data_;
 		RealType value_;
+		size_t loc_;
 	}; // FreeOperators
 } // namespace Dmrg 
 

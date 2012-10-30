@@ -172,35 +172,38 @@ int main(int argc,char *argv[])
 
 	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:g:p:")) != -1) {
 		switch (opt) {
-			case 'n':
-				n = atoi(optarg);
-				break;
-			case 'e':
-				electronsUp = atoi(optarg);
-				break;
-			case 's':
-				PsimagLite::tokenizer(optarg,str,",");
-				for (size_t i=0;i<str.size();i++)
-					sites.push_back(atoi(str[i].c_str()));
-				break;
-			case 't':
-				total = atoi(optarg);
-				break;
-			case 'i':
-				step = atof(optarg);
-				break;
-			case 'o':
-				offset = atof(optarg);
-				break;
-			case 'g':
-				PsimagLite::tokenizer(optarg,str,",");
-				setMyGeometry(geometryParams,str);
-				break;
-			case 'p':
-				readPotential(v,optarg);
-				break;
-			default: /* '?' */
-				throw std::runtime_error("Wrong usage\n");
+		case 'n':
+			n = atoi(optarg);
+			break;
+		case 'e':
+			electronsUp = atoi(optarg);
+			break;
+		case 's':
+			str.clear();
+			PsimagLite::tokenizer(optarg,str,",");
+			for (size_t i=0;i<str.size();i++) {
+				sites.push_back(atoi(str[i].c_str()));
+			}
+			break;
+		case 't':
+			total = atoi(optarg);
+			break;
+		case 'i':
+			step = atof(optarg);
+			break;
+		case 'o':
+			offset = atof(optarg);
+			break;
+		case 'g':
+			str.clear();
+			PsimagLite::tokenizer(optarg,str,",");
+			setMyGeometry(geometryParams,str);
+			break;
+		case 'p':
+			readPotential(v,optarg);
+			break;
+		default: /* '?' */
+			throw std::runtime_error("Wrong usage\n");
 		}
 	}
 	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
