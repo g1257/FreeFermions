@@ -106,6 +106,8 @@ int main(int argc,char *argv[])
 		switch (opt) {
 		case 'n':
 			n = atoi(optarg);
+			v.resize(n,0);
+			geometryParams.sites = n;
 			break;
 		case 'e':
 			electronsUp = atoi(optarg);
@@ -163,7 +165,10 @@ int main(int argc,char *argv[])
 
 	FieldType superdensity = calcSuperDensity(sites[0],sites[1],gs,engine);
 	std::cout<<"#superdensity="<<superdensity<<"\n";
-	std::cout<<"#site="<<sites[0]<<" site2="<<sites[1]<<"\n";
+
+	std::cout<<"#sites= ";
+	for (size_t i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
+	std::cout<<"\n";
 	
 	PsimagLite::Range<ConcurrencyType> range(0,total,concurrency);
 	enum {SPIN_UP,SPIN_DOWN};

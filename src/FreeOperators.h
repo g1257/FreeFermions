@@ -106,7 +106,7 @@ namespace FreeFermions {
 		typedef typename OperatorType::RealType RealType;
 		typedef typename OperatorType::FieldType FieldType;
 		typedef IndexGenerator IndexGeneratorType;
-		typedef Permutations<IndexGeneratorType> PermutationsType;
+		typedef PsimagLite::Permutations<IndexGeneratorType> PermutationsType;
 		typedef std::vector<OpPointerType> OpPointersType;
 
 		enum {CREATION = OperatorType::CREATION,

@@ -97,15 +97,18 @@ int main(int argc,char *argv[])
 	std::vector<RealType> v;
 
 	RealType step = 0;
-	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:l")) != -1) {
+	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:g:p:")) != -1) {
 		switch (opt) {
 		case 'n':
 			n = atoi(optarg);
+			v.resize(n,0);
+			geometryParams.sites = n;
 			break;
 		case 'e':
 			electronsUp = atoi(optarg);
 			break;
 		case 's':
+			str.clear();
 			PsimagLite::tokenizer(optarg,str,",");
 			for (size_t i=0;i<str.size();i++)
 				sites.push_back(atoi(str[i].c_str()));
@@ -145,17 +148,24 @@ int main(int argc,char *argv[])
 	
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,false);
-	
+
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	bool verbose = false;
 	HilbertStateType gs(engine,ne,debug);
 	
+	RealType sum = 0;
+	for (size_t i=0;i<electronsUp;i++) sum += engine.eigenvalue(i);
+	std::cerr<<"Energy="<<dof*sum<<"\n";
+
 	size_t sigma3 = 0;
 	
 	FieldType superdensity = calcSuperDensity(sites[0],sites[1],gs,engine);
 	std::cout<<"#superdensity="<<superdensity<<"\n";
-	std::cout<<"#site="<<sites[0]<<" site2="<<sites[1]<<"\n";
+
+	std::cout<<"#sites= ";
+	for (size_t i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
+	std::cout<<"\n";
 
 	PsimagLite::Range<ConcurrencyType> range(0,total,concurrency);
 	
