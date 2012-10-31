@@ -262,7 +262,20 @@ namespace FreeFermions {
 
 		int signChange(size_t i1,size_t i2) const
 		{
-			return (isInverted(i1) || isInverted(i2)) ? signChange_ : 1;
+			// change the sign of Cu-O
+			size_t newi1 = std::min(i1,i2);
+			size_t newi2 = std::max(i1,i2);
+			PairType type1 = findTypeOfSite(newi1);
+			PairType type2 = findTypeOfSite(newi2);
+			int sign1 = 1;
+			if (type1.first!=type2.first) {
+
+				int diff =  newi2-newi1;
+				assert(diff==1 || diff==2 || diff==3);
+				if (diff<2) sign1 = -1;
+			}
+
+			return (isInverted(i1) || isInverted(i2)) ? signChange_*sign1 : sign1;
 		}
 
 		bool isInverted(size_t i) const
