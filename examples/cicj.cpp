@@ -43,7 +43,6 @@ int main(int argc,char* argv[])
 		switch (opt) {
 			case 'n':
 				n = atoi(optarg);
-				v.resize(n,0);
 				geometryParams.sites = n;
 				break;
 			case 'e':

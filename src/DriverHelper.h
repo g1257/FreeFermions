@@ -145,7 +145,7 @@ public:
 			return;
 		}
 
-		if (vstr.size()!=3) {
+		if (vstr.size()<3) {
 			usage("setMyGeometry"," -g {feas | ktwoniffour} leg filename");
 			throw std::runtime_error("setMyGeometry: usage is: -g {feas | ktwoniffour} leg filename\n");
 		}
@@ -154,6 +154,8 @@ public:
 
 		if (gName == "feas") {
 			geometryParams.type = GeometryLibraryType::FEAS;
+			if (vstr.size()==4) geometryParams.orbitals=atoi(vstr[3].c_str());
+			else geometryParams.orbitals=2;
 			return;
 		}
 

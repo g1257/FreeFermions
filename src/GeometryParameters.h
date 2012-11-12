@@ -98,7 +98,8 @@ namespace FreeFermions {
 		  isPeriodicY(false),
 		  hopping(1,1.0),
 		  option(OPTION_NONE),
-	          filename("")
+	          filename(""),
+		  orbitals(1)
 		{}
 
 		size_t type;
@@ -108,6 +109,7 @@ namespace FreeFermions {
 		std::vector<RealType> hopping;
 		size_t option;
 		std::string filename;
+		size_t orbitals;
 	}; // struct GeometryParameters
 } // namespace Dmrg 
 

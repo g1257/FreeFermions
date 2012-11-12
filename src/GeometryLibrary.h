@@ -142,6 +142,7 @@ namespace FreeFermions {
 		template<typename SomeRealType>
 		void addPotential(const std::vector<SomeRealType>& p)
 		{
+			if (p.size()==0) return;
 			if (p.size()!=t_.n_row()) {
 				std::string str(__FILE__);
 				str += " " + ttos(__LINE__) + "\n";
@@ -218,12 +219,12 @@ namespace FreeFermions {
 		void setGeometryFeAs()
 		{
 			std::vector<MatrixType> t;
-			size_t edof = 2; // 2 orbitals
+			size_t edof = geometryParams_.orbitals;
 			std::vector<RealType> oneSiteHoppings;
 			readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename);
 
 			size_t sites = geometryParams_.sites;
-			for (size_t i=0;i<edof*edof;i++) { // 4 cases: aa ab ba and bb
+			for (size_t i=0;i<edof*edof;i++) { // orbital*orbital cases: aa ab ba bb etc
 				MatrixType oneT(sites,sites);
 				setGeometryFeAs(oneT,i,oneSiteHoppings);
 				reorderLadderX(oneT,geometryParams_.leg);
@@ -232,8 +233,8 @@ namespace FreeFermions {
 			}
 			resizeAndZeroOut(edof*sites,edof*sites);
 			for (size_t orbitalPair=0;orbitalPair<edof*edof;orbitalPair++) {
-				size_t orb1 = (orbitalPair & 1);
-				size_t orb2 = orbitalPair/2;
+				size_t orb1 = (orbitalPair % geometryParams_.orbitals);
+				size_t orb2 = orbitalPair/geometryParams_.orbitals;
 				for (size_t i=0;i<sites;i++)
 					for (size_t j=0;j<sites;j++)
 						t_(i+orb1*sites,j+orb2*sites) += t[orbitalPair](i,j);
@@ -321,7 +322,8 @@ namespace FreeFermions {
 			size_t sites = geometryParams_.sites;
 			size_t leg = geometryParams_.leg;
 			size_t geometryOption = geometryParams_.option;
-			RealType tx = oneSiteHoppings[orborb+DIRECTION_X*4];
+			size_t orbitalsSquared = geometryParams_.orbitals * geometryParams_.orbitals;
+			RealType tx = oneSiteHoppings[orborb+DIRECTION_X*orbitalsSquared];
 			size_t lengthx  = sites/leg;
 			if (sites%leg!=0) throw std::runtime_error("Leg must divide number of sites.\n");
 			for (size_t j=0;j<leg;j++) {
@@ -333,7 +335,7 @@ namespace FreeFermions {
 					t(j*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,j*lengthx) = tx;
 			}
 
-			RealType ty = oneSiteHoppings[orborb+DIRECTION_Y*4];
+			RealType ty = oneSiteHoppings[orborb+DIRECTION_Y*orbitalsSquared];
 			for (size_t i=0;i<lengthx;i++) {
 				for (size_t j=0;j<leg;j++) {
 					if (j>0) t(i+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j-1)*lengthx) = ty;
@@ -342,8 +344,8 @@ namespace FreeFermions {
 				if (geometryOption==GeometryParamsType::OPTION_PERIODIC)
 					t(i,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i) = ty;
 			}
-			RealType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*4];
-			RealType txmy = oneSiteHoppings[orborb+DIRECTION_XMY*4];
+			RealType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*orbitalsSquared];
+			RealType txmy = oneSiteHoppings[orborb+DIRECTION_XMY*orbitalsSquared];
 			for (size_t i=0;i<lengthx;i++) {
 				for (size_t j=0;j<leg;j++) {
 					if (j+1<leg && i+1<lengthx)
