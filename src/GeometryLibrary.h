@@ -222,7 +222,9 @@ namespace FreeFermions {
 			size_t edof = geometryParams_.orbitals;
 			std::vector<RealType> oneSiteHoppings;
 			readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename);
-
+			if (oneSiteHoppings.size()!=4*edof*edof) {
+				throw std::runtime_error("Wrong number of hoppings\n");
+			}
 			size_t sites = geometryParams_.sites;
 			for (size_t i=0;i<edof*edof;i++) { // orbital*orbital cases: aa ab ba bb etc
 				MatrixType oneT(sites,sites);
