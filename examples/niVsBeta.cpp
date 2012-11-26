@@ -42,6 +42,7 @@ void doOneBeta(const EngineType& engine,
 	RealType sum = 0;
 	RealType sum2 = 0;
 	RealType denominator = 0;
+	RealType energy = 0;
 	FreeFermions::Combinations combinations(engine.size(),ne[0]);
 	size_t factorToMakeItSmaller = 1;
 	for (size_t i = 0; i<combinations.size(); ++i) {
@@ -55,14 +56,17 @@ void doOneBeta(const EngineType& engine,
 		HilbertStateType thisState(engine,occupations);
 		HilbertStateType phi = thisState;
 		eibOp.applyTo(phi);
-		denominator += scalarProduct(thisState,phi)*factorToMakeItSmaller;
+		RealType tmp= scalarProduct(thisState,phi)*factorToMakeItSmaller;
+		denominator += tmp;
+		energy -= tmp * log(tmp)/beta;
 		LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,site,sigma);
 		myOp2.applyTo(phi);
 		sum += scalarProduct(thisState,phi)*factorToMakeItSmaller;
 		myOp2.applyTo(phi);
 		sum2 += scalarProduct(thisState,phi)*factorToMakeItSmaller;
 	}
-	std::cout<<beta<<" "<<sum<<" "<<denominator<<" "<<sum/denominator<<" "<<sum2/denominator<<"\n";	
+	energy /= denominator;
+	std::cout<<beta<<" "<<sum<<" "<<denominator<<" "<<sum/denominator<<" "<<sum2/denominator<<" "<<energy<<"\n";	
 }
 
 int main(int argc,char *argv[])
