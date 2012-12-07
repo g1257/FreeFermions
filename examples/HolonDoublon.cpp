@@ -97,7 +97,7 @@ int main(int argc,char *argv[])
 	std::vector<RealType> v;
 
 	RealType step = 0;
-	while ((opt = getopt(argc, argv, "n:e:b:s:t:o:i:g:p:")) != -1) {
+	while ((opt = getopt(argc, argv, "n:e:s:t:o:i:g:p:")) != -1) {
 		switch (opt) {
 		case 'n':
 			n = atoi(optarg);

@@ -33,47 +33,34 @@ typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
 void doOneBeta(const EngineType& engine,
-               std::vector<size_t>& ne,
-               OpLibFactoryType& opLibFactory,
                size_t site,
-               size_t sigma,
                RealType beta)
 {
-	RealType sum = 0;
-	RealType sum2 = 0;
-	RealType denominator = 0;
-	RealType energy = 0;
-	FreeFermions::Combinations combinations(engine.size(),ne[0]);
-	size_t factorToMakeItSmaller = 1;
-	for (size_t i = 0; i<combinations.size(); ++i) {
-		OpDiagonalFactoryType opDiagonalFactory(engine);
-		EtoTheBetaHType ebh(beta,engine,0);
-		DiagonalOperatorType& eibOp = opDiagonalFactory(ebh);
-		
-		std::vector<size_t> vTmp(engine.size(),0);
-		for (size_t j=0;j<combinations(i).size();++j) vTmp[combinations(i)[j]]=1;
-		std::vector<std::vector<size_t> > occupations(1,vTmp);
-		HilbertStateType thisState(engine,occupations);
-		HilbertStateType phi = thisState;
-		eibOp.applyTo(phi);
-		RealType tmp= scalarProduct(thisState,phi)*factorToMakeItSmaller;
-		denominator += tmp;
-		energy -= tmp * log(tmp)/beta;
-		LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,site,sigma);
-		myOp2.applyTo(phi);
-		sum += scalarProduct(thisState,phi)*factorToMakeItSmaller;
-		myOp2.applyTo(phi);
-		sum2 += scalarProduct(thisState,phi)*factorToMakeItSmaller;
+	RealType density = 0;
+	for (size_t i = 0; i<engine.size(); ++i) {
+		RealType fermiFactor = 1.0/(1.0 + exp(-beta*engine.eigenvalue(i)));
+		density +=  fermiFactor;
 	}
-	energy /= denominator;
-	std::cout<<beta<<" "<<sum<<" "<<denominator<<" "<<sum/denominator<<" "<<sum2/denominator<<" "<<energy<<"\n";	
+
+	RealType energy = 0;
+	for (size_t i = 0; i<engine.size(); ++i) {
+		RealType fermiFactor = engine.eigenvalue(i)/(1.0 + exp(-beta*engine.eigenvalue(i)));
+		energy +=  fermiFactor;
+	}
+
+	RealType sum = 0;
+	for (size_t i = 0; i<engine.size(); ++i) {
+		RealType fermiFactor = 1.0/(1.0 + exp(-beta*engine.eigenvalue(i)));
+		sum += std::conj(engine.eigenvector(i,site)) * engine.eigenvector(i,site)* fermiFactor;
+	}
+
+	std::cout<<beta<<" "<<sum<<" "<<density<<" "<<energy<<"\n";
 }
 
 int main(int argc,char *argv[])
 {
 	int opt;
 	size_t n =0;
-	size_t electronsUp=0;
 	RealType step = 0;
 	RealType offset=0;
 	size_t total=0;
@@ -82,14 +69,11 @@ int main(int argc,char *argv[])
 	std::vector<RealType> v;
 	std::vector<std::string> str;
 
-	while ((opt = getopt(argc, argv, "n:e:s:p:t:o:i:l")) != -1) {
+	while ((opt = getopt(argc, argv, "n:s:p:t:o:i:l")) != -1) {
 		switch (opt) {
 			case 'n':
 				n = atoi(optarg);
 				v.resize(n,0);
-				break;
-			case 'e':
-				electronsUp = atoi(optarg);
 				break;
 			case 's':
 				site = atoi(optarg);
@@ -149,18 +133,12 @@ int main(int argc,char *argv[])
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(*geometry,concurrency,dof,true);
 
-	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
-	bool debug = false;
-	HilbertStateType gs(engine,ne,debug);
-
-	size_t sigma =0;
 	std::cout<<(*geometry);
 	std::cout<<"#site="<<site<<"\n";
 
-	OpLibFactoryType opLibFactory(engine);
 	for (size_t i=0;i<total;++i) {
 		RealType beta = i*step + offset;
-		doOneBeta(engine,ne,opLibFactory,site,sigma,beta);
+		doOneBeta(engine,site,beta);
 	}
 	delete geometry;
 }
