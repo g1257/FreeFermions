@@ -38,20 +38,20 @@ void doOneBeta(const EngineType& engine,
 {
 	RealType density = 0;
 	for (size_t i = 0; i<engine.size(); ++i) {
-		RealType fermiFactor = 1.0/(1.0 + exp(-beta*engine.eigenvalue(i)));
+		RealType fermiFactor = 1.0/(1.0 + exp(beta*engine.eigenvalue(i)));
 		density +=  fermiFactor;
 	}
 
 	RealType energy = 0;
 	for (size_t i = 0; i<engine.size(); ++i) {
-		RealType fermiFactor = engine.eigenvalue(i)/(1.0 + exp(-beta*engine.eigenvalue(i)));
+		RealType fermiFactor = engine.eigenvalue(i)/(1.0 + exp(beta*engine.eigenvalue(i)));
 		energy +=  fermiFactor;
 	}
 
 	RealType sum = 0;
 	for (size_t i = 0; i<engine.size(); ++i) {
-		RealType fermiFactor = 1.0/(1.0 + exp(-beta*engine.eigenvalue(i)));
-		sum += std::conj(engine.eigenvector(i,site)) * engine.eigenvector(i,site)* fermiFactor;
+		RealType fermiFactor = 1.0/(1.0 + exp(beta*engine.eigenvalue(i)));
+		sum += std::conj(engine.eigenvector(site,i)) * engine.eigenvector(site,i)* fermiFactor;
 	}
 
 	std::cout<<beta<<" "<<sum<<" "<<density<<" "<<energy<<"\n";
