@@ -153,6 +153,14 @@ namespace FreeFermions {
 			for (size_t i=0;i<p.size();i++) t_(i,i) = p[i];
 		}
 
+		template<typename SomeRealType>
+		void addPotential(const SomeRealType& value)
+		{
+			size_t n = t_.n_row();
+
+			for (size_t i=0;i<n;i++) t_(i,i) = value;
+		}
+
 		template<typename ComplexType>
 		void fourierTransform(std::vector<ComplexType>& dest,const MatrixType& src,size_t leg) const
 		{
