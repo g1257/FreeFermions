@@ -93,7 +93,7 @@ namespace FreeFermions {
 		typedef GeometryParamsType_ GeometryParamsType;
 		typedef typename MatrixType::value_type RealType;
 
-		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR};
+		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D};
 
 		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 		
@@ -101,20 +101,21 @@ namespace FreeFermions {
 		: geometryParams_(geometryParams)
 		{
 			switch (geometryParams.type) {
-				case CHAIN:
-					setGeometryChain();
-					break;
-				case LADDER:
-					setGeometryLadder();
-					break;
-				case FEAS:
-					setGeometryFeAs();
-					break;
-				case KTWONIFFOUR:
-					setGeometryKniffour();
-					break;
-				default:
-					assert(false);
+			case CHAIN:
+				setGeometryChain();
+				break;
+			case LADDER:
+				setGeometryLadder();
+				break;
+			case FEAS:
+			case FEAS1D:
+				setGeometryFeAs();
+				break;
+			case KTWONIFFOUR:
+				setGeometryKniffour();
+				break;
+			default:
+				assert(false);
 			}
 		}
 
@@ -212,6 +213,9 @@ namespace FreeFermions {
 			case KTWONIFFOUR:
 				return "kniffour";
 				break;
+			case FEAS1D:
+				return "feas1d";
+				break;
 			default:
 				assert(false);
 			}
@@ -230,7 +234,8 @@ namespace FreeFermions {
 			size_t edof = geometryParams_.orbitals;
 			std::vector<RealType> oneSiteHoppings;
 			readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename);
-			if (oneSiteHoppings.size()!=4*edof*edof) {
+			size_t dirs = (geometryParams_.type==FEAS1D) ? 1 : 4;
+			if (oneSiteHoppings.size()!=dirs*edof*edof) {
 				throw std::runtime_error("Wrong number of hoppings\n");
 			}
 			size_t sites = geometryParams_.sites;
@@ -344,6 +349,8 @@ namespace FreeFermions {
 				if (geometryOption==GeometryParamsType::OPTION_PERIODIC) 
 					t(j*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,j*lengthx) = tx;
 			}
+
+			if (geometryParams_.type==FEAS1D) return;
 
 			RealType ty = oneSiteHoppings[orborb+DIRECTION_Y*orbitalsSquared];
 			for (size_t i=0;i<lengthx;i++) {

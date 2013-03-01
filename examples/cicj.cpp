@@ -96,7 +96,7 @@ int main(int argc,char* argv[])
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
 	size_t sigma = 0;
 	//MatrixType cicj(n,n);
-	size_t norb = (geometryParams.type == GeometryLibraryType::FEAS) ? 2 : 1;
+	size_t norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
 	for (size_t orbital=0; orbital<norb; orbital++) {
 		for (size_t site = 0; site<n ; site++) {
 			OpNormalFactoryType opNormalFactory(engine);

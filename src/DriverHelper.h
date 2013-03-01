@@ -159,6 +159,13 @@ public:
 			return;
 		}
 
+		if (gName == "feas1d") {
+			geometryParams.type = GeometryLibraryType::FEAS1D;
+			if (vstr.size()==4) geometryParams.orbitals=atoi(vstr[3].c_str());
+			else geometryParams.orbitals=2;
+			return;
+		}
+
 		if (gName == "kniffour") {
 			geometryParams.type = GeometryLibraryType::KTWONIFFOUR;
 			geometryParams.isPeriodicY = geometryParams.leg;
