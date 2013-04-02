@@ -93,7 +93,11 @@ namespace FreeFermions {
 		typedef GeometryParamsType_ GeometryParamsType;
 		typedef typename MatrixType::value_type RealType;
 
-		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D};
+		enum {CHAIN=GeometryParamsType::CHAIN,
+			  LADDER=GeometryParamsType::LADDER,
+			  FEAS=GeometryParamsType::FEAS,
+			  KTWONIFFOUR=GeometryParamsType::KTWONIFFOUR,
+			  FEAS1D=GeometryParamsType::FEAS1D};
 
 		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 		

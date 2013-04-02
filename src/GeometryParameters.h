@@ -91,16 +91,81 @@ namespace FreeFermions {
 
 		enum {OPTION_NONE,OPTION_PERIODIC};
 
-		GeometryParameters() 
-		: type(0),
+		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D};
+
+		GeometryParameters(const std::string& file)
+		: type(CHAIN),
 		  sites(0),
 		  leg(0),
 		  isPeriodicY(false),
 		  hopping(1,1.0),
 		  option(OPTION_NONE),
-	          filename(""),
+		  filename(file),
 		  orbitals(1)
-		{}
+		{
+			PsimagLite::IoSimple::In io(filename);
+			io.readline(sites,"TotalNumberOfSites=");
+
+			// default value
+			type = CHAIN;
+
+			std::string geometry("");
+			io.readline(geometry,"GeometryKind=");
+
+			std::string model("");
+			io.readline(model,"Model=");
+
+			int x = 0;
+
+			if (model=="HubbardOneBand")  {//    Immm  Tj1Orb
+				if (geometry=="chain") return;
+				if (geometry!="ladder")
+					throw std::runtime_error("GeometryParameters: HubbardOneBand supports geometry chain or ladder only\n");
+
+				type = LADDER;
+				hopping.resize(2);
+				hopping[0] =  hopping[1]  = 1.0;
+
+				io.readline(x,"IsPeriodicY=");
+				if (x<0)
+					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
+				isPeriodicY = (x>0);
+
+				io.readline(x,"LadderLeg=");
+				if (x<0)
+					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder leg must be non negative\n");
+				leg = x;
+				return;
+			} else if (model=="FeAsBasedSc") {
+
+				try {
+					io.readline(x,"LadderLeg=");
+				} catch (std::exception& e) {
+					x=1;
+					io.rewind();
+				}
+				if (x!=1 && x!=2)
+					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder leg must be 1 or 2 only\n");
+				leg = x;
+				type = (leg==1) ? FEAS1D :  FEAS;
+
+				if (x<1 || x>3)
+					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder orbitals must be 1, 2 or 3 only\n");
+				io.readline(x,"Orbitals=");
+				orbitals = x;
+
+			} else if (model=="Immm") {
+				type = KTWONIFFOUR;
+				io.readline(x,"IsPeriodicY=");
+				if (x<0)
+					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
+				isPeriodicY = (x>0);
+			} else {
+				std::string str("GeometryParameters: unknown model ");
+				str += model + "\n";
+				throw std::runtime_error(str.c_str());
+			}
+		}
 
 		size_t type;
 		size_t sites;

@@ -30,21 +30,13 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 
 int main(int argc,char* argv[])
 {
-
-	GeometryParamsType geometryParams;
-	std::vector<std::string> str;
 	int opt = 0;
 	std::string file("");
-	geometryParams.type = GeometryLibraryType::CHAIN;
 
-	while ((opt = getopt(argc, argv, "f:g:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
-			break;
-		case 'g':
-			PsimagLite::tokenizer(optarg,str,",");
-			DriverHelperType::setMyGeometry(geometryParams,str);
 			break;
 		default: /* '?' */
 			DriverHelperType::usage(argv[0],"-n sites -e electronsUp -g geometry,[leg,filename]");
@@ -57,7 +49,7 @@ int main(int argc,char* argv[])
 		throw std::runtime_error("Wrong usage\n");
 	}
 
-	geometryParams.sites = DriverHelperType::readLabel(file,"TotalNumberOfSites=");
+	GeometryParamsType geometryParams(file);
 	size_t electronsUp = 	DriverHelperType::readLabel(file,"TargetElectronsUp=");
 
 	std::vector<RealType> v;

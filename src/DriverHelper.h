@@ -124,63 +124,6 @@ public:
 		if (v.size()>w.size()) v.resize(w.size());
 		for (size_t i=0;i<w.size();i++) v[i] += w[i];
 	}
-
-	static void setMyGeometry(GeometryParamsType& geometryParams,const std::vector<std::string>& vstr)
-	{
-		// default value
-		geometryParams.type = GeometryLibraryType::CHAIN;
-
-		if (vstr.size()<2) {
-			// assume chain
-			return;
-		}
-
-		std::string gName = vstr[0];
-		if (gName == "chain") {
-			throw std::runtime_error("setMyGeometry: -g chain takes no further arguments\n");
-		}
-
-		geometryParams.leg = atoi(vstr[1].c_str());
-
-		if (gName == "ladder") {
-			if (vstr.size()!=3) {
-				usage("setMyGeometry","-g ladder,leg,isPeriodic");
-				throw std::runtime_error("setMyGeometry: usage is: -g ladder,leg,isPeriodic \n");
-			}
-			geometryParams.type = GeometryLibraryType::LADDER;
-			geometryParams.hopping.resize(2);
-			geometryParams.hopping[0] =  geometryParams.hopping[1]  = 1.0;
-			geometryParams.isPeriodicY = (atoi(vstr[2].c_str())>0);
-			return;
-		}
-
-		if (vstr.size()<3) {
-			usage("setMyGeometry"," -g {feas | ktwoniffour} leg filename");
-			throw std::runtime_error("setMyGeometry: usage is: -g {feas | ktwoniffour} leg filename\n");
-		}
-
-		geometryParams.filename = vstr[2];
-
-		if (gName == "feas") {
-			geometryParams.type = GeometryLibraryType::FEAS;
-			if (vstr.size()==4) geometryParams.orbitals=atoi(vstr[3].c_str());
-			else geometryParams.orbitals=2;
-			return;
-		}
-
-		if (gName == "feas1d") {
-			geometryParams.type = GeometryLibraryType::FEAS1D;
-			if (vstr.size()==4) geometryParams.orbitals=atoi(vstr[3].c_str());
-			else geometryParams.orbitals=2;
-			return;
-		}
-
-		if (gName == "kniffour") {
-			geometryParams.type = GeometryLibraryType::KTWONIFFOUR;
-			geometryParams.isPeriodicY = geometryParams.leg;
-			return;
-		}
-	}
 }; // DriverHelper
 } // namespace Dmrg 
 
