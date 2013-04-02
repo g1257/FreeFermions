@@ -107,23 +107,6 @@ public:
 
 		return x;
 	}
-
-	static void readPotential(std::vector<RealType>& v,const std::string& filename)
-	{
-		std::vector<RealType> w;
-		PsimagLite::IoSimple::In io(filename);
-		try {
-			io.read(w,"PotentialT");
-		} catch (std::exception& e) {
-			std::cerr<<"INFO: No PotentialT in file "<<filename<<"\n";
-		}
-		io.rewind();
-
-		io.read(v,"potentialV");
-		if (w.size()==0) return;
-		if (v.size()>w.size()) v.resize(w.size());
-		for (size_t i=0;i<w.size();i++) v[i] += w[i];
-	}
 }; // DriverHelper
 } // namespace Dmrg 
 

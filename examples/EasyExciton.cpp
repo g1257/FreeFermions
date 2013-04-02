@@ -13,6 +13,7 @@
 #include "DiagonalOperator.h"
 #include "Tokenizer.h"
 #include "GeometryParameters.h"
+#include "DriverHelper.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -28,23 +29,22 @@ typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
+typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 
 int main(int argc,char *argv[])
 {
 	int opt;
-	size_t n =0,electronsUp=0,total=0;
+	std::string file("");
+	size_t total=0;
 	RealType offset = 0;
 	std::vector<size_t> sites;
 	std::vector<std::string> str;
-	bool ladder = false;
 	RealType step = 0;
-	while ((opt = getopt(argc, argv, "n:e:s:t:o:i:l")) != -1) {
+
+	while ((opt = getopt(argc, argv, "f:s:t:o:i:")) != -1) {
 		switch (opt) {
-		case 'n':
-			n = atoi(optarg);
-			break;
-		case 'e':
-			electronsUp = atoi(optarg);
+		case 'f':
+			file=optarg;
 			break;
 		case 's':
 			PsimagLite::tokenizer(optarg,str,",");
@@ -60,37 +60,27 @@ int main(int argc,char *argv[])
 		case 'o':
 			offset = atof(optarg);
 			break;
-		case 'l':
-			ladder = true;
-			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
 		}
 	}
-	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
+
+	if (file=="") {
+		DriverHelperType::usage(argv[0],"-f file");
+		throw std::runtime_error("Wrong usage\n");
+	}
+
+	GeometryParamsType geometryParams(file);
+	size_t electronsUp = DriverHelperType::readLabel(file,"TargetElectronsUp=");
 
 	size_t dof = 1; // spinless
 
-	GeometryParamsType geometryParams;
-	geometryParams.sites = n;
-	GeometryLibraryType* geometry;
-
-	if (!ladder) {
-		geometryParams.type = GeometryLibraryType::CHAIN;
-		geometry = new GeometryLibraryType(geometryParams);
-	} else {
-		geometryParams.type = GeometryLibraryType::LADDER;
-		geometryParams.leg = 2;
-		geometryParams.hopping.resize(2);
-		geometryParams.hopping[0] = 1.0;
-		geometryParams.hopping[1] = 0.5;
-		geometry = new GeometryLibraryType(geometryParams);
-	}
+	GeometryLibraryType geometry(geometryParams);
 
 	std::cerr<<geometry;
 	
 	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(*geometry,concurrency,dof,true);
+	EngineType engine(geometry,concurrency,dof,true);
 
 	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
@@ -119,6 +109,4 @@ int main(int argc,char *argv[])
 		myOp2.applyTo(phi);
 		std::cout<<time<<" "<<scalarProduct(phi,phi)<<"\n";
 	}
-	
-	delete geometry;
 }

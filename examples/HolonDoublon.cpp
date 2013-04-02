@@ -89,23 +89,17 @@ FieldType calcSuperDensity(size_t site,
 int main(int argc,char *argv[])
 {
 	int opt;
-	size_t n =0,electronsUp=0,total=0;
+	std::string file("");
+	size_t total=0;
 	RealType offset = 0;
 	std::vector<size_t> sites;
 	std::vector<std::string> str;
-	GeometryParamsType geometryParams;
-	std::vector<RealType> v;
 
 	RealType step = 0;
-	while ((opt = getopt(argc, argv, "n:e:s:t:o:i:g:p:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:s:t:o:i:")) != -1) {
 		switch (opt) {
-		case 'n':
-			n = atoi(optarg);
-			v.resize(n,0);
-			geometryParams.sites = n;
-			break;
-		case 'e':
-			electronsUp = atoi(optarg);
+		case 'f':
+			file=optarg;
 			break;
 		case 's':
 			str.clear();
@@ -122,27 +116,17 @@ int main(int argc,char *argv[])
 		case 'o':
 			offset = atof(optarg);
 			break;
-		case 'g':
-			str.clear();
-			PsimagLite::tokenizer(optarg,str,",");
-			DriverHelperType::setMyGeometry(geometryParams,str);
-			break;
-		case 'p':
-			DriverHelperType::readPotential(v,optarg);
-			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
 		}
 	}
-	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
+	if (file=="") throw std::runtime_error("Wrong usage\n");
 
+	GeometryParamsType geometryParams(file);
+	size_t electronsUp = DriverHelperType::readLabel(file,"TargetElectronsUp=");
 	size_t dof = 2; // spin up and down
 
 	GeometryLibraryType geometry(geometryParams);
-
-	if (geometryParams.type!=GeometryLibraryType::KTWONIFFOUR) {
-		geometry.addPotential(v);
-	}
 
 	std::cerr<<geometry;
 	

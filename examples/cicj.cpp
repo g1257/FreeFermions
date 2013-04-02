@@ -45,31 +45,16 @@ int main(int argc,char* argv[])
 	}
 
 	if (file=="") {
-		DriverHelperType::usage(argv[0],"-f file -g geometry,[leg,filename]");
+		DriverHelperType::usage(argv[0],"-f file");
 		throw std::runtime_error("Wrong usage\n");
 	}
 
 	GeometryParamsType geometryParams(file);
-	size_t electronsUp = 	DriverHelperType::readLabel(file,"TargetElectronsUp=");
-
-	std::vector<RealType> v;
-	DriverHelperType::readPotential(v,file);
-
-	size_t n = geometryParams.sites;
-	if (v.size()==4*n) {
-		v.resize(2*n);
-	}
-	if (v.size()==2*n && geometryParams.type == GeometryLibraryType::LADDER) {
-		v.resize(n);
-	}
+	size_t electronsUp = DriverHelperType::readLabel(file,"TargetElectronsUp=");
 
 	size_t dof = 1; // spinless
 
 	GeometryLibraryType geometry(geometryParams);
-
- 	if (geometryParams.type!=GeometryLibraryType::KTWONIFFOUR) {
-		geometry.addPotential(v);
-	}
 
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
@@ -83,13 +68,13 @@ int main(int argc,char* argv[])
 	//MatrixType cicj(n,n);
 	size_t norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
 	for (size_t orbital=0; orbital<norb; orbital++) {
-		for (size_t site = 0; site<n ; site++) {
+		for (size_t site = 0; site<geometryParams.sites ; site++) {
 			OpNormalFactoryType opNormalFactory(engine);
-			OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,site+orbital*n,sigma);
-			for (size_t site2=0; site2<n; site2++) {
+			OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,site+orbital*geometryParams.sites,sigma);
+			for (size_t site2=0; site2<geometryParams.sites; site2++) {
 				HilbertStateType phi = gs;
 				myOp.applyTo(phi);
-				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,site2+orbital*n,sigma);
+				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,site2+orbital*geometryParams.sites,sigma);
 				myOp2.applyTo(phi);
 				std::cout<<scalarProduct(gs,phi)<<" ";
 				//cicj(site,site2) += scalarProduct(gs,phi);

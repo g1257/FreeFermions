@@ -13,6 +13,7 @@
 #include "DiagonalOperator.h"
 #include "Tokenizer.h"
 #include "GeometryParameters.h"
+#include "DriverHelper.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -28,6 +29,7 @@ typedef FreeFermions::DiagonalOperator<OneOverZminusHType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
+typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 
 enum {DYN_TYPE_0,DYN_TYPE_1};
 
@@ -87,24 +89,18 @@ void setMyGeometry(GeometryParamsType& geometryParams,const std::vector<std::str
 int main(int argc,char *argv[])
 {
 	int opt;
-	size_t n =0,electronsUp=0,total=0;
+	std::string file("");
+	size_t total=0;
 	RealType offset = 0;
 	std::vector<size_t> sites;
 	std::vector<std::string> str;
 	RealType step = 0;
-	GeometryParamsType geometryParams;
 	size_t dynType = DYN_TYPE_0;
-	
-	geometryParams.type = GeometryLibraryType::CHAIN;
 
-	while ((opt = getopt(argc, argv, "n:e:s:t:o:i:g:d")) != -1) {
+	while ((opt = getopt(argc, argv, "f:s:t:o:i:d")) != -1) {
 		switch (opt) {
-		case 'n':
-			n = atoi(optarg);
-			geometryParams.sites = n;
-			break;
-		case 'e':
-			electronsUp = atoi(optarg);
+		case 'f':
+			file=optarg;
 			break;
 		case 's':
 			PsimagLite::tokenizer(optarg,str,",");
@@ -120,11 +116,6 @@ int main(int argc,char *argv[])
 		case 'o':
 			offset = atof(optarg);
 			break;
-		case 'g':
-			str.clear();
-			PsimagLite::tokenizer(optarg,str,",");
-			setMyGeometry(geometryParams,str);
-			break;
 		case 'd':
 			dynType = DYN_TYPE_1;
 			break;
@@ -133,10 +124,12 @@ int main(int argc,char *argv[])
 		}
 	}
 
-	if (n==0 || geometryParams.sites==0 || sites.size()!=2) {
-			usage("setMyGeometry");
-			throw std::runtime_error("Wrong usage\n");
-		}
+	if (file=="") {
+		throw std::runtime_error("Wrong usage\n");
+	}
+
+	GeometryParamsType geometryParams(file);
+	size_t electronsUp = DriverHelperType::readLabel(file,"TargetElectronsUp=");
 
 	size_t dof = 1; // spinless
 

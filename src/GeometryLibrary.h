@@ -121,6 +121,9 @@ namespace FreeFermions {
 			default:
 				assert(false);
 			}
+			std::vector<RealType> v;
+			readPotential(v,geometryParams_.filename);
+			addPotential(v);
 		}
 
 		void bathify(const std::vector<RealType>& tb)
@@ -142,28 +145,6 @@ namespace FreeFermions {
 				}
 			}
 			t_ = tnew;
-		}
-
-		template<typename SomeRealType>
-		void addPotential(const std::vector<SomeRealType>& p)
-		{
-			if (p.size()==0) return;
-			if (p.size()!=t_.n_row()) {
-				std::string str(__FILE__);
-				str += " " + ttos(__LINE__) + "\n";
-				str += "addPotential(...): expecting " + ttos(t_.n_row());
-				str += " numbers but " + ttos(p.size()) + " found instead.\n";
-				throw std::runtime_error(str.c_str());
-			}
-			for (size_t i=0;i<p.size();i++) t_(i,i) = p[i];
-		}
-
-		template<typename SomeRealType>
-		void addPotential(const SomeRealType& value)
-		{
-			size_t n = t_.n_row();
-
-			for (size_t i=0;i<n;i++) t_(i,i) = value;
 		}
 
 		template<typename ComplexType>
@@ -225,12 +206,33 @@ namespace FreeFermions {
 			}
 			return "unknown";
 		}
+
+		void addPotential(const RealType& value)
+		{
+			size_t n = t_.n_row();
+
+			for (size_t i=0;i<n;i++) t_(i,i) = value;
+		}
 		
 		template<typename MType,typename PType>
 		friend std::ostream& operator<<(std::ostream& os,
 	                                    const GeometryLibrary<MType,PType>& gl);
 
 	private:
+
+		template<typename SomeRealType>
+		void addPotential(const std::vector<SomeRealType>& p)
+		{
+			if (p.size()==0) return;
+			if (p.size()!=t_.n_row()) {
+				std::string str(__FILE__);
+				str += " " + ttos(__LINE__) + "\n";
+				str += "addPotential(...): expecting " + ttos(t_.n_row());
+				str += " numbers but " + ttos(p.size()) + " found instead.\n";
+				throw std::runtime_error(str.c_str());
+			}
+			for (size_t i=0;i<p.size();i++) t_(i,i) = p[i];
+		}
 
 		void setGeometryFeAs()
 		{
@@ -459,6 +461,23 @@ namespace FreeFermions {
 			for (size_t i=0;i<nrow;i++)
 				for(size_t j=0;j<ncol;j++)
 					t_(i,j)=0;
+		}
+
+		void readPotential(std::vector<RealType>& v,const std::string& filename)
+		{
+			std::vector<RealType> w;
+			PsimagLite::IoSimple::In io(filename);
+			try {
+				io.read(w,"PotentialT");
+			} catch (std::exception& e) {
+				std::cerr<<"INFO: No PotentialT in file "<<filename<<"\n";
+			}
+			io.rewind();
+
+			io.read(v,"potentialV");
+			if (w.size()==0) return;
+			if (v.size()>w.size()) v.resize(w.size());
+			for (size_t i=0;i<w.size();i++) v[i] += w[i];
 		}
 
 		const GeometryParamsType& geometryParams_;

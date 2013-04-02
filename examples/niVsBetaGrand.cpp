@@ -62,63 +62,49 @@ void doOneBeta(const EngineType& engine,
 int main(int argc,char *argv[])
 {
 	int opt;
-	size_t n =0;
+	std::string file("");
 	RealType step = 0;
 	RealType offset=0;
 	size_t total=0;
 	size_t site = 0;
-	std::vector<RealType> v;
-	std::vector<std::string> str;
-	GeometryParamsType geometryParams;
 	RealType mu = 0;
 
-	while ((opt = getopt(argc, argv, "n:s:p:t:o:i:m:g:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:s:t:o:i:m:")) != -1) {
 		switch (opt) {
-			case 'n':
-				n = atoi(optarg);
-				geometryParams.sites = n;
-				break;
-			case 's':
-				site = atoi(optarg);
-				break;
-			case 'p':
-				DriverHelperType::readPotential(v,optarg);
-				break;
-			case 't':
-				total = atoi(optarg);
-				break;
-			case 'i':
-				step = atof(optarg);
-				break;
-			case 'o':
-				offset = atof(optarg);
-				break;
-			case 'm':
-				mu = atof(optarg);
-				break;
-			case 'g':
-				str.clear();
-				PsimagLite::tokenizer(optarg,str,",");
-				DriverHelperType::setMyGeometry(geometryParams,str);
-				break;
-			default: /* '?' */
-				DriverHelperType::usage(argv[0],"-n sites -g geometry,[leg,filename]");
-				throw std::runtime_error("Wrong usage\n");
+		case 'f':
+			file=optarg;
+			break;
+		case 's':
+			site = atoi(optarg);
+			break;
+		case 't':
+			total = atoi(optarg);
+			break;
+		case 'i':
+			step = atof(optarg);
+			break;
+		case 'o':
+			offset = atof(optarg);
+			break;
+		case 'm':
+			mu = atof(optarg);
+			break;
+		default: /* '?' */
+			throw std::runtime_error("Wrong usage\n");
 		}
 	}
 
-	if (n==0 || total==0) {
-		DriverHelperType::usage(argv[0],"-n sites -g geometry,[leg,filename]");
+	if (file=="") {
+		DriverHelperType::usage(argv[0],"-f file");
 		throw std::runtime_error("Wrong usage\n");
 	}
+
+	GeometryParamsType geometryParams(file);
 
 	size_t dof = 1; // spinless
 	GeometryLibraryType geometry(geometryParams);
 
-	geometry.addPotential(v);
 	geometry.addPotential(mu);
-
-	std::cerr<<v;
 
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);

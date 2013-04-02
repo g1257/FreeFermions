@@ -42,51 +42,39 @@ RealType fermi(const RealType& x)
 int main(int argc,char *argv[])
 {
 	int opt;
+	std::string file("");
 	size_t n =0;
 	RealType beta = 0;
 	RealType mu=0;
-	std::vector<RealType> v;
-	std::vector<std::string> str;
-	GeometryParamsType geometryParams;
 
-	while ((opt = getopt(argc, argv, "n:p:m:b:g:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:m:b:")) != -1) {
 		switch (opt) {
-			case 'n':
-				n = atoi(optarg);
-				geometryParams.sites = n;
-				break;
-			case 'p':
-				DriverHelperType::readPotential(v,optarg);
-				break;
-			case 'm':
-				mu = atof(optarg);
-				break;
-			case 'b':
-				beta = atof(optarg);
-				break;
-			case 'g':
-				str.clear();
-				PsimagLite::tokenizer(optarg,str,",");
-				DriverHelperType::setMyGeometry(geometryParams,str);
-				break;
-			default: /* '?' */
-				DriverHelperType::usage(argv[0],"-n sites -g geometry,[leg,filename]");
-				throw std::runtime_error("Wrong usage\n");
+		case 'f':
+			file=optarg;
+			break;
+		case 'm':
+			mu = atof(optarg);
+			break;
+		case 'b':
+			beta = atof(optarg);
+			break;
+		default: /* '?' */
+			DriverHelperType::usage(argv[0],"-n sites -g geometry,[leg,filename]");
+			throw std::runtime_error("Wrong usage\n");
 		}
 	}
 
-	if (n==0) {
-		DriverHelperType::usage(argv[0],"-n sites -g geometry,[leg,filename]");
+	if (file=="") {
+		DriverHelperType::usage(argv[0],"-f file");
 		throw std::runtime_error("Wrong usage\n");
 	}
+
+	GeometryParamsType geometryParams(file);
 
 	size_t dof = 1; // spinless
 	GeometryLibraryType geometry(geometryParams);
 
-	geometry.addPotential(v);
 	geometry.addPotential(mu);
-
-	std::cerr<<v;
 
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
