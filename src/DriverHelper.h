@@ -99,6 +99,15 @@ public:
 		//std::cout<<"\n";
 	}
 
+	static int readLabel(const std::string& filename,const std::string& label)
+	{
+		PsimagLite::IoSimple::In io(filename);
+		int x = 0;
+		io.readline(x,label);
+
+		return x;
+	}
+
 	static void readPotential(std::vector<RealType>& v,const std::string& filename)
 	{
 		std::vector<RealType> w;

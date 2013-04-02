@@ -30,46 +30,45 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 
 int main(int argc,char* argv[])
 {
-	size_t n = 0;
-	size_t electronsUp = 0;
-	std::vector<RealType> v;
+
 	GeometryParamsType geometryParams;
 	std::vector<std::string> str;
 	int opt = 0;
-	
+	std::string file("");
 	geometryParams.type = GeometryLibraryType::CHAIN;
-	
-	while ((opt = getopt(argc, argv, "n:e:g:p:")) != -1) {
+
+	while ((opt = getopt(argc, argv, "f:g:")) != -1) {
 		switch (opt) {
-			case 'n':
-				n = atoi(optarg);
-				geometryParams.sites = n;
-				break;
-			case 'e':
-				electronsUp = atoi(optarg);
-				break;
-			case 'g':
-				PsimagLite::tokenizer(optarg,str,",");
-				DriverHelperType::setMyGeometry(geometryParams,str);
-				break;
-			case 'p':
-				DriverHelperType::readPotential(v,optarg);
-				break;
-			default: /* '?' */
-				DriverHelperType::usage(argv[0],"-n sites -e electronsUp -g geometry,[leg,filename]");
-				throw std::runtime_error("Wrong usage\n");
+		case 'f':
+			file=optarg;
+			break;
+		case 'g':
+			PsimagLite::tokenizer(optarg,str,",");
+			DriverHelperType::setMyGeometry(geometryParams,str);
+			break;
+		default: /* '?' */
+			DriverHelperType::usage(argv[0],"-n sites -e electronsUp -g geometry,[leg,filename]");
+			throw std::runtime_error("Wrong usage\n");
 		}
 	}
+
+	if (file=="") {
+		DriverHelperType::usage(argv[0],"-f file -g geometry,[leg,filename]");
+		throw std::runtime_error("Wrong usage\n");
+	}
+
+	geometryParams.sites = DriverHelperType::readLabel(file,"TotalNumberOfSites=");
+	size_t electronsUp = 	DriverHelperType::readLabel(file,"TargetElectronsUp=");
+
+	std::vector<RealType> v;
+	DriverHelperType::readPotential(v,file);
+
+	size_t n = geometryParams.sites;
 	if (v.size()==4*n) {
 		v.resize(2*n);
 	}
 	if (v.size()==2*n && geometryParams.type == GeometryLibraryType::LADDER) {
 		v.resize(n);
-	}
-
-	if (n==0 || geometryParams.sites==0) {
-		DriverHelperType::usage(argv[0],"-n sites -e electronsUp -g geometry,[leg,filename]");
-		throw std::runtime_error("Wrong usage\n");
 	}
 
 	size_t dof = 1; // spinless
@@ -78,13 +77,7 @@ int main(int argc,char* argv[])
 
  	if (geometryParams.type!=GeometryLibraryType::KTWONIFFOUR) {
 		geometry.addPotential(v);
-	} /*else {
-		v.clear();
-		size_t blocks = size_t(n/4);
-		v.resize(7*blocks);
-		for (size_t i=0;i<blocks;i++) v[7*i+6]= -10.0;
-		geometry.addPotential(v);
-	}*/
+	}
 
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
