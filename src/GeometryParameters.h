@@ -167,6 +167,15 @@ namespace FreeFermions {
 			}
 		}
 
+		static int readLabel(const std::string& filename,const std::string& label)
+		{
+			PsimagLite::IoSimple::In io(filename);
+			int x = 0;
+			io.readline(x,label);
+
+			return x;
+		}
+
 		size_t type;
 		size_t sites;
 		size_t leg;

@@ -12,7 +12,6 @@
 #include "HilbertState.h"
 #include "GeometryParameters.h"
 #include "Tokenizer.h"
-#include "DriverHelper.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -24,7 +23,6 @@ typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLib
 typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
-typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 
 
@@ -39,18 +37,16 @@ int main(int argc,char* argv[])
 			file=optarg;
 			break;
 		default: /* '?' */
-			DriverHelperType::usage(argv[0],"-n sites -e electronsUp -g geometry,[leg,filename]");
 			throw std::runtime_error("Wrong usage\n");
 		}
 	}
 
 	if (file=="") {
-		DriverHelperType::usage(argv[0],"-f file");
 		throw std::runtime_error("Wrong usage\n");
 	}
 
 	GeometryParamsType geometryParams(file);
-	size_t electronsUp = DriverHelperType::readLabel(file,"TargetElectronsUp=");
+	size_t electronsUp = GeometryParamsType::readLabel(file,"TargetElectronsUp=");
 
 	size_t dof = 1; // spinless
 

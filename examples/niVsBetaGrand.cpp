@@ -15,7 +15,6 @@
 #include "LibraryOperator.h"
 #include "Combinations.h"
 #include "GeometryParameters.h"
-#include "DriverHelper.h"
 
 typedef double RealType;
 typedef RealType FieldType;
@@ -32,7 +31,6 @@ typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
-typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 
 void doOneBeta(const EngineType& engine,
                size_t site,
@@ -95,7 +93,6 @@ int main(int argc,char *argv[])
 	}
 
 	if (file=="") {
-		DriverHelperType::usage(argv[0],"-f file");
 		throw std::runtime_error("Wrong usage\n");
 	}
 

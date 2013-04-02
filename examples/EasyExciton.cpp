@@ -13,7 +13,6 @@
 #include "DiagonalOperator.h"
 #include "Tokenizer.h"
 #include "GeometryParameters.h"
-#include "DriverHelper.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -29,7 +28,6 @@ typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
-typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 
 int main(int argc,char *argv[])
 {
@@ -66,12 +64,11 @@ int main(int argc,char *argv[])
 	}
 
 	if (file=="") {
-		DriverHelperType::usage(argv[0],"-f file");
 		throw std::runtime_error("Wrong usage\n");
 	}
 
 	GeometryParamsType geometryParams(file);
-	size_t electronsUp = DriverHelperType::readLabel(file,"TargetElectronsUp=");
+	size_t electronsUp = GeometryParamsType::readLabel(file,"TargetElectronsUp=");
 
 	size_t dof = 1; // spinless
 

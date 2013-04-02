@@ -13,7 +13,6 @@
 #include "DiagonalOperator.h"
 #include "Tokenizer.h"
 #include "GeometryParameters.h"
-#include "DriverHelper.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -29,7 +28,6 @@ typedef FreeFermions::DiagonalOperator<OneOverZminusHType> DiagonalOperatorType;
 typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
-typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 
 enum {DYN_TYPE_0,DYN_TYPE_1};
 
@@ -129,7 +127,7 @@ int main(int argc,char *argv[])
 	}
 
 	GeometryParamsType geometryParams(file);
-	size_t electronsUp = DriverHelperType::readLabel(file,"TargetElectronsUp=");
+	size_t electronsUp = GeometryParamsType::readLabel(file,"TargetElectronsUp=");
 
 	size_t dof = 1; // spinless
 

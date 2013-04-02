@@ -18,7 +18,6 @@
 #include "Tokenizer.h" // in PsimagLite
 #include "GeometryParameters.h"
 #include "Range.h"
-#include "DriverHelper.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -36,7 +35,6 @@ typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
-typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 
 FieldType calcSuperDensity(size_t site,
                              size_t site2,
@@ -123,7 +121,7 @@ int main(int argc,char *argv[])
 	if (file=="") throw std::runtime_error("Wrong usage\n");
 
 	GeometryParamsType geometryParams(file);
-	size_t electronsUp = DriverHelperType::readLabel(file,"TargetElectronsUp=");
+	size_t electronsUp = GeometryParamsType::readLabel(file,"TargetElectronsUp=");
 	size_t dof = 2; // spin up and down
 
 	GeometryLibraryType geometry(geometryParams);

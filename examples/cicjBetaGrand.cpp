@@ -15,7 +15,6 @@
 #include "LibraryOperator.h"
 #include "Combinations.h"
 #include "GeometryParameters.h"
-#include "DriverHelper.h"
 
 typedef double RealType;
 typedef RealType FieldType;
@@ -32,7 +31,6 @@ typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
-typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 
 RealType fermi(const RealType& x)
 {
@@ -59,13 +57,11 @@ int main(int argc,char *argv[])
 			beta = atof(optarg);
 			break;
 		default: /* '?' */
-			DriverHelperType::usage(argv[0],"-n sites -g geometry,[leg,filename]");
 			throw std::runtime_error("Wrong usage\n");
 		}
 	}
 
 	if (file=="") {
-		DriverHelperType::usage(argv[0],"-f file");
 		throw std::runtime_error("Wrong usage\n");
 	}
 
