@@ -199,11 +199,11 @@ namespace FreeFermions {
 			}
 
 			if (x>0) return x;
-			if (v.size()<2) {
+			if (v.size()<1) {
 				std::string str("Incorrect TargetQuantumNumbers line\n");
 				throw std::runtime_error(str.c_str());
 			}
-			return v[1]*nsites;
+			return v[0]*nsites;
 		}
 
 		size_t type;
