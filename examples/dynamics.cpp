@@ -127,7 +127,7 @@ int main(int argc,char *argv[])
 	}
 
 	GeometryParamsType geometryParams(file);
-	size_t electronsUp = GeometryParamsType::readLabel(file,"TargetElectronsUp=");
+	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
 
 	size_t dof = 1; // spinless
 

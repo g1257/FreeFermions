@@ -121,7 +121,8 @@ int main(int argc,char *argv[])
 	if (file=="") throw std::runtime_error("Wrong usage\n");
 
 	GeometryParamsType geometryParams(file);
-	size_t electronsUp = GeometryParamsType::readLabel(file,"TargetElectronsUp=");
+	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
+
 	size_t dof = 2; // spin up and down
 
 	GeometryLibraryType geometry(geometryParams);

@@ -167,13 +167,43 @@ namespace FreeFermions {
 			}
 		}
 
-		static int readLabel(const std::string& filename,const std::string& label)
+		static int readElectrons(const std::string& filename,size_t nsites)
 		{
 			PsimagLite::IoSimple::In io(filename);
 			int x = 0;
-			io.readline(x,label);
+			try {
+				io.readline(x,"TargetElectronsUp=");
+			} catch (std::exception& e)
+			{
+				x=0;
+				io.rewind();
+			}
 
-			return x;
+			std::vector<RealType> v;
+			try {
+				io.read(v,"TargetQuantumNumbers");
+			} catch (std::exception& e)
+			{
+				v.resize(0);
+				io.rewind();
+			}
+
+			if (x==0 && v.size()==0) {
+				std::string str("Either TargetElectronsUp or TargetQuantumNumbers is need\n");
+				throw std::runtime_error(str.c_str());
+			}
+
+			if (x>0 && v.size()>0) {
+				std::string str("Having both TargetElectronsUp and TargetQuantumNumbers is an error\n");
+				throw std::runtime_error(str.c_str());
+			}
+
+			if (x>0) return x;
+			if (v.size()<2) {
+				std::string str("Incorrect TargetQuantumNumbers line\n");
+				throw std::runtime_error(str.c_str());
+			}
+			return v[1]*nsites;
 		}
 
 		size_t type;
