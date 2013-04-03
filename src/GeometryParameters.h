@@ -170,12 +170,12 @@ namespace FreeFermions {
 		static int readElectrons(const std::string& filename,size_t nsites)
 		{
 			PsimagLite::IoSimple::In io(filename);
-			int x = 0;
+			int x = -1;
 			try {
 				io.readline(x,"TargetElectronsUp=");
 			} catch (std::exception& e)
 			{
-				x=0;
+				x=-1;
 				io.rewind();
 			}
 
@@ -188,22 +188,22 @@ namespace FreeFermions {
 				io.rewind();
 			}
 
-			if (x==0 && v.size()==0) {
+			if (x<0 && v.size()==0) {
 				std::string str("Either TargetElectronsUp or TargetQuantumNumbers is need\n");
 				throw std::runtime_error(str.c_str());
 			}
 
-			if (x>0 && v.size()>0) {
+			if (x>=0 && v.size()>0) {
 				std::string str("Having both TargetElectronsUp and TargetQuantumNumbers is an error\n");
 				throw std::runtime_error(str.c_str());
 			}
 
-			if (x>0) return x;
+			if (x>=0) return x;
 			if (v.size()<1) {
 				std::string str("Incorrect TargetQuantumNumbers line\n");
 				throw std::runtime_error(str.c_str());
 			}
-			return v[0]*nsites;
+			return static_cast<size_t>(round(v[0]*nsites));
 		}
 
 		size_t type;
