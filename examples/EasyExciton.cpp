@@ -35,19 +35,12 @@ int main(int argc,char *argv[])
 	std::string file("");
 	size_t total=0;
 	RealType offset = 0;
-	std::vector<size_t> sites;
-	std::vector<std::string> str;
 	RealType step = 0;
 
-	while ((opt = getopt(argc, argv, "f:s:t:o:i:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:t:o:i:")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
-			break;
-		case 's':
-			PsimagLite::tokenizer(optarg,str,",");
-			for (size_t i=0;i<str.size();i++)
-				sites.push_back(atoi(str[i].c_str()));
 			break;
 		case 't':
 			total = atoi(optarg);
@@ -69,6 +62,8 @@ int main(int argc,char *argv[])
 
 	GeometryParamsType geometryParams(file);
 	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
+	std::vector<size_t> sites;
+	GeometryParamsType::readVector(sites,file,"TSPSites");
 
 	size_t dof = 1; // spinless
 

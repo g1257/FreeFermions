@@ -206,6 +206,20 @@ namespace FreeFermions {
 			return static_cast<size_t>(round(v[0]*nsites));
 		}
 
+		template<typename SomeFieldType>
+		static void readVector(std::vector<SomeFieldType>& v,const std::string& filename,const std::string& label)
+		{
+			PsimagLite::IoSimple::In io(filename);
+			io.read(v,label);
+		}
+
+		template<typename SomeFieldType>
+		static void readLabel(SomeFieldType& v,const std::string& filename,const std::string& label)
+		{
+			PsimagLite::IoSimple::In io(filename);
+			io.readline(v,label);
+		}
+
 		size_t type;
 		size_t sites;
 		size_t leg;
