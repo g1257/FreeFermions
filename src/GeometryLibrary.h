@@ -221,9 +221,20 @@ namespace FreeFermions {
 	private:
 
 		template<typename SomeRealType>
-		void addPotential(const std::vector<SomeRealType>& p)
+		void addPotential(const std::vector<SomeRealType>& p2)
 		{
-			if (p.size()==0) return;
+			if (p2.size()==0) return;
+
+			std::vector<SomeRealType> p = p2;
+			if (p.size()!=t_.n_row()) {
+				size_t halfSize = size_t(p2.size()/2);
+				p.resize(halfSize);
+				std::string str(__FILE__);
+				str += " " + ttos(__LINE__) + "\n";
+				str += "addPotential(...): resizing potential to " + ttos(t_.n_row());
+				str += " from " + ttos(p2.size()) + "\n";
+				std::cerr<<str;
+			}
 			if (p.size()!=t_.n_row()) {
 				std::string str(__FILE__);
 				str += " " + ttos(__LINE__) + "\n";
@@ -239,8 +250,8 @@ namespace FreeFermions {
 			std::vector<MatrixType> t;
 			size_t edof = geometryParams_.orbitals;
 			std::vector<RealType> oneSiteHoppings;
-			readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename);
 			size_t dirs = (geometryParams_.type==FEAS1D) ? 1 : 4;
+			readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename,dirs);
 			if (oneSiteHoppings.size()!=dirs*edof*edof) {
 				throw std::runtime_error("Wrong number of hoppings\n");
 			}
@@ -425,10 +436,31 @@ namespace FreeFermions {
 			return y + x*leg;
 		}
 
-		void readOneSiteHoppings(std::vector<RealType>& v,const std::string& filename)
+		void readOneSiteHoppings(std::vector<RealType>& v,const std::string& filename,size_t dirs)
 		{
 			typename PsimagLite::IoSimple::In io(filename);
-			io.read(v,"hoppings");
+			v.clear();
+			for (size_t i=0;i<dirs;i++) {
+				MatrixType m;
+				io.readMatrix(m,"Connectors");
+				if (m.n_row()!=m.n_col() || m.n_row()!=geometryParams_.orbitals) {
+					std::string str(__FILE__);
+					str += " " + ttos(__LINE__) + "\n";
+					str += "Error in input file "+filename+" label: Connectors\n";
+					throw std::runtime_error(str.c_str());
+				}
+				appendToVector(v,m);
+			}
+		}
+
+		void appendToVector(std::vector<RealType>& v,const MatrixType& m) const
+		{
+			for (size_t i=0;i<m.n_row();i++) {
+				for (size_t j=0;j<m.n_col();j++) {
+					assert(counter<v.size());
+					v.push_back(m(i,j));
+				}
+			}
 		}
 
 		template<typename MatrixComplexType>

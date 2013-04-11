@@ -94,13 +94,13 @@ int main(int argc,char *argv[])
 	PTHREADS_NAME<ParallelHolonDoublonType> threadedHolonDoublon;
 	PTHREADS_NAME<ParallelHolonDoublonType>::setThreads(nthreads);
 
-	typename ParallelHolonDoublonType::HolonDoublonParamsType params(ne,
-																	sites,
-																	sigma3,
-																	offset,
-																	step,
-																	debug,
-																	verbose);
+	ParallelHolonDoublonType::HolonDoublonParamsType params(ne,
+															sites,
+															sigma3,
+															offset,
+															step,
+															debug,
+															verbose);
 	ParallelHolonDoublonType helperHolonDoublon(engine,params);
 
 	FieldType superdensity = helperHolonDoublon.calcSuperDensity(sites[0],sites[1]);
