@@ -133,7 +133,11 @@ public:
 
 	ParallelHolonDoublon(const EngineType& engine,const HolonDoublonParamsType& params)
 		: engine_(engine),params_(params),gs_(engine,params.ne,params.debug)
-	{}
+	{
+		if (params.sites.size()!=3) {
+			throw std::runtime_error("ParallelHolonDoublon: expecting 3 sites\n");
+		}
+	}
 
 	void thread_function_(size_t threadNum,size_t blockSize,size_t total,pthread_mutex_t* myMutex)
 	{

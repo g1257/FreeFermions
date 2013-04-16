@@ -36,12 +36,16 @@ int main(int argc,char *argv[])
 	std::string file("");
 	size_t total=0;
 	RealType offset = 0;
+	size_t site3 = 0;
 
 	RealType step = 0;
-	while ((opt = getopt(argc, argv, "f:t:o:i:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:p:t:o:i:")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
+			break;
+		case 'p':
+			site3 = atoi(optarg);
 			break;
 		case 't':
 			total = atoi(optarg);
@@ -62,6 +66,8 @@ int main(int argc,char *argv[])
 	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
 	std::vector<size_t> sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
+	sites.resize(3);
+	sites[2] = site3;
 	size_t nthreads = 0;
 	GeometryParamsType::readLabel(nthreads,file,"Threads=");
 	assert(nthreads>0);
