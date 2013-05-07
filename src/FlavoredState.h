@@ -107,7 +107,7 @@ namespace FreeFermions {
 				data_[sigma] = portion;
 			}
 			
-//			void fill(const std::vector<size_t>& ne)
+//			void fill(const typename PsimagLite::Vector<size_t>::Type& ne)
 //			{
 //				if (ne.size()!=data_.size()) throw std::runtime_error(
 //						"FlavoredState::fill()\n");
@@ -128,7 +128,7 @@ namespace FreeFermions {
 			}
 			
 			
-//			void occupations(std::vector<size_t>& ns,size_t flavor) const
+//			void occupations(typename PsimagLite::Vector<size_t>::Type& ns,size_t flavor) const
 //			{
 //				ns.resize(size_);
 //				for (size_t i = 0; i < size_; i++) ns[i] = 0;
@@ -211,7 +211,7 @@ namespace FreeFermions {
 				return sum;
 			}
 
-			std::vector<LevelsType> data_;
+			typename PsimagLite::Vector<LevelsType>::Type data_;
 	}; // FlavoredState
 	
 	template<typename T,typename U>
@@ -235,7 +235,7 @@ namespace FreeFermions {
 		return true;
 	}
 
-	inline bool operator<(const std::vector<bool>& v1,const std::vector<bool>& v2)
+	inline bool operator<(const typename PsimagLite::Vector<bool>::Type& v1,const typename PsimagLite::Vector<bool>::Type& v2)
 	{
 		for (size_t i=0;i<v1.size();i++) {
 			if (v1[i] && !v2[i]) return false;

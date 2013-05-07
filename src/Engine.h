@@ -149,7 +149,7 @@ namespace FreeFermions {
 			size_t dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
 			bool verbose_;
 			PsimagLite::Matrix<FieldType> eigenvectors_;
-			std::vector<RealType> eigenvalues_;
+			typename PsimagLite::Vector<RealType>::Type eigenvalues_;
 	}; // Engine
 } // namespace FreeFermions 
 

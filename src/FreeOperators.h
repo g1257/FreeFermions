@@ -107,7 +107,7 @@ namespace FreeFermions {
 		typedef typename OperatorType::FieldType FieldType;
 		typedef IndexGenerator IndexGeneratorType;
 		typedef PsimagLite::Permutations<IndexGeneratorType> PermutationsType;
-		typedef std::vector<OpPointerType> OpPointersType;
+		typedef typename PsimagLite::Vector<OpPointerType>::Type OpPointersType;
 
 		enum {CREATION = OperatorType::CREATION,
 		      DESTRUCTION = OperatorType::DESTRUCTION,
@@ -117,8 +117,8 @@ namespace FreeFermions {
 		              const IndexGeneratorType& lambda,
 		              const PermutationsType& lambda2,
 		              size_t sigma,
-		              const std::vector<size_t>& occupations,
-		              const std::vector<size_t>& occupations2)
+		              const typename PsimagLite::Vector<size_t>::Type& occupations,
+		              const typename PsimagLite::Vector<size_t>::Type& occupations2)
 			: value_(1),loc_(0)
 		{
 			size_t counter3 = addAtTheFront(occupations,DRY_RUN);
@@ -164,7 +164,7 @@ namespace FreeFermions {
 
 		void removeNonCsOrDs()
 		{
-			std::vector<FreeOperator> dataOld = data_;
+			typename PsimagLite::Vector<FreeOperator>::Type dataOld = data_;
 			data_.clear();
 			for (size_t i=0;i<dataOld.size();i++) {
 				size_t type1 = dataOld[i].type;
@@ -180,7 +180,7 @@ namespace FreeFermions {
 		void reverse()
 		{
 			// flip'em
-			std::vector<FreeOperator> dataCopy = data_;
+			typename PsimagLite::Vector<FreeOperator>::Type dataCopy = data_;
 			size_t n = data_.size();
 			for (size_t i=0;i<n;i++)
 				data_[i] = dataCopy[n-i-1];
@@ -193,7 +193,7 @@ namespace FreeFermions {
 
 		void removePair(size_t thisLambda)
 		{
-			std::vector<FreeOperator>::iterator itp = data_.begin();
+			typename PsimagLite::Vector<FreeOperator>::Type::iterator itp = data_.begin();
 			data_.erase(itp);
 			// find again because the erase changed data:
 			int y = findOpGivenLambda(thisLambda,0);
@@ -221,7 +221,7 @@ namespace FreeFermions {
 
 	private:
 
-		size_t addAtTheBack(const std::vector<size_t>&  occupations2,size_t typeOfRun)
+		size_t addAtTheBack(const typename PsimagLite::Vector<size_t>::Type&  occupations2,size_t typeOfRun)
 		{
 			size_t counter = 0;
 			for (int i=occupations2.size()-1;i>=0;i--) {
@@ -239,7 +239,7 @@ namespace FreeFermions {
 			return counter;
 		}
 
-		 size_t addAtTheFront(const std::vector<size_t>&  occupations,size_t typeOfRun)
+		 size_t addAtTheFront(const typename PsimagLite::Vector<size_t>::Type&  occupations,size_t typeOfRun)
 		 {
 			 size_t counter = 0;
 			 for (size_t i=0;i<occupations.size();++i) {
@@ -293,7 +293,7 @@ namespace FreeFermions {
 			 }
 		 }
 
-		std::vector<FreeOperator> data_;
+		typename PsimagLite::Vector<FreeOperator>::Type data_;
 		RealType value_;
 		size_t loc_;
 	}; // FreeOperators

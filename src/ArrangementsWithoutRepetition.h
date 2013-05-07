@@ -139,7 +139,7 @@ namespace FreeFermions {
 
 	private:
 
-		std::vector<size_t> data_;
+		typename PsimagLite::Vector<size_t>::Type data_;
 		size_t k_;
 	}; // ArrangementsWithoutRepetition
 	

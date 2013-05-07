@@ -66,7 +66,7 @@ int main(int argc,char *argv[])
 
 	GeometryParamsType geometryParams(file);
 	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
-	std::vector<size_t> sites;
+	typename PsimagLite::Vector<size_t>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
 	sites.resize(3);
 	sites[2] = site3;
@@ -80,7 +80,7 @@ int main(int argc,char *argv[])
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
 
-	std::vector<size_t> ne(dof,electronsUp); // 8 up and 8 down
+	typename PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
 

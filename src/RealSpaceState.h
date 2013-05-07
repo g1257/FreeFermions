@@ -97,9 +97,9 @@ namespace FreeFermions {
 		typedef typename CorDOperatorType_::EngineType EngineType;
 		typedef typename CorDOperatorType_::RealType RealType;
 		typedef typename CorDOperatorType_::FieldType FieldType;
-		typedef  FlavoredState<std::vector<bool>,CorDOperatorType_> FlavoredStateType;
+		typedef  FlavoredState<typename PsimagLite::Vector<bool>,CorDOperatorType_>::Type FlavoredStateType;
 		typedef RealSpaceState<CorDOperatorType_> ThisType;
-		typedef ArrangementsWithoutRepetition<std::vector<size_t> >
+		typedef ArrangementsWithoutRepetition<typename PsimagLite::Vector<size_t>::Type >
 						ArrangementsWithoutRepetitionType;
 		typedef Permutations<ArrangementsWithoutRepetitionType> PermutationsType;
 
@@ -113,7 +113,7 @@ namespace FreeFermions {
 
 		// it's the g.s. for now, FIXME change it later to allow more flex.
 		RealSpaceState(const EngineType& engine,
-		              const std::vector<size_t>& ne,
+		              const typename PsimagLite::Vector<size_t>::Type& ne,
 		              bool debug = false)
 		:  engine_(&engine),ne_(ne),debug_(debug),sorted_(false),zeroVals_(0)
 		{
@@ -164,9 +164,9 @@ namespace FreeFermions {
 			sort();
 
 			FlavoredStateType prev = terms_[0];
-			std::vector<FlavoredStateType> terms2 = terms_;
+			typename PsimagLite::Vector<FlavoredStateType>::Type terms2 = terms_;
 			terms_.clear();
-			std::vector<FieldType> values2 = values_;
+			typename PsimagLite::Vector<FieldType>::Type values2 = values_;
 			values_.clear();
 			terms_.push_back(prev);
 			values_.push_back(values_[0]);
@@ -180,10 +180,10 @@ namespace FreeFermions {
 		void sort()
 		{
 			if (terms_.size()<2 || sorted_) return;
-			std::vector<size_t> iperm(terms_.size());
-			Sort<std::vector<FlavoredStateType> > mysort;
+			typename PsimagLite::Vector<size_t>::Type iperm(terms_.size());
+			Sort<typename PsimagLite::Vector<FlavoredStateType>::Type > mysort;
 			mysort.sort(terms_,iperm);
-			std::vector<FieldType> valuesNew(values_.size());
+			typename PsimagLite::Vector<FieldType>::Type valuesNew(values_.size());
 			for (size_t i=0;i<values_.size();i++)
 				valuesNew[i]=values_[iperm[i]];
 			values_=valuesNew;
@@ -198,7 +198,7 @@ namespace FreeFermions {
 		{
 			assert(engine_->dof()==1);
 			size_t n = engine_->size();
-			std::vector<bool> v(n,false);
+			typename PsimagLite::Vector<bool>::Type v(n,false);
 			if (ne_[sigma]==0) {
 				FlavoredStateType fl(engine_->dof(),v.size());
 				fl.pushInto(sigma,v);
@@ -235,15 +235,15 @@ namespace FreeFermions {
 		{
 			// make a copy because sort will modify it:
 			typedef typename SomeVectorType::value_type SomeElementType;
-			std::vector<SomeElementType> w(v.size());
+			typename PsimagLite::Vector<SomeElementType>::Type w(v.size());
 			for (size_t i=0;i<v.size();i++) w[i] = v[i];
-			Sort<std::vector<SomeElementType> > mysort;
-			std::vector<size_t> iperm(w.size());
+			Sort<typename PsimagLite::Vector<SomeElementType>::Type > mysort;
+			typename PsimagLite::Vector<size_t>::Type iperm(w.size());
 			mysort.sort(w,iperm);
 			return isOdd(iperm);
 		}
 
-		bool isOdd(const std::vector<size_t>& x)
+		bool isOdd(const typename PsimagLite::Vector<size_t>::Type& x)
 		{
 			//Return even parity for the permutation
 			int temp =  (x.size() - ncycles(x));
@@ -253,9 +253,9 @@ namespace FreeFermions {
 		void killZeroVals()
 		{
 			FlavoredStateType prev = terms_[0];
-			std::vector<FlavoredStateType>  terms2 = terms_;
+			typename PsimagLite::Vector<FlavoredStateType>::Type  terms2 = terms_;
 			terms_.clear();
-			std::vector<FieldType> values2 = values_;
+			typename PsimagLite::Vector<FieldType>::Type values2 = values_;
 			values_.clear();
 			terms_.push_back(prev);
 			values_.push_back(values_[0]);
@@ -279,10 +279,10 @@ namespace FreeFermions {
 //			zeroVals_=0;
 //		}
 
-		size_t ncycles(const std::vector<size_t>& x)
+		size_t ncycles(const typename PsimagLite::Vector<size_t>::Type& x)
 		{
 			size_t ncycles = 0;
-			std::vector<bool> seen(x.size(),false);
+			typename PsimagLite::Vector<bool>::Type seen(x.size(),false);
 
 			for (size_t i=0;i<seen.size();i++) {
 				if (seen[i]) continue;
@@ -297,12 +297,12 @@ namespace FreeFermions {
 			return ncycles;
 		}
 		const EngineType* engine_;
-		std::vector<size_t> ne_;
+		typename PsimagLite::Vector<size_t>::Type ne_;
 		bool debug_;
 		bool sorted_;
 		size_t zeroVals_;
-		std::vector<FlavoredStateType> terms_;
-		std::vector<FieldType> values_;
+		typename PsimagLite::Vector<FlavoredStateType>::Type terms_;
+		typename PsimagLite::Vector<FieldType>::Type values_;
 	}; // RealSpaceState
 	
 	template<typename CorDOperatorType>

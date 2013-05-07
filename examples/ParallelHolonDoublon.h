@@ -90,8 +90,8 @@ namespace FreeFermions {
 
 template<typename RealType>
 struct HolonDoublonParams {
-	HolonDoublonParams(const std::vector<size_t>& ne_,
-					   const std::vector<size_t>& sites_,
+	HolonDoublonParams(const typename PsimagLite::Vector<size_t>::Type& ne_,
+					   const typename PsimagLite::Vector<size_t>::Type& sites_,
 					   size_t sigma3_,
 					   const RealType& offset_,
 					   const RealType& step_,
@@ -105,8 +105,8 @@ struct HolonDoublonParams {
 		  debug(debug_),
 		  verbose(verbose_)
 	{}
-	std::vector<size_t> ne;
-	std::vector<size_t> sites;
+	typename PsimagLite::Vector<size_t>::Type ne;
+	typename PsimagLite::Vector<size_t>::Type sites;
 	size_t sigma3;
 	RealType offset;
 	RealType step;

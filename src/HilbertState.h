@@ -142,7 +142,7 @@ namespace FreeFermions {
 
 		// it's the g.s. for now, FIXME change it later to allow more flex.
 		HilbertState(const EngineType& engine,
-		              const std::vector<size_t>& ne,
+		              const typename PsimagLite::Vector<size_t>::Type& ne,
 		              bool debug = false)
 		: engine_(&engine),
 		  debug_(debug),
@@ -159,7 +159,7 @@ namespace FreeFermions {
 		}
 
 		HilbertState(const EngineType& engine,
-		             const std::vector<std::vector<size_t> >& occupations,
+		             const typename PsimagLite::Vector<typename PsimagLite::Vector<size_t>::Type >::Type& occupations,
 		             bool debug = false)
 		: engine_(&engine),
 		  debug_(debug),
@@ -217,7 +217,7 @@ namespace FreeFermions {
 			pourInternal(hs);
 		}
 
-		FieldType close(const std::vector<std::vector<size_t> >& occupations2) const
+		FieldType close(const typename PsimagLite::Vector<typename PsimagLite::Vector<size_t>::Type >::Type& occupations2) const
 		{
 			//std::cerr<<"DEBUG: closing with weight="<<opPointers_.size()<<"\n";
 			FieldType prod = 1.0;
@@ -230,20 +230,20 @@ namespace FreeFermions {
 			return prod; // FIXME: NEEDS FERMION SIGN
 		}
 
-		bool equalZero(const std::vector<std::vector<size_t> >& v) const
+		bool equalZero(const typename PsimagLite::Vector<typename PsimagLite::Vector<size_t>::Type >::Type& v) const
 		{
 			for (size_t i=0;i<v.size();i++)
 				if (!equalZero(v[i])) return false;
 			return true;
 		}
 		
-		bool equalZero(const std::vector<size_t>& v) const
+		bool equalZero(const typename PsimagLite::Vector<size_t>::Type& v) const
 		{
 			for (size_t i=0;i<v.size();i++) if (v[i]!=0) return false;
 			return true;
 		}
 
-		FieldType close(size_t sigma,const std::vector<size_t>& occupations2) const
+		FieldType close(size_t sigma,const typename PsimagLite::Vector<size_t>::Type& occupations2) const
 		{
 			size_t m = findCreationGivenSpin(sigma);
 			IndexGeneratorType lambda(m,engine_->size());
@@ -266,7 +266,7 @@ namespace FreeFermions {
 
 		FieldType compute(const IndexGeneratorType& lambda,
 		                  size_t sigma,
-		                  const std::vector<size_t>& occupations2) const
+		                  const typename PsimagLite::Vector<size_t>::Type& occupations2) const
 		{
 
 			PermutationsType lambda2(lambda);
@@ -310,7 +310,7 @@ namespace FreeFermions {
 		}
 
 		int findLocOf(
-		                  const std::vector<const CorDOperatorType*>& v,
+		                  const typename PsimagLite::Vector<const CorDOperatorType*>::Type& v,
 		                  size_t ind,
 		                  size_t sigma) const
 		{
@@ -358,12 +358,12 @@ namespace FreeFermions {
 
 		const EngineType* engine_;
 		bool debug_;
-		std::vector<std::vector<size_t> > occupations_;
-// 		std::vector<size_t> ne_;
-// 		std::vector<size_t> ne2_;
-		std::vector<const CorDOperatorType*> operatorsCreation_,operatorsDestruction_;
-		std::vector<const DiagonalOperatorType*> operatorsDiagonal_;
-		std::vector<OperatorPointer> opPointers_;
+		typename PsimagLite::Vector<PsimagLite::Vector<size_t>::Type>::Type occupations_;
+// 		typename PsimagLite::Vector<size_t>::Type ne_;
+// 		typename PsimagLite::Vector<size_t>::Type ne2_;
+		typename PsimagLite::Vector<const CorDOperatorType*>::Type operatorsCreation_,operatorsDestruction_;
+		typename PsimagLite::Vector<const DiagonalOperatorType*>::Type operatorsDiagonal_;
+		typename PsimagLite::Vector<OperatorPointer>::Type opPointers_;
 		OpNormalFactoryType opNormalFactory_;
 		OpDiagonalFactoryType opDiagonalFactory_;
 	}; // HilbertState

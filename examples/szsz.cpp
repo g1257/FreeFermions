@@ -42,7 +42,7 @@ int main(int argc,char* argv[])
 		geometryParams.filename = argv[3];
 
 // 	MatrixType t(4,4);
-// 	std::vector<RealType> tHop(3);
+// 	typename PsimagLite::Vector<RealType>::Type tHop(3);
 // 	tHop[0] = 0.1;
 // 	tHop[1] = 0.5; 
 // 	tHop[2] = 1.3;
@@ -54,7 +54,7 @@ int main(int argc,char* argv[])
 	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
 	
 
- 	/* std::vector<RealType> w;
+ 	/* typename PsimagLite::Vector<RealType>::Type w;
 	PsimagLite::IoSimple::In io(argv[3]);
 	try {
 		io.read(w,"PotentialT");
@@ -62,7 +62,7 @@ int main(int argc,char* argv[])
 		std::cerr<<"No PotentialT in file "<<argv[3]<<"\n";
 	}
 	io.rewind();
-	std::vector<RealType> v;
+	typename PsimagLite::Vector<RealType>::Type v;
 	io.read(v,"potentialV");
 	for (size_t i=0;i<v.size();i++) v[i] += w[i];
 
@@ -70,7 +70,7 @@ int main(int argc,char* argv[])
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
-	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
+	typename PsimagLite::Vector<size_t>::Type ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);

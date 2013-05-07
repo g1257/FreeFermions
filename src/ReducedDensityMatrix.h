@@ -96,10 +96,10 @@ namespace FreeFermions {
 	template<typename EngineType>
 	class ReducedDensityMatrix {
 		
-		typedef std::vector<size_t> VectorUintType;
+		typedef typename PsimagLite::Vector<size_t>::Type VectorUintType;
 		typedef typename EngineType::FieldType FieldType;
 		typedef typename EngineType::RealType RealType;
-		typedef std::vector<FieldType> VectorType;
+		typedef typename PsimagLite::Vector<FieldType>::Type VectorType;
 		typedef PsimagLite::Matrix<FieldType> MatrixType;
 		typedef typename EngineType::ConcurrencyType ConcurrencyType;
 		typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
@@ -126,7 +126,7 @@ namespace FreeFermions {
 			
 			size_t rank() const { return rho_.n_row(); }
 			
-			void diagonalize(std::vector<RealType>& e)
+			void diagonalize(typename PsimagLite::Vector<RealType>::Type& e)
 			{
 				if (!concurrency_.root()) return;
 				diag(rho_,e,'N');
@@ -147,7 +147,7 @@ namespace FreeFermions {
 				std::cout<<"#psi of size"<<states<<"x"<<states<<"\n";
 				size_t each = states/10;
 				VectorType psiV(states);
-				std::vector<VectorType> psiVv(states);
+				typename PsimagLite::Vector<VectorType>::Type psiVv(states);
 				RealType sum = 0;
 				PsimagLite::Range<ConcurrencyType> range(0,states,concurrency_);
 				for (;!range.end();range.next()) {

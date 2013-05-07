@@ -120,7 +120,7 @@ template<typename OperatorType,typename OpPointerType>
 
 	private:
 
-		void pairUp(//const std::vector<size_t>& occupations,
+		void pairUp(//const typename PsimagLite::Vector<size_t>::Type& occupations,
 		            FreeOperatorsType& freeOps)
 		{
 			// pair up daggers with non-daggers

@@ -126,7 +126,7 @@ namespace FreeFermions {
 		private:
 
 			const EngineType* engine_;
-			std::vector<OpType*> garbage_;
+			typename PsimagLite::Vector<OpType*>::Type garbage_;
 
 	}; // OperatorFactory
 } // namespace Dmrg 

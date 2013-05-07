@@ -27,56 +27,37 @@ enum {SPIN_UP,SPIN_DOWN};
 
 int main(int argc,char* argv[])
 {
-	int argce = 3;
-	size_t whatGeometry = GeometryLibraryType::FEAS; //CHAIN; // FEAS; //CHAIN; // KTWONIFFOUR;
-	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
-	if (argc<argce) throw std::runtime_error(s.c_str());
-	size_t n = atoi(argv[1]); // n. of  sites
-	size_t dof = 2; // spin
-	GeometryParamsType geometryParams;
-	geometryParams.sites = n;
-	geometryParams.type =whatGeometry;
-	if (whatGeometry==GeometryLibraryType::LADDER || whatGeometry==GeometryLibraryType::FEAS)
-		geometryParams.leg = 2;
-	if (whatGeometry==GeometryLibraryType::FEAS || whatGeometry==GeometryLibraryType::KTWONIFFOUR)
-		geometryParams.filename = argv[3];
+	int opt;
+	std::string file("");
 
-// 	MatrixType t(4,4);
-// 	std::vector<RealType> tHop(3);
-// 	tHop[0] = 0.1;
-// 	tHop[1] = 0.5; 
-// 	tHop[2] = 1.3;
-// 	t(0,1) = t(1,0) = tHop[0];
-// 	t(1,2) = t(2,1) = tHop[1];
-// 	t(2,3) = t(3,2) = tHop[2];
-	GeometryLibraryType geometry(geometryParams);
-	//GeometryLibraryType geometry(n,GeometryLibraryType::CHAIN);
-	//geometry.setGeometry(t,GeometryLibraryType::OPTION_PERIODIC);
-	
-
- 	/* std::vector<RealType> w;
-	PsimagLite::IoSimple::In io(argv[3]);
-	try {
-		io.read(w,"PotentialT");
-	} catch (std::exception& e) {
-		std::cerr<<"No PotentialT in file "<<argv[3]<<"\n";
+	while ((opt = getopt(argc, argv, "f:")) != -1) {
+		switch (opt) {
+		case 'f':
+			file=optarg;
+			break;
+		default: /* '?' */
+			throw std::runtime_error("Wrong usage\n");
+		}
 	}
-	io.rewind();
-	std::vector<RealType> v;
-	io.read(v,"potentialV");
-	for (size_t i=0;i<v.size();i++) v[i] += w[i];
+	if (file=="") throw std::runtime_error("Wrong usage\n");
 
- 	geometry.addPotential(v);*/
+	GeometryParamsType geometryParams(file);
+	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
+
+	size_t dof = 2; // spin
+
+	GeometryLibraryType geometry(geometryParams);
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
-	std::vector<size_t> ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
+	typename PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
-	std::cerr<<"Energy="<<dof*sum<<"\n";	
-	//MatrixType cicj(n,n);
-	size_t norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
+	std::cerr<<"Energy="<<dof*sum<<"\n";
+
+	size_t n = geometryParams.sites;
+	size_t norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
 	for (size_t orbital1=0; orbital1<norb; orbital1++) {
 		for (size_t orbital2=0; orbital2<norb; orbital2++) {
 			for (size_t site = 0; site<n ; site++) {

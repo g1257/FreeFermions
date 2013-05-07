@@ -96,7 +96,7 @@ namespace FreeFermions {
 			mainLoop(n);
 		}
 		
-		const std::vector<size_t>& operator()(size_t i) const
+		const typename PsimagLite::Vector<size_t>::Type& operator()(size_t i) const
 		{
 			return data_[i];
 		}
@@ -106,8 +106,8 @@ namespace FreeFermions {
 	private:
 		void mainLoop(size_t n)
 		{
-			std::vector<int> c(k_+3);
-			std::vector<size_t> tmpVec(k_);
+			typename PsimagLite::Vector<int>::Type c(k_+3);
+			typename PsimagLite::Vector<size_t>::Type tmpVec(k_);
 			int x = 0;
 			for (int i=1; i <= int(k_); i++) c[i] = i;
 			c[k_+1] = n+1;
@@ -137,7 +137,7 @@ incr:
 		}
 
 		size_t k_;
-		std::vector<std::vector<size_t> > data_;
+		typename PsimagLite::Vector<PsimagLite::Vector<size_t>::Type>::Type data_;
 	}; // Combinations
 	
 	std::ostream& operator<<(std::ostream& os,const Combinations& ig)
