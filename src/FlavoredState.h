@@ -235,7 +235,7 @@ namespace FreeFermions {
 		return true;
 	}
 
-	inline bool operator<(const typename PsimagLite::Vector<bool>::Type& v1,const typename PsimagLite::Vector<bool>::Type& v2)
+	inline bool operator<(const PsimagLite::Vector<bool>::Type& v1,const PsimagLite::Vector<bool>::Type& v2)
 	{
 		for (size_t i=0;i<v1.size();i++) {
 			if (v1[i] && !v2[i]) return false;

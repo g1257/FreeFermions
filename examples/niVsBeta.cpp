@@ -33,7 +33,7 @@ typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
 void doOneBeta(const EngineType& engine,
-               typename PsimagLite::Vector<size_t>::Type& ne,
+               PsimagLite::Vector<size_t>::Type& ne,
                OpLibFactoryType& opLibFactory,
                size_t site,
                size_t sigma,
@@ -50,9 +50,9 @@ void doOneBeta(const EngineType& engine,
 		EtoTheBetaHType ebh(beta,engine,0);
 		DiagonalOperatorType& eibOp = opDiagonalFactory(ebh);
 		
-		typename PsimagLite::Vector<size_t>::Type vTmp(engine.size(),0);
+		PsimagLite::Vector<size_t>::Type vTmp(engine.size(),0);
 		for (size_t j=0;j<combinations(i).size();++j) vTmp[combinations(i)[j]]=1;
-		typename PsimagLite::Vector<std::vector<size_t>::Type > occupations(1,vTmp);
+		PsimagLite::Vector<std::vector<size_t> >::Type occupations(1,vTmp);
 		HilbertStateType thisState(engine,occupations);
 		HilbertStateType phi = thisState;
 		eibOp.applyTo(phi);
@@ -79,8 +79,8 @@ int main(int argc,char *argv[])
 	size_t total=0;
 	size_t site = 0;
 	bool ladder = false;
-	typename PsimagLite::Vector<RealType>::Type v;
-	typename PsimagLite::Vector<std::string>::Type str;
+	PsimagLite::Vector<RealType>::Type v;
+	PsimagLite::Vector<std::string>::Type str;
 
 	while ((opt = getopt(argc, argv, "n:e:s:p:t:o:i:l")) != -1) {
 		switch (opt) {
@@ -149,7 +149,7 @@ int main(int argc,char *argv[])
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(*geometry,concurrency,dof,true);
 
-	typename PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
+	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
 

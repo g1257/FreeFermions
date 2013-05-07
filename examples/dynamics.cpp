@@ -37,7 +37,7 @@ void usage(const std::string& thisFile)
 	std::cout<<" -n sites -e electronsUp -g geometry,[leg,filename]\n";
 }
 
-void setMyGeometry(GeometryParamsType& geometryParams,const typename PsimagLite::Vector<std::string>::Type& vstr)
+void setMyGeometry(GeometryParamsType& geometryParams,const PsimagLite::Vector<std::string>::Type& vstr)
 {
 	// default value
 	geometryParams.type = GeometryLibraryType::CHAIN;
@@ -121,7 +121,7 @@ int main(int argc,char *argv[])
 
 	GeometryParamsType geometryParams(file);
 	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
-	typename PsimagLite::Vector<size_t>::Type sites;
+	PsimagLite::Vector<size_t>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
 
 	size_t dof = 1; // spinless
@@ -133,7 +133,7 @@ int main(int argc,char *argv[])
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
 
-	typename PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
+	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
 

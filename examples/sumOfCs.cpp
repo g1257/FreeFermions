@@ -32,7 +32,7 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 enum {SPIN_UP,SPIN_DOWN};
 
 // <phi | H |phi>
-FieldType phiHPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const typename PsimagLite::Vector<size_t>::Type& sites,DiagonalOperatorType& h,const typename PsimagLite::Vector<ComplexType>::Type& weights)
+FieldType phiHPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const PsimagLite::Vector<size_t>::Type& sites,DiagonalOperatorType& h,const PsimagLite::Vector<ComplexType>::Type& weights)
 {
 	FieldType sum = 0;
 	for (size_t i = 0;i<sites.size();i++) {
@@ -52,7 +52,7 @@ FieldType phiHPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& g
 }
 
 // <phi| n_p | phi>
-FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,size_t siteP,const typename PsimagLite::Vector<size_t>::Type& sites,size_t sigma,DiagonalOperatorType& eihOp,const typename PsimagLite::Vector<ComplexType>::Type& weights)
+FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,size_t siteP,const PsimagLite::Vector<size_t>::Type& sites,size_t sigma,DiagonalOperatorType& eihOp,const PsimagLite::Vector<ComplexType>::Type& weights)
 {
 	FieldType sum = 0;
 	OperatorType& cdaggerP = opNormalFactory(OperatorType::CREATION,siteP,sigma);
@@ -79,7 +79,7 @@ FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& 
 }
 
 // <phi| | phi>
-FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const typename PsimagLite::Vector<size_t>::Type& sites,size_t sigma,DiagonalOperatorType& eihOp,const typename PsimagLite::Vector<ComplexType>::Type& weights)
+FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const PsimagLite::Vector<size_t>::Type& sites,size_t sigma,DiagonalOperatorType& eihOp,const PsimagLite::Vector<ComplexType>::Type& weights)
 {
 	FieldType sum = 0;
 	for (size_t i = 0;i<sites.size();i++) {
@@ -137,7 +137,7 @@ int main(int argc,char* argv[])
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
-	typename PsimagLite::Vector<size_t>::Type ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
+	PsimagLite::Vector<size_t>::Type ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
@@ -147,8 +147,8 @@ int main(int argc,char* argv[])
 	
 	//MatrixType cicj(n,n);
 	//size_t norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
-	typename PsimagLite::Vector<size_t>::Type sites(n-2);
-	typename PsimagLite::Vector<ComplexType>::Type weights(n-2);
+	PsimagLite::Vector<size_t>::Type sites(n-2);
+	PsimagLite::Vector<ComplexType>::Type weights(n-2);
 	for (size_t i=1;i<15;i++) {
 		sites[i-1]=i;
 		RealType tmp123 = (i-n/2)*(i-n/2)/8.;

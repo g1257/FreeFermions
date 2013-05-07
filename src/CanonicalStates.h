@@ -86,7 +86,7 @@ namespace FreeFermions {
 	
 	class CanonicalStates {
 		
-		typedef typename PsimagLite::Vector<size_t>::Type VectorUintType;
+		typedef PsimagLite::Vector<size_t>::Type VectorUintType;
 		typedef unsigned int long long BinaryNumberType;
 		
 		public:
@@ -130,7 +130,7 @@ namespace FreeFermions {
 				}
 			}
 			
-			typename PsimagLite::Vector<BinaryNumberType>::Type states_;
+			PsimagLite::Vector<BinaryNumberType>::Type states_;
 	}; // CanonicalStates
 } // FreeFermions namespace
 /*@}*/

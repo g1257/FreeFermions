@@ -119,7 +119,7 @@ namespace FreeFermions {
 // 		size_t max() const { return ne_; }
 
 	private:
-		typename PsimagLite::Vector<size_t>::Type data_;
+		PsimagLite::Vector<size_t>::Type data_;
 		size_t ne_;
 	}; // IndexGenerator
 	

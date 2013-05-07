@@ -51,7 +51,7 @@ int main(int argc,char* argv[])
 	
 	ReducedDensityMatrixType reducedDensityMatrix(engine,n,nup);
 	
-	typename PsimagLite::Vector<double>::Type e(reducedDensityMatrix.rank());
+	PsimagLite::Vector<double>::Type e(reducedDensityMatrix.rank());
 	reducedDensityMatrix.diagonalize(e);
 	if (concurrency.root()) {
 		std::cout<<"DensityMatrixEigenvalues:\n";

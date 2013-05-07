@@ -97,11 +97,11 @@ namespace FreeFermions {
 		typedef typename CorDOperatorType_::EngineType EngineType;
 		typedef typename CorDOperatorType_::RealType RealType;
 		typedef typename CorDOperatorType_::FieldType FieldType;
-		typedef  FlavoredState<typename PsimagLite::Vector<bool>,CorDOperatorType_>::Type FlavoredStateType;
+		typedef  FlavoredState<typename PsimagLite::Vector<bool>::Type,CorDOperatorType_> FlavoredStateType;
 		typedef RealSpaceState<CorDOperatorType_> ThisType;
 		typedef ArrangementsWithoutRepetition<typename PsimagLite::Vector<size_t>::Type >
 						ArrangementsWithoutRepetitionType;
-		typedef Permutations<ArrangementsWithoutRepetitionType> PermutationsType;
+		typedef PsimagLite::Permutations<ArrangementsWithoutRepetitionType> PermutationsType;
 
 		enum {CREATION = CorDOperatorType_::CREATION,
 		       DESTRUCTION = CorDOperatorType_::DESTRUCTION,
