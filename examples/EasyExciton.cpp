@@ -36,8 +36,9 @@ int main(int argc,char *argv[])
 	size_t total=0;
 	RealType offset = 0;
 	RealType step = 0;
+	size_t site3 = 0;
 
-	while ((opt = getopt(argc, argv, "f:t:o:i:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:t:o:i:p:")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
@@ -50,6 +51,9 @@ int main(int argc,char *argv[])
 			break;
 		case 'o':
 			offset = atof(optarg);
+			break;
+		case 'p':
+			site3 = atoi(optarg);
 			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
@@ -64,6 +68,8 @@ int main(int argc,char *argv[])
 	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
 	std::vector<size_t> sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
+	sites.resize(3);
+	sites[2] = site3;
 
 	size_t dof = 1; // spinless
 

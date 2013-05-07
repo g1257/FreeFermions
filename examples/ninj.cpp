@@ -12,7 +12,6 @@
 #include "GeometryParameters.h"
 #include "Tokenizer.h"
 #include "LibraryOperator.h"
-#include "DriverHelper.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -27,7 +26,6 @@ typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
-typedef FreeFermions::DriverHelper<GeometryLibraryType> DriverHelperType;
 
 void usage(const std::string& thisFile)
 {
@@ -52,12 +50,11 @@ int main(int argc,char* argv[])
 	}
 
 	if (file=="") {
-		DriverHelperType::usage(argv[0],"-f file");
 		throw std::runtime_error("Wrong usage\n");
 	}
 
 	GeometryParamsType geometryParams(file);
-	size_t electronsUp = DriverHelperType::readLabel(file,"TargetElectronsUp=");
+	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
 
 	size_t dof = 1; // spinless
 
