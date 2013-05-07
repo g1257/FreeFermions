@@ -181,7 +181,7 @@ namespace FreeFermions {
 		{
 			if (terms_.size()<2 || sorted_) return;
 			typename PsimagLite::Vector<size_t>::Type iperm(terms_.size());
-			Sort<typename PsimagLite::Vector<FlavoredStateType>::Type > mysort;
+			PsimagLite::Sort<typename PsimagLite::Vector<FlavoredStateType>::Type > mysort;
 			mysort.sort(terms_,iperm);
 			typename PsimagLite::Vector<FieldType>::Type valuesNew(values_.size());
 			for (size_t i=0;i<values_.size();i++)
@@ -237,7 +237,7 @@ namespace FreeFermions {
 			typedef typename SomeVectorType::value_type SomeElementType;
 			typename PsimagLite::Vector<SomeElementType>::Type w(v.size());
 			for (size_t i=0;i<v.size();i++) w[i] = v[i];
-			Sort<typename PsimagLite::Vector<SomeElementType>::Type > mysort;
+			PsimagLite::Sort<typename PsimagLite::Vector<SomeElementType>::Type > mysort;
 			typename PsimagLite::Vector<size_t>::Type iperm(w.size());
 			mysort.sort(w,iperm);
 			return isOdd(iperm);
