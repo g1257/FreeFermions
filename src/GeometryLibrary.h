@@ -121,12 +121,12 @@ namespace FreeFermions {
 			default:
 				assert(false);
 			}
-			std::vector<RealType> v;
+			typename PsimagLite::Vector<RealType>::Type v;
 			readPotential(v,geometryParams_.filename);
 			addPotential(v);
 		}
 
-		void bathify(const std::vector<RealType>& tb)
+		void bathify(const typename PsimagLite::Vector<RealType>::Type& tb)
 		{
 			size_t sites = geometryParams_.sites;
 			assert(t_.size()!=1);
@@ -148,7 +148,9 @@ namespace FreeFermions {
 		}
 
 		template<typename ComplexType>
-		void fourierTransform(std::vector<ComplexType>& dest,const MatrixType& src,size_t leg) const
+		void fourierTransform(typename PsimagLite::Vector<ComplexType>::Type& dest,
+		                      const MatrixType& src,
+		                      size_t leg) const
 		{
 			size_t n = src.n_row();
 			if (n!=geometryParams_.sites) throw std::runtime_error("src must have the same number of sites as lattice\n");
@@ -220,12 +222,12 @@ namespace FreeFermions {
 
 	private:
 
-		template<typename SomeRealType>
-		void addPotential(const std::vector<SomeRealType>& p2)
+		template<typename VectorLikeType>
+		void addPotential(const VectorLikeType& p2)
 		{
 			if (p2.size()==0) return;
 
-			std::vector<SomeRealType> p = p2;
+			VectorLikeType p = p2;
 			if (p.size()!=t_.n_row()) {
 				size_t halfSize = size_t(p2.size()/2);
 				p.resize(halfSize);
@@ -247,9 +249,9 @@ namespace FreeFermions {
 
 		void setGeometryFeAs()
 		{
-			std::vector<MatrixType> t;
+			typename PsimagLite::Vector<MatrixType>::Type t;
 			size_t edof = geometryParams_.orbitals;
-			std::vector<RealType> oneSiteHoppings;
+			typename PsimagLite::Vector<RealType>::Type oneSiteHoppings;
 			size_t dirs = (geometryParams_.type==FEAS1D) ? 1 : 4;
 			readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename,dirs);
 			if (oneSiteHoppings.size()!=dirs*edof*edof) {
@@ -303,7 +305,7 @@ namespace FreeFermions {
 			size_t sites = geometryParams_.sites;
 			resizeAndZeroOut(sites,sites);
 			for (size_t i=0;i<sites;i++) {
-				std::vector<size_t> v;
+				PsimagLite::Vector<size_t>::Type v;
 				ladderFindNeighbors(v,i,leg,isPeriodicY);
 				for (size_t k=0;k<v.size();k++) {
 					size_t j = v[k];
@@ -314,7 +316,7 @@ namespace FreeFermions {
 			}
 		}
 
-		void ladderFindNeighbors(std::vector<size_t>& v,size_t i,size_t leg,bool isPeriodicY)
+		void ladderFindNeighbors(PsimagLite::Vector<size_t>::Type& v,size_t i,size_t leg,bool isPeriodicY)
 		{
 			size_t sites = geometryParams_.sites;
 			v.clear();
@@ -349,7 +351,9 @@ namespace FreeFermions {
 		}
 
 		// only 2 orbitals supported
-		void setGeometryFeAs(MatrixType& t,size_t orborb,const std::vector<RealType>& oneSiteHoppings)
+		void setGeometryFeAs(MatrixType& t,
+		                     size_t orborb,
+		                     const typename PsimagLite::Vector<RealType>::Type& oneSiteHoppings)
 		{
 			size_t sites = geometryParams_.sites;
 			size_t leg = geometryParams_.leg;
@@ -436,7 +440,9 @@ namespace FreeFermions {
 			return y + x*leg;
 		}
 
-		void readOneSiteHoppings(std::vector<RealType>& v,const std::string& filename,size_t dirs)
+		void readOneSiteHoppings(typename PsimagLite::Vector<RealType>::Type& v,
+		                         const std::string& filename,
+		                         size_t dirs)
 		{
 			typename PsimagLite::IoSimple::In io(filename);
 			v.clear();
@@ -453,7 +459,8 @@ namespace FreeFermions {
 			}
 		}
 
-		void appendToVector(std::vector<RealType>& v,const MatrixType& m) const
+		void appendToVector(typename PsimagLite::Vector<RealType>::Type& v,
+		                    const MatrixType& m) const
 		{
 			for (size_t i=0;i<m.n_row();i++) {
 				for (size_t j=0;j<m.n_col();j++) {
@@ -495,9 +502,10 @@ namespace FreeFermions {
 					t_(i,j)=0;
 		}
 
-		void readPotential(std::vector<RealType>& v,const std::string& filename)
+		void readPotential(typename PsimagLite::Vector<RealType>::Type& v,
+		                   const std::string& filename)
 		{
-			std::vector<RealType> w;
+			typename PsimagLite::Vector<RealType>::Type w;
 			PsimagLite::IoSimple::In io(filename);
 			try {
 				io.read(w,"PotentialT");

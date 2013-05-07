@@ -179,7 +179,7 @@ namespace FreeFermions {
 				io.rewind();
 			}
 
-			std::vector<RealType> v;
+			typename PsimagLite::Vector<RealType>::Type v;
 			try {
 				io.read(v,"TargetQuantumNumbers");
 			} catch (std::exception& e)
@@ -206,8 +206,8 @@ namespace FreeFermions {
 			return static_cast<size_t>(round(v[0]*nsites));
 		}
 
-		template<typename SomeFieldType>
-		static void readVector(std::vector<SomeFieldType>& v,const std::string& filename,const std::string& label)
+		template<typename VectorLikeType>
+		static void readVector(VectorLikeType& v,const std::string& filename,const std::string& label)
 		{
 			PsimagLite::IoSimple::In io(filename);
 			io.read(v,label);
@@ -224,7 +224,7 @@ namespace FreeFermions {
 		size_t sites;
 		size_t leg;
 		bool isPeriodicY;
-		std::vector<RealType> hopping;
+		typename PsimagLite::Vector<RealType>::Type hopping;
 		size_t option;
 		std::string filename;
 		size_t orbitals;

@@ -52,7 +52,7 @@ void doOneBeta(const EngineType& engine,
 		
 		PsimagLite::Vector<size_t>::Type vTmp(engine.size(),0);
 		for (size_t j=0;j<combinations(i).size();++j) vTmp[combinations(i)[j]]=1;
-		PsimagLite::Vector<std::vector<size_t> >::Type occupations(1,vTmp);
+		PsimagLite::Vector<PsimagLite::Vector<size_t>::Type>::Type occupations(1,vTmp);
 		HilbertStateType thisState(engine,occupations);
 		HilbertStateType phi = thisState;
 		eibOp.applyTo(phi);
