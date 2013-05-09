@@ -80,7 +80,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define GEOMETRY_PARAMS_H
 
 #include <assert.h>
-#include <string>
+#include "String.h"
 
 namespace FreeFermions {
 
@@ -93,7 +93,7 @@ namespace FreeFermions {
 
 		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D};
 
-		GeometryParameters(const std::string& file)
+		GeometryParameters(const PsimagLite::String& file)
 		: type(CHAIN),
 		  sites(0),
 		  leg(0),
@@ -109,10 +109,10 @@ namespace FreeFermions {
 			// default value
 			type = CHAIN;
 
-			std::string geometry("");
+			PsimagLite::String geometry("");
 			io.readline(geometry,"GeometryKind=");
 
-			std::string model("");
+			PsimagLite::String model("");
 			io.readline(model,"Model=");
 
 			int x = 0;
@@ -161,13 +161,13 @@ namespace FreeFermions {
 					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
 				isPeriodicY = (x>0);
 			} else {
-				std::string str("GeometryParameters: unknown model ");
+				PsimagLite::String str("GeometryParameters: unknown model ");
 				str += model + "\n";
 				throw std::runtime_error(str.c_str());
 			}
 		}
 
-		static int readElectrons(const std::string& filename,size_t nsites)
+		static int readElectrons(const PsimagLite::String& filename,size_t nsites)
 		{
 			PsimagLite::IoSimple::In io(filename);
 			int x = -1;
@@ -189,32 +189,32 @@ namespace FreeFermions {
 			}
 
 			if (x<0 && v.size()==0) {
-				std::string str("Either TargetElectronsUp or TargetQuantumNumbers is need\n");
+				PsimagLite::String str("Either TargetElectronsUp or TargetQuantumNumbers is need\n");
 				throw std::runtime_error(str.c_str());
 			}
 
 			if (x>=0 && v.size()>0) {
-				std::string str("Having both TargetElectronsUp and TargetQuantumNumbers is an error\n");
+				PsimagLite::String str("Having both TargetElectronsUp and TargetQuantumNumbers is an error\n");
 				throw std::runtime_error(str.c_str());
 			}
 
 			if (x>=0) return x;
 			if (v.size()<1) {
-				std::string str("Incorrect TargetQuantumNumbers line\n");
+				PsimagLite::String str("Incorrect TargetQuantumNumbers line\n");
 				throw std::runtime_error(str.c_str());
 			}
 			return static_cast<size_t>(round(v[0]*nsites));
 		}
 
 		template<typename VectorLikeType>
-		static void readVector(VectorLikeType& v,const std::string& filename,const std::string& label)
+		static void readVector(VectorLikeType& v,const PsimagLite::String& filename,const PsimagLite::String& label)
 		{
 			PsimagLite::IoSimple::In io(filename);
 			io.read(v,label);
 		}
 
 		template<typename SomeFieldType>
-		static void readLabel(SomeFieldType& v,const std::string& filename,const std::string& label)
+		static void readLabel(SomeFieldType& v,const PsimagLite::String& filename,const PsimagLite::String& label)
 		{
 			PsimagLite::IoSimple::In io(filename);
 			io.readline(v,label);
@@ -226,7 +226,7 @@ namespace FreeFermions {
 		bool isPeriodicY;
 		typename PsimagLite::Vector<RealType>::Type hopping;
 		size_t option;
-		std::string filename;
+		PsimagLite::String filename;
 		size_t orbitals;
 	}; // struct GeometryParameters
 } // namespace Dmrg 

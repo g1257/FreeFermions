@@ -31,13 +31,13 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 
 enum {DYN_TYPE_0,DYN_TYPE_1};
 
-void usage(const std::string& thisFile)
+void usage(const PsimagLite::String& thisFile)
 {
 	std::cout<<thisFile<<": USAGE IS "<<thisFile<<" ";
 	std::cout<<" -n sites -e electronsUp -g geometry,[leg,filename]\n";
 }
 
-void setMyGeometry(GeometryParamsType& geometryParams,const PsimagLite::Vector<std::string>::Type& vstr)
+void setMyGeometry(GeometryParamsType& geometryParams,const PsimagLite::Vector<PsimagLite::String>::Type& vstr)
 {
 	// default value
 	geometryParams.type = GeometryLibraryType::CHAIN;
@@ -47,7 +47,7 @@ void setMyGeometry(GeometryParamsType& geometryParams,const PsimagLite::Vector<s
 		return;
 	}
 
-	std::string gName = vstr[0];
+	PsimagLite::String gName = vstr[0];
 	if (gName == "chain") {
 		throw std::runtime_error("setMyGeometry: -g chain takes no further arguments\n");
 	}
@@ -87,7 +87,7 @@ void setMyGeometry(GeometryParamsType& geometryParams,const PsimagLite::Vector<s
 int main(int argc,char *argv[])
 {
 	int opt;
-	std::string file("");
+	PsimagLite::String file("");
 	size_t total=0;
 	RealType offset = 0;
 	RealType step = 0;

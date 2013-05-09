@@ -28,7 +28,7 @@ enum {SPIN_UP,SPIN_DOWN};
 int main(int argc,char* argv[])
 {
 	int opt;
-	std::string file("");
+	PsimagLite::String file("");
 
 	while ((opt = getopt(argc, argv, "f:")) != -1) {
 		switch (opt) {

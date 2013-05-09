@@ -80,7 +80,7 @@ int main(int argc,char *argv[])
 	size_t site = 0;
 	bool ladder = false;
 	PsimagLite::Vector<RealType>::Type v;
-	PsimagLite::Vector<std::string>::Type str;
+	PsimagLite::Vector<PsimagLite::String>::Type str;
 
 	while ((opt = getopt(argc, argv, "n:e:s:p:t:o:i:l")) != -1) {
 		switch (opt) {
@@ -96,13 +96,13 @@ int main(int argc,char *argv[])
 				break;
 			case 'p':
 				if (v.size()==0) {
-					std::string s(argv[0]);
+					PsimagLite::String s(argv[0]);
 					s += "-p must come after -n\n";
 					throw std::runtime_error(s.c_str());
 				}
 				PsimagLite::tokenizer(optarg,str,",");
 				if (str.size() & 1) {
-					std::string s(argv[0]);
+					PsimagLite::String s(argv[0]);
 					s += " Expecting pairs for -p\n";
 					throw std::runtime_error(s.c_str());
 				}

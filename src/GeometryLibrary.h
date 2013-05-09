@@ -184,7 +184,7 @@ namespace FreeFermions {
 			return t_(i,j);
 		}
 
-		std::string name() const
+		PsimagLite::String name() const
 		{
 
 			switch (geometryParams_.type) {
@@ -231,14 +231,14 @@ namespace FreeFermions {
 			if (p.size()!=t_.n_row()) {
 				size_t halfSize = size_t(p2.size()/2);
 				p.resize(halfSize);
-				std::string str(__FILE__);
+				PsimagLite::String str(__FILE__);
 				str += " " + ttos(__LINE__) + "\n";
 				str += "addPotential(...): resizing potential to " + ttos(t_.n_row());
 				str += " from " + ttos(p2.size()) + "\n";
 				std::cerr<<str;
 			}
 			if (p.size()!=t_.n_row()) {
-				std::string str(__FILE__);
+				PsimagLite::String str(__FILE__);
 				str += " " + ttos(__LINE__) + "\n";
 				str += "addPotential(...): expecting " + ttos(t_.n_row());
 				str += " numbers but " + ttos(p.size()) + " found instead.\n";
@@ -441,7 +441,7 @@ namespace FreeFermions {
 		}
 
 		void readOneSiteHoppings(typename PsimagLite::Vector<RealType>::Type& v,
-		                         const std::string& filename,
+		                         const PsimagLite::String& filename,
 		                         size_t dirs)
 		{
 			typename PsimagLite::IoSimple::In io(filename);
@@ -450,7 +450,7 @@ namespace FreeFermions {
 				MatrixType m;
 				io.readMatrix(m,"Connectors");
 				if (m.n_row()!=m.n_col() || m.n_row()!=geometryParams_.orbitals) {
-					std::string str(__FILE__);
+					PsimagLite::String str(__FILE__);
 					str += " " + ttos(__LINE__) + "\n";
 					str += "Error in input file "+filename+" label: Connectors\n";
 					throw std::runtime_error(str.c_str());
@@ -503,7 +503,7 @@ namespace FreeFermions {
 		}
 
 		void readPotential(typename PsimagLite::Vector<RealType>::Type& v,
-		                   const std::string& filename)
+		                   const PsimagLite::String& filename)
 		{
 			typename PsimagLite::Vector<RealType>::Type w;
 			PsimagLite::IoSimple::In io(filename);

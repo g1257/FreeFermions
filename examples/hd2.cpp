@@ -92,7 +92,7 @@ FieldType calcSuperDensity(size_t site,
 int main(int argc,char *argv[])
 {
 	int opt;
-	std::string file("");
+	PsimagLite::String file("");
 	size_t total=0;
 	RealType offset = 0;
 	RealType step = 0;

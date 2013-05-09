@@ -60,7 +60,7 @@ void doOneBeta(const EngineType& engine,
 int main(int argc,char *argv[])
 {
 	int opt;
-	std::string file("");
+	PsimagLite::String file("");
 	RealType step = 0;
 	RealType offset=0;
 	size_t total=0;

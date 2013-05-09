@@ -29,7 +29,7 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 int main(int argc,char* argv[])
 {
 	int opt = 0;
-	std::string file("");
+	PsimagLite::String file("");
 
 	while ((opt = getopt(argc, argv, "f:")) != -1) {
 		switch (opt) {

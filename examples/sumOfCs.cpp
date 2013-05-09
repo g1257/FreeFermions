@@ -102,7 +102,7 @@ int main(int argc,char* argv[])
 {
 	int argce = 5;
 	size_t whatGeometry = GeometryLibraryType::CHAIN; // FEAS; //CHAIN; // KTWONIFFOUR;
-	std::string s = "Needs " + ttos(argce) + " argument(s)\n";
+	PsimagLite::String s = "Needs " + ttos(argce) + " argument(s)\n";
 	if (argc<argce) throw std::runtime_error(s.c_str());
 	size_t n = atoi(argv[1]); // n. of  sites
 	size_t dof = 1; // spinless

@@ -27,7 +27,7 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
-void usage(const std::string& thisFile)
+void usage(const PsimagLite::String& thisFile)
 {
 	std::cout<<thisFile<<": USAGE IS "<<thisFile<<" ";
 	std::cout<<" -n sites -e electronsUp -g geometry,[leg,filename]\n";
@@ -36,7 +36,7 @@ void usage(const std::string& thisFile)
 int main(int argc,char* argv[])
 {
 	int opt = 0;
-	std::string file("");
+	PsimagLite::String file("");
 
 	while ((opt = getopt(argc, argv, "f:")) != -1) {
 		switch (opt) {

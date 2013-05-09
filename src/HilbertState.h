@@ -202,15 +202,15 @@ namespace FreeFermions {
 		void pour(const ThisType& hs)
 		{
 			if (hs.engine_->size()!=engine_->size()) {
-				std::string s = "HilbertState::pour(...)  size1=" +
+				PsimagLite::String s = "HilbertState::pour(...)  size1=" +
 				                 ttos(engine_->size()) +
 				                " size2=" + ttos(hs.engine_->size()) + "\n";
 				throw std::runtime_error(s.c_str());
 			}
 // 			if (hs.occupations_!=occupations_ && !equalZero(occupations_)) {
-// 				std::string s(__FILE__);
-// 				s += std::string(" ") + ttos(__LINE__) + " ";
-// 				s += std::string(__FUNCTION__) + "\n";
+// 				PsimagLite::String s(__FILE__);
+// 				s += PsimagLite::String(" ") + ttos(__LINE__) + " ";
+// 				s += PsimagLite::String(__FUNCTION__) + "\n";
 // 				throw std::runtime_error(s.c_str());
 // 			}
 
