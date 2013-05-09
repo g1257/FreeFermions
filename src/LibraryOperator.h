@@ -1,9 +1,8 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009 , UT-Battelle, LLC
+Copyright (c) 2009-2013, UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -68,9 +67,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
@@ -89,8 +86,12 @@ namespace FreeFermions {
 	
 	template<typename OperatorType>
 	class LibraryOperator {
+
 		typedef LibraryOperator<OperatorType> ThisType;
 		typedef OperatorFactory<OperatorType> OpNormalFactoryType;
+
+		enum {SPIN_UP,SPIN_DOWN};
+
 	public:
 		typedef typename OperatorType::EngineType EngineType;
 		typedef typename OperatorType::RealType RealType;
@@ -98,9 +99,10 @@ namespace FreeFermions {
 		typedef OperatorFactory<ThisType> FactoryType;
 
 		enum {CREATION = OperatorType::CREATION,
-		      DESTRUCTION = OperatorType::DESTRUCTION,
-		      N,
-		      NBAR};
+			  DESTRUCTION = OperatorType::DESTRUCTION,
+			  N,
+			  NBAR,
+			  DELTA};
 
 		friend class OperatorFactory<ThisType>;
 
@@ -116,6 +118,13 @@ namespace FreeFermions {
 			} else if (type_==NBAR){
 				state.pushInto(op2);
 				state.pushInto(op);
+			} else if (type_==DELTA) {
+				OperatorType& opUp = opNormalFactory_(DESTRUCTION,ind_,SPIN_UP);
+				state.pushInto(opUp);
+				OperatorType& opDown = opNormalFactory_(DESTRUCTION,ind_,SPIN_DOWN);
+				state.pushInto(opDown);
+			} else {
+				throw std::runtime_error("LibraryOperator::applyTo()\n");
 			}
 
 		}

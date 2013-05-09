@@ -5,6 +5,7 @@
 #else
 #include "ConcurrencySerial.h"
 #endif
+#include "ReducedDensityMatrix.h"
 
 // TBW FIXME
 typedef double RealType;
@@ -24,32 +25,45 @@ typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 //typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
+typedef FreeFermions::ReducedDensityMatrix<EngineType> ReducedDensityMatrixType;
 
 
 int main(int argc,char* argv[])
 {
-	if (argc<3) throw std::runtime_error("Needs 2 or more argument(s)\n");
-	size_t n = atoi(argv[1]);
-	size_t nup =  atoi(argv[2]); 
-	typedef FreeFermions::ReducedDensityMatrix<EngineType> ReducedDensityMatrixType;
-	ConcurrencyType concurrency(argc,argv);
-	
-	GeometryParamsType geometryParams;
-	geometryParams.type = GeometryLibraryType::CHAIN;
-	geometryParams.sites = 2*n;
-	if (argc>=4) {
-		geometryParams.leg = atoi(argv[3]);
-		if (geometryParams.leg>0) 
-			  geometryParams.type = GeometryLibraryType::LADDER;
+	int opt = 0;
+	std::string file("");
+
+	while ((opt = getopt(argc, argv, "f:")) != -1) {
+		switch (opt) {
+		case 'f':
+			file=optarg;
+			break;
+		default: /* '?' */
+			throw std::runtime_error("Wrong usage\n");
+		}
 	}
 
+	if (file=="") {
+		throw std::runtime_error("Wrong usage\n");
+	}
+
+	GeometryParamsType geometryParams(file);
+	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
+
+	size_t dof = 1; // spinless
+
 	GeometryLibraryType geometry(geometryParams);
-	if (concurrency.root()) std::cerr<<geometry;
+
+	std::cerr<<geometry;
+	ConcurrencyType concurrency(argc,argv);
+	EngineType engine(geometry,concurrency,dof,true);
+	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
+	HilbertStateType gs(engine,ne);
+	RealType sum = 0;
+	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
+	std::cerr<<"Energy="<<dof*sum<<"\n";
 	
-	size_t dof = 1;
-	EngineType engine(geometry,concurrency,dof,false);
-	
-	ReducedDensityMatrixType reducedDensityMatrix(engine,n,nup);
+	ReducedDensityMatrixType reducedDensityMatrix(engine,geometryParams.sites,electronsUp);
 	
 	PsimagLite::Vector<double>::Type e(reducedDensityMatrix.rank());
 	reducedDensityMatrix.diagonalize(e);

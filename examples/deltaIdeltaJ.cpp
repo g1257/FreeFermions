@@ -1,8 +1,10 @@
 
 
 // SAmple of how to use FreeFermions core engine to calculate
-// <sz sz >
+// < \delta_{i,\gamma} \delta^\dagger_{j,\gamma'} >
+
 #include <cstdlib>
+#include <unistd.h>
 #include "Engine.h"
 #include "GeometryLibrary.h"
 #include "ConcurrencySerial.h"
@@ -10,6 +12,8 @@
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
 #include "GeometryParameters.h"
+#include "Tokenizer.h"
+#include "LibraryOperator.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -22,8 +26,8 @@ typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
-
-enum {SPIN_UP,SPIN_DOWN};
+typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
+typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
 int main(int argc,char* argv[])
 {
@@ -53,53 +57,41 @@ int main(int argc,char* argv[])
 
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
+
 	EngineType engine(geometry,concurrency,dof,true);
 	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
-	size_t n = geometryParams.sites;
 
-	std::cout.precision(20);
-	//MatrixType cicj(n,n);
+	size_t n = geometryParams.sites;
+	MatrixType m(n,n);
+	FieldType sum2 = 0;
+	size_t effectiveN  = n;
 	size_t norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
-	for (size_t orbital1=0; orbital1<norb; orbital1++) {
-		for (size_t orbital2=0; orbital2<norb; orbital2++) {
-			for (size_t site = 0; site<n ; site++) {
-				OpNormalFactoryType opNormalFactory(engine);
-				OperatorType& myOp1 = opNormalFactory(OperatorType::DESTRUCTION,site+orbital1*n,SPIN_UP);
-				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,site+orbital1*n,SPIN_UP);
-				OperatorType& myOp3 = opNormalFactory(OperatorType::DESTRUCTION,site+orbital1*n,SPIN_DOWN);
-				OperatorType& myOp4 = opNormalFactory(OperatorType::CREATION,site+orbital1*n,SPIN_DOWN);
-				HilbertStateType phi1 = gs;
-				myOp1.applyTo(phi1);
-				myOp2.applyTo(phi1);
-				HilbertStateType phi2 = gs;
-				myOp3.applyTo(phi2);
-				myOp4.applyTo(phi2);
-				for (size_t site2=0; site2<n; site2++) {
-					OperatorType& myOp5 = opNormalFactory(OperatorType::DESTRUCTION,site2+orbital2*n,SPIN_UP);
-					OperatorType& myOp6 = opNormalFactory(OperatorType::CREATION,site2+orbital2*n,SPIN_UP);
-					OperatorType& myOp7 = opNormalFactory(OperatorType::DESTRUCTION,site2+orbital2*n,SPIN_DOWN);
-					OperatorType& myOp8 = opNormalFactory(OperatorType::CREATION,site2+orbital2*n,SPIN_DOWN);
-					HilbertStateType phi3 = gs;
-					myOp5.applyTo(phi3);
-					myOp6.applyTo(phi3);
-					HilbertStateType phi4 = gs;
-					myOp7.applyTo(phi4);
-					myOp8.applyTo(phi4);
-					RealType x13 = scalarProduct(phi1,phi3);
-					RealType x24 = scalarProduct(phi2,phi4);
-					RealType x14 = scalarProduct(phi1,phi4);
-					RealType x23 = scalarProduct(phi2,phi3);
-					std::cout<<(x13+x24-x14-x23)<<" ";
-					//cicj(site,site2) += scalarProduct(gs,phi);
+
+	OpLibFactoryType opLibFactory(engine);
+	for (size_t site = 0; site<effectiveN ; site++) {
+		FieldType y = 0;
+		for (size_t orb1 = 0;orb1<norb; orb1++) {
+			HilbertStateType phi = gs;
+			LibraryOperatorType& myOp = opLibFactory(LibraryOperatorType::DELTA,site+orb1*n,0);
+			myOp.applyTo(phi);
+			y += scalarProduct(phi,gs);
+			for (size_t site2=0; site2<effectiveN; site2++) {
+				for (size_t orb2=0;orb2<norb;orb2++) {
+					HilbertStateType phi2 = gs;
+					LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::DELTA,site2+orb2*n,0);
+					myOp2.applyTo(phi2);
+					FieldType x = scalarProduct(phi2,phi);
+					std::cout<<x<<" ";
+					std::cout.flush();
+					m(site,site2) += x;
+					sum2 += y*y;
 				}
-				std::cout<<"\n";
 			}
-			std::cout<<"-------------------------------------------\n";
+			std::cout<<"\n";
 		}
 	}
 }
-
