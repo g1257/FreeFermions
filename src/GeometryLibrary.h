@@ -99,7 +99,10 @@ namespace FreeFermions {
 			  KTWONIFFOUR=GeometryParamsType::KTWONIFFOUR,
 			  FEAS1D=GeometryParamsType::FEAS1D};
 
-		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
+		enum {DIRECTION_X   = GeometryParamsType::DIRECTION_X,
+			  DIRECTION_Y   = GeometryParamsType::DIRECTION_Y,
+			  DIRECTION_XPY = GeometryParamsType::DIRECTION_XPY,
+			  DIRECTION_XMY = GeometryParamsType::DIRECTION_XMY};
 		
 		GeometryLibrary(GeometryParamsType& geometryParams) 
 		: geometryParams_(geometryParams)
@@ -298,15 +301,14 @@ namespace FreeFermions {
 		{
 			assert(geometryParams_.hopping.size()==2);
 			size_t leg = geometryParams_.leg;
-			bool isPeriodicY = geometryParams_.isPeriodicY;
 			if (leg<2)
 				throw std::runtime_error("GeometryLibrary:: ladder must have leg>1\n");
-			assert(!isPeriodicY || leg>2);
+			assert(!geometryParams_.isPeriodic[DIRECTION_Y] || leg>2);
 			size_t sites = geometryParams_.sites;
 			resizeAndZeroOut(sites,sites);
 			for (size_t i=0;i<sites;i++) {
 				PsimagLite::Vector<size_t>::Type v;
-				ladderFindNeighbors(v,i,leg,isPeriodicY);
+				ladderFindNeighbors(v,i,leg,geometryParams_.isPeriodic);
 				for (size_t k=0;k<v.size();k++) {
 					size_t j = v[k];
 					RealType tmp = (ladderSameColumn(i,j,leg))? 
@@ -316,18 +318,30 @@ namespace FreeFermions {
 			}
 		}
 
-		void ladderFindNeighbors(PsimagLite::Vector<size_t>::Type& v,size_t i,size_t leg,bool isPeriodicY)
+		void ladderFindNeighbors(PsimagLite::Vector<size_t>::Type& v,
+		                         size_t i,
+		                         size_t leg,
+		                         const PsimagLite::Vector<bool>::Type& isPeriodic)
 		{
 			size_t sites = geometryParams_.sites;
+			size_t lengthX = static_cast<size_t>(sites/leg);
+
 			v.clear();
 			size_t k = i + 1;
 			if (k<sites && ladderSameColumn(k,i,leg)) v.push_back(k);
 			k = i + leg;
 			if (k<sites)  v.push_back(k);
 		
-			if (leg>2 && isPeriodicY) {
-				if (i == 0 || i % leg == 0) {
-					k = i +leg -1;
+			if (leg>2 && isPeriodic[DIRECTION_Y]) {
+				if (i < lengthX) {
+					k = i + (leg-1)*lengthX;
+					if (k<sites) v.push_back(k);
+				}
+			}
+
+			if (isPeriodic[DIRECTION_X]) {
+				if (i == 0 || i % lengthX == 0) {
+					k = i +lengthX -1;
 					if (k<sites) v.push_back(k);
 				}
 			}
@@ -464,7 +478,6 @@ namespace FreeFermions {
 		{
 			for (size_t i=0;i<m.n_row();i++) {
 				for (size_t j=0;j<m.n_col();j++) {
-					assert(counter<v.size());
 					v.push_back(m(i,j));
 				}
 			}

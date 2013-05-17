@@ -93,11 +93,13 @@ namespace FreeFermions {
 
 		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D};
 
+		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
+
 		GeometryParameters(const PsimagLite::String& file)
 		: type(CHAIN),
 		  sites(0),
 		  leg(0),
-		  isPeriodicY(false),
+		  isPeriodic(2,false),
 		  hopping(1,1.0),
 		  option(OPTION_NONE),
 		  filename(file),
@@ -118,6 +120,11 @@ namespace FreeFermions {
 			int x = 0;
 
 			if (model=="HubbardOneBand")  {//    Immm  Tj1Orb
+				io.readline(x,"IsPeriodicX=");
+				if (x<0)
+					throw std::runtime_error("GeometryParameters: IsPeriodicX must be non negative\n");
+				isPeriodic[DIRECTION_X] = (x>0);
+
 				if (geometry=="chain") return;
 				if (geometry!="ladder")
 					throw std::runtime_error("GeometryParameters: HubbardOneBand supports geometry chain or ladder only\n");
@@ -129,7 +136,7 @@ namespace FreeFermions {
 				io.readline(x,"IsPeriodicY=");
 				if (x<0)
 					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
-				isPeriodicY = (x>0);
+				isPeriodic[DIRECTION_Y] = (x>0);
 
 				io.readline(x,"LadderLeg=");
 				if (x<0)
@@ -159,7 +166,7 @@ namespace FreeFermions {
 				io.readline(x,"IsPeriodicY=");
 				if (x<0)
 					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
-				isPeriodicY = (x>0);
+				isPeriodic[DIRECTION_Y] = (x>0);
 			} else {
 				PsimagLite::String str("GeometryParameters: unknown model ");
 				str += model + "\n";
@@ -223,7 +230,7 @@ namespace FreeFermions {
 		size_t type;
 		size_t sites;
 		size_t leg;
-		bool isPeriodicY;
+		typename PsimagLite::Vector<bool>::Type isPeriodic;
 		typename PsimagLite::Vector<RealType>::Type hopping;
 		size_t option;
 		PsimagLite::String filename;

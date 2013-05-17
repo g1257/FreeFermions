@@ -141,7 +141,8 @@ namespace FreeFermions {
 
 		void addPeriodicConnections(MatrixType& t) const
 		{
-			if (!geometryParams_.isPeriodicY) return;
+			if (!geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_Y])
+				return;
 		
 			size_t n = geometryParams_.sites;
 

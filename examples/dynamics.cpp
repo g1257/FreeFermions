@@ -62,7 +62,7 @@ void setMyGeometry(GeometryParamsType& geometryParams,const PsimagLite::Vector<P
 		geometryParams.type = GeometryLibraryType::LADDER;
 		geometryParams.hopping.resize(2);
 		geometryParams.hopping[0] =  geometryParams.hopping[1]  = 1.0;
-		geometryParams.isPeriodicY = (atoi(vstr[2].c_str())>0);
+		geometryParams.isPeriodic[GeometryParamsType::DIRECTION_Y] = (atoi(vstr[2].c_str())>0);
 		return;
 	}
 
