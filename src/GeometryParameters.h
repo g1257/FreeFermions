@@ -119,7 +119,7 @@ namespace FreeFermions {
 
 			int x = 0;
 
-			if (model=="HubbardOneBand")  {//    Immm  Tj1Orb
+			if (model=="HubbardOneBand" || model=="HubbardOneOrbital")  {//    Immm  Tj1Orb
 				io.readline(x,"IsPeriodicX=");
 				if (x<0)
 					throw std::runtime_error("GeometryParameters: IsPeriodicX must be non negative\n");
