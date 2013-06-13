@@ -15,6 +15,7 @@
 #include "LibraryOperator.h"
 #include "Combinations.h"
 #include "GeometryParameters.h"
+#include "Vector.h"
 
 typedef double RealType;
 typedef RealType FieldType;
@@ -41,7 +42,6 @@ int main(int argc,char *argv[])
 {
 	int opt;
 	PsimagLite::String file("");
-	size_t n =0;
 	RealType beta = 0;
 	RealType mu=0;
 
@@ -70,23 +70,40 @@ int main(int argc,char *argv[])
 	size_t dof = 1; // spinless
 	GeometryLibraryType geometry(geometryParams);
 
-	geometry.addPotential(mu);
-
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
+
+	size_t n = engine.size();
 
 	std::cout<<geometry;
 	std::cout<<"#beta="<<beta<<" mu="<<mu<<"\n";
 
+	PsimagLite::Vector<RealType>::Type ni(n);
+	RealType density = 0.0;
+	RealType energy = 0.0;
 	for (size_t i=0;i<n;i++) {
 		for (size_t j=0;j<n;j++) {
 			RealType value = 0;
-			for (size_t k=0;k<n;k++)
+			for (size_t k=0;k<n;k++) {
 				value += std::conj(engine.eigenvector(i,k))*engine.eigenvector(j,k)*
 						fermi(beta*(engine.eigenvalue(k)-mu));
+				if (i == j && i == 0) {
+					density += fermi(beta*(engine.eigenvalue(k)-mu));
+					energy += engine.eigenvalue(k)*fermi(beta*(engine.eigenvalue(k)-mu));
+				}
+			}
 			std::cout<<value<<" ";
+			if (i == j) ni[i] = value;
 		}
 		std::cout<<"\n";
 	}
 
+	RealType sum = 0.0;
+	std::cout<<"#density = "<<density<<"\n";
+	for (size_t i=0;i<ni.size();i++) {
+		std::cout<<i<<" "<<ni[i]<<"\n";
+		sum += ni[i];
+	}
+	std::cout<<"#total density= "<<sum<<"\n";
+	std::cout<<"#energy= "<<energy<<"\n";
 }

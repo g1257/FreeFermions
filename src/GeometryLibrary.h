@@ -216,7 +216,7 @@ namespace FreeFermions {
 		{
 			size_t n = t_.n_row();
 
-			for (size_t i=0;i<n;i++) t_(i,i) = value;
+			for (size_t i=0;i<n;i++) t_(i,i) += value;
 		}
 		
 		template<typename MType,typename PType>
