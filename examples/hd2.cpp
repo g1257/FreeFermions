@@ -17,8 +17,8 @@ typedef double RealType;
 #include "LibraryOperator.h"
 #include "Tokenizer.h" // in PsimagLite
 #include "GeometryParameters.h"
-#include "Range.h"
 #include "Concurrency.h"
+#include "Parallelizer.h"
 
 typedef std::complex<double> ComplexType;
 typedef ComplexType FieldType;
@@ -82,6 +82,105 @@ FieldType calcSuperDensity(size_t site,
 	return sum;
 }
 
+template<typename InfoType>
+class MyLoop {
+
+	enum {SPIN_UP,SPIN_DOWN};
+
+public:
+
+	MyLoop(EngineType& engine,
+	       SizeType step,
+	       SizeType offset,
+	       const HilbertStateType& gs,
+	       PsimagLite::Vector<SizeType>::Type& sites,
+	       bool verbose)
+	    : engine_(engine),
+	      step_(step),
+	      offset_(offset),
+	      gs_(gs),
+	      sites_(sites),
+	      verbose_(verbose)
+	{}
+
+	void thread_function_(SizeType threadNum,
+	                      SizeType blockSize,
+	                      SizeType total,
+	                      typename InfoType::MutexType* myMutex)
+	{
+		for (SizeType p=0;p<blockSize;p++) {
+			SizeType it = threadNum*blockSize + p;
+			if (it>=total) break;
+
+			OpNormalFactoryType opNormalFactory(engine_);
+			OpLibFactoryType opLibFactory(engine_);
+			OpDiagonalFactoryType opDiagonalFactory(engine_);
+
+			RealType time = it * step_ + offset_;
+			EtoTheIhTimeType eih(time,engine_,0);
+			DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
+
+			PsimagLite::Vector<HilbertStateType*>::Type savedVector(4);
+
+			for (size_t sigma = 0;sigma<2;sigma++) {
+				HilbertStateType phi = gs_;
+				LibraryOperatorType& myOp = opLibFactory(
+				            LibraryOperatorType::N,sites_[0],1-sigma);
+				myOp.applyTo(phi);
+
+				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,
+				                                      sites_[0],sigma);
+				myOp2.applyTo(phi);
+
+				for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
+					savedVector[sigma+sigma2*2] = new HilbertStateType(phi);
+
+
+					LibraryOperatorType& myOp3 = opLibFactory(
+					            LibraryOperatorType::NBAR,sites_[1],1-sigma2);
+					myOp3.applyTo(*savedVector[sigma+sigma2*2]);
+
+					OperatorType& myOp4 = opNormalFactory(
+					            OperatorType::DESTRUCTION,sites_[1],sigma2);
+					myOp4.applyTo(*savedVector[sigma+sigma2*2]);
+
+					if (verbose_) std::cerr<<"Applying exp(iHt)\n";
+					eihOp.applyTo(*savedVector[sigma+sigma2*2]);
+
+					if (verbose_) std::cerr<<"Applying c_{p down}\n";
+					OperatorType& myOp6 = opNormalFactory(
+					            OperatorType::DESTRUCTION,sites_[2],SPIN_DOWN);
+					myOp6.applyTo(*savedVector[sigma+sigma2*2]);
+
+					if (verbose_) std::cerr<<"Applying c_{p up}\n";
+					OperatorType& myOp7 = opNormalFactory(
+					            OperatorType::DESTRUCTION,sites_[2],SPIN_UP);
+					myOp7.applyTo(*savedVector[sigma+sigma2*2]);
+				}
+			}
+			FieldType sum = 0;
+			size_t total = savedVector.size()*savedVector.size()/2;
+			for (size_t x=0;x<total;x++) {
+				size_t sigma = (x & 3);
+				size_t sigma2 = (x & 12);
+				sigma2 >>= 2;
+				sum += scalarProduct(*savedVector[sigma],*savedVector[sigma2]);
+			}
+			for (size_t x=0;x<savedVector.size();x++) delete savedVector[x];
+
+			std::cout<<time<<" "<<(2.0*sum)<<"\n";
+		}
+	}
+
+private:
+
+	EngineType& engine_;
+	SizeType step_;
+	SizeType offset_;
+    const HilbertStateType& gs_;
+    PsimagLite::Vector<SizeType>::Type& sites_;
+    bool verbose_;
+};
 
 int main(int argc,char *argv[])
 {
@@ -119,6 +218,8 @@ int main(int argc,char *argv[])
 	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
 	PsimagLite::Vector<size_t>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
+	SizeType nthreads = 1;
+	GeometryParamsType::readLabel(nthreads,file,"Threads=");
 	sites.resize(3);
 	sites[2]=site3;
 
@@ -126,8 +227,10 @@ int main(int argc,char *argv[])
 	GeometryLibraryType geometry(geometryParams);
 
 	std::cerr<<geometry;
-	
-	PsimagLite::Concurrency concurrency(argc,argv);
+
+	typedef PsimagLite::Concurrency ConcurrencyType;
+	ConcurrencyType concurrency(argc,argv);
+
 	EngineType engine(geometry,dof,false);
 	
 	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
@@ -146,81 +249,16 @@ int main(int argc,char *argv[])
 	for (size_t i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
 	
-	PsimagLite::Range range(0,total);
-	enum {SPIN_UP,SPIN_DOWN};
-	
-	while(!range.end()) {
-		size_t it = range.index();
+	typedef MyLoop<ConcurrencyType::Info> MyLoopType;
+	typedef PsimagLite::Parallelizer<ConcurrencyType,MyLoopType> ParallelizerType;
+	ParallelizerType threadObject;
 
-		OpNormalFactoryType opNormalFactory(engine);
-		OpLibFactoryType opLibFactory(engine);
-		OpDiagonalFactoryType opDiagonalFactory(engine);
-		
-		RealType time = it * step + offset;
-		EtoTheIhTimeType eih(time,engine,0);
-		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
-		
-// 		HilbertStateType savedVector = gs;
-//		FieldType savedValue = 0;
-// 		FieldType sum = 0;
-		PsimagLite::Vector<HilbertStateType*>::Type savedVector(4);
-		
-		for (size_t sigma = 0;sigma<2;sigma++) {
-			HilbertStateType phi = gs;
-			LibraryOperatorType& myOp = opLibFactory(
-				LibraryOperatorType::N,sites[0],1-sigma);
-			myOp.applyTo(phi);
-			
-			OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,
-												  sites[0],sigma);
-			myOp2.applyTo(phi);
-			
-			for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
-				savedVector[sigma+sigma2*2] = new HilbertStateType(phi);
-				
-				
-				LibraryOperatorType& myOp3 = opLibFactory(
-					LibraryOperatorType::NBAR,sites[1],1-sigma2);
-				myOp3.applyTo(*savedVector[sigma+sigma2*2]);
-				
-				OperatorType& myOp4 = opNormalFactory(
-					OperatorType::DESTRUCTION,sites[1],sigma2);
-				myOp4.applyTo(*savedVector[sigma+sigma2*2]);
-				
-				if (verbose) std::cerr<<"Applying exp(iHt)\n";
-				eihOp.applyTo(*savedVector[sigma+sigma2*2]);
-				
-				if (verbose) std::cerr<<"Applying c_{p down}\n";
-				OperatorType& myOp6 = opNormalFactory(
-					OperatorType::DESTRUCTION,sites[2],SPIN_DOWN);
-				myOp6.applyTo(*savedVector[sigma+sigma2*2]);
-				
-				if (verbose) std::cerr<<"Applying c_{p up}\n";
-				OperatorType& myOp7 = opNormalFactory(
-					OperatorType::DESTRUCTION,sites[2],SPIN_UP);
-				myOp7.applyTo(*savedVector[sigma+sigma2*2]);
-				
-// 				if (verbose) std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
-// 				
-// 				if (sigma ==0 && sigma2 ==0) savedVector = phi3;
-// 				if (sigma ==1 && sigma2 ==1) {
-// 					savedValue = scalarProduct(phi3,savedVector);
-// 				}
-// 				sum += scalarProduct(phi3,phi3);
-// 				if (verbose) std::cerr<<"Done with scalar product\n";
-			}
-		}
-		FieldType sum = 0;
-		size_t total = savedVector.size()*savedVector.size()/2;
-		for (size_t x=0;x<total;x++) {
-			size_t sigma = (x & 3);
-			size_t sigma2 = (x & 12);
-			sigma2 >>= 2;
-			sum += scalarProduct(*savedVector[sigma],*savedVector[sigma2]);
-		}
-		for (size_t x=0;x<savedVector.size();x++) delete savedVector[x];
-		
-		std::cout<<time<<" "<<(2.0*sum)<<"\n";
-		range.next();
-	}
+	ParallelizerType::setThreads(nthreads);
+
+	MyLoopType myLoop(engine,step,offset,gs,sites,verbose);
+
+	std::cout<<"Using "<<threadObject.name();
+	std::cout<<" with "<<threadObject.threads()<<" threads.\n";
+	threadObject.loopCreate(total,myLoop);
+
 }

@@ -87,11 +87,11 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "GeometryLibrary.h"
 #include "CanonicalStates.h"
 #include "CreationOrDestructionOp.h"
-#include "Range.h"
 #include "RealSpaceState.h"
 #include "BLAS.h"
 #include "GeometryParameters.h"
 #include "Concurrency.h"
+#include "Parallelizer.h"
 
 namespace FreeFermions {
 	template<typename EngineType>
@@ -107,11 +107,127 @@ namespace FreeFermions {
 		typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 		typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
 		typedef typename OperatorType::FactoryType OpNormalFactoryType;
+		typedef PsimagLite::Concurrency ConcurrencyType;
 
 		enum {CREATION = OperatorType::CREATION,
 				       DESTRUCTION = OperatorType::DESTRUCTION};
 
+		template<typename InfoType>
+		class MyLoop {
+
 		public:
+
+			MyLoop(EngineType& engine,
+			       SizeType n,
+			       SizeType ne,
+			       CanonicalStates& aux,
+			       SizeType states,
+			       SizeType nthreads)
+			    : engine_(engine),
+			      n_(n),
+			      ne_(ne),
+			      aux_(aux),
+			      neV_(engine_.dof(),ne_),
+			      zeroV_(engine_.dof(),0),
+			      gs_(engine_,neV_),
+			      psiV_(states),
+			      psiVv_(states),
+			      sumV_((InfoType::mode == InfoType::MPI) ? 1 : nthreads,0),
+			      opNormalFactory_(engine_)
+			{}
+
+			void thread_function_(SizeType threadNum,
+			                      SizeType blockSize,
+			                      SizeType total,
+			                      typename InfoType::MutexType* myMutex)
+			{
+				size_t each = total/10;
+
+				for (SizeType p=0;p<blockSize;p++) {
+					SizeType i = threadNum*blockSize + p;
+					if (i>=total) break;
+
+					if (i%each ==0 && threadNum == 0) {
+						std::cerr<<"Done "<<(i*10/each)<<"%\n";
+						std::cerr.flush();
+					}
+
+					SizeType ind = (InfoType::mode == InfoType::MPI) ? 0 : threadNum;
+
+					VectorUintType v;
+					aux_.getSites(v,i);
+					HilbertStateType phi(engine_,zeroV_);
+					psiOneBlock(phi,v,CREATION,opNormalFactory_);
+					//std::cout<<phi;
+					for (size_t j=0;j<total;j++) {
+						VectorUintType w;
+						aux_.getSites(w,j);
+						if (v.size()+w.size()!=ne_) {
+							psiV_[j] = 0;
+							continue;
+						}
+
+						HilbertStateType phi2 = gs_;
+						psiOneBlock(phi2,w,DESTRUCTION,opNormalFactory_,n_);
+						psiV_[j] = scalarProduct(phi2,phi);
+						//std::cout<<psi(i,j)<<" ";
+					}
+					psiVv_[i]=psiV_;
+					sumV_[ind] += psiV_*psiV_;
+					//std::cout<<"\n";
+				}
+			}
+
+			template<typename SomeParallelizerType>
+			FieldType sum(SomeParallelizerType& p)
+			{
+				assert(sumV_.size()>0);
+				p.gather(sumV_);
+				FieldType tmp = sumV_[0];
+				p.broadcast(tmp);
+				return tmp;
+			}
+
+			template<typename SomeParallelizerType>
+			const typename PsimagLite::Vector<VectorType>::Type&
+			psiVv(SomeParallelizerType& p)
+			{
+				if (p.name() != "mpi") return psiVv_;
+				p.gather(psiV_);
+				return psiVv_;
+			}
+
+		private:
+
+			void psiOneBlock(HilbertStateType& phi,
+			                   const VectorUintType& v,
+			                   size_t label,
+			                   OpNormalFactoryType& opNormalFactory,
+			                   size_t offset = 0)
+			{
+				size_t sigma = 0;
+				for (size_t i=0;i<v.size();i++) {
+					size_t site = v[i] + offset;
+					OperatorType& myOp = opNormalFactory(label,site,sigma);
+					myOp.applyTo(phi);
+				}
+			}
+
+			EngineType engine_;
+			SizeType n_;
+			SizeType ne_;
+			CanonicalStates aux_;
+			VectorUintType neV_;
+			VectorUintType zeroV_;
+			HilbertStateType gs_;
+			VectorType psiV_;
+			typename PsimagLite::Vector<VectorType>::Type psiVv_;
+			typename PsimagLite::Vector<FieldType>::Type sumV_;
+			OpNormalFactoryType opNormalFactory_;
+		}; // class MyLoop
+
+		public:
+
 			// note: right and left blocks are assumed equal and of size n
 			ReducedDensityMatrix(EngineType& engine,size_t n,size_t ne)
 			: engine_(engine),n_(n),ne_(ne)
@@ -134,69 +250,34 @@ namespace FreeFermions {
 		private:
 			void calculatePsi(MatrixType& psi)
 			{
-				OpNormalFactoryType opNormalFactory(engine_);
 				CanonicalStates aux(n_,ne_);
 				size_t states = aux.states();
 				psi.resize(states,states);
 				
-				VectorUintType neV(engine_.dof(),ne_);
-				VectorUintType zeroV(engine_.dof(),0);
-				HilbertStateType gs(engine_,neV);
-				
 				std::cout<<"#psi of size"<<states<<"x"<<states<<"\n";
-				size_t each = states/10;
-				VectorType psiV(states);
-				typename PsimagLite::Vector<VectorType>::Type psiVv(states);
-				RealType sum = 0;
-				PsimagLite::Range range(0,states);
-				for (;!range.end();range.next()) {
-					size_t i = range.index();
-					if (i%each ==0 && range.parallelizer()=="serial") {
-						std::cerr<<"Done "<<(i*10/each)<<"%\n";
-						std::cerr.flush();
-					}
-					VectorUintType v;
-					aux.getSites(v,i);
-					HilbertStateType phi(engine_,zeroV);
-					psiOneBlock(phi,v,CREATION,opNormalFactory);
-					//std::cout<<phi;
-					for (size_t j=0;j<states;j++) {
-						VectorUintType w;
-						aux.getSites(w,j);
-						if (v.size()+w.size()!=ne_) {
-							psiV[j] = 0;
-							continue;
-						}
 
-						HilbertStateType phi2 = gs;
-						psiOneBlock(phi2,w,DESTRUCTION,opNormalFactory,n_);
-						psiV[j] = scalarProduct(phi2,phi);
-						//std::cout<<psi(i,j)<<" ";
-					}
-					psiVv[i]=psiV;
-					sum += psiV*psiV;
-					//std::cout<<"\n";
-				}
+				typedef MyLoop<ConcurrencyType::Info> MyLoopType;
+				typedef PsimagLite::Parallelizer<ConcurrencyType,MyLoopType> ParallelizerType;
+				ParallelizerType threadObject;
+
+				ParallelizerType::setThreads(engine_.threads());
+
+				MyLoopType myLoop(engine_,n_,ne_,aux,states,threadObject.threads());
+
+				std::cout<<"Using "<<threadObject.name();
+				std::cout<<" with "<<threadObject.threads()<<" threads.\n";
+				threadObject.loopCreate(states,myLoop);
+
+				FieldType sum = myLoop.sum(threadObject);
+				const typename PsimagLite::Vector<VectorType>::Type& psiVv =
+				        myLoop.psiVv(threadObject);
+
 //				concurrency_.gather(psiVv);
 //				concurrency_.gather(sum);
 				std::cerr<<"sum="<<sum<<"\n";
 				for (size_t i=0;i<psiVv.size();i++)
 					for (size_t j=0;j<psiVv[i].size();j++)
 						psi(i,j) = psiVv[i][j]/sqrt(sum);
-			}
-			
-			void psiOneBlock(HilbertStateType& phi,
-			                   const VectorUintType& v,
-			                   size_t label,
-			                   OpNormalFactoryType& opNormalFactory,
-			                   size_t offset = 0)
-			{
-				size_t sigma = 0; 
-				for (size_t i=0;i<v.size();i++) {
-					size_t site = v[i] + offset;
-					OperatorType& myOp = opNormalFactory(label,site,sigma);
-					myOp.applyTo(phi);
-				}
 			}
 			
 			void calculateRdm(MatrixType& rho,const MatrixType& psi)
