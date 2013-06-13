@@ -1,9 +1,11 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
-my ($what)=@ARGV;
-my $possibilities = getPossibilities();
-defined($what) or die "perl make.pl whatever\n \twhere whatever is one of $possibilities\n";
-$what=~s/\.cpp$//;
+use strict;
+use warnings;
+
+my @drivers = ("cicj","deltaIdeltaJ","EasyExciton","HolonDoublon",
+	       "reducedDensityMatrix","cicjBetaGrand",
+	       "dynamics","hd2","ninj","niVsBetaGrand","splusSminus","szsz");
 
 backupMakefile();
 writeMakefile();
@@ -22,8 +24,10 @@ sub backupMakefile
 
 sub writeMakefile
 {
+	my $allExecutables = combineAllDrivers("");
+	my $allCpps = combineAllDrivers(".cpp");
+
 open(FILE,">Makefile") or die "Cannot open Makefile for writing: $!\n";
-my $headers = join(' ',glob("../Engine/*.h"));
 print FILE<<EOF;
 # DO NOT EDIT!!! Changes will be lost. Modify configure.pl instead
 # This Makefile was written by configure.pl
@@ -34,21 +38,27 @@ print FILE<<EOF;
 LDFLAGS =      -llapack    -lm  -lpthread 
 CPPFLAGS = -Werror -Wall -I../PartialPsimag  -I../../PsimagLite/src -I../src
 CXX = g++ -O3 -DNDEBUG
-EXAMPLES = HolonDoublon EasyExciton cicj ninj reducedDensityMatrix
 
-all: $what
+all: $allExecutables
+EOF
 
-$what.o: $what.cpp $headers Makefile
+foreach my $what (@drivers) {
+print FILE<<EOF;
+$what.o: $what.cpp  Makefile
 	\$(CXX) \$(CPPFLAGS) -c $what.cpp  
 
 $what: $what.o
 	\$(CXX) -o  $what $what.o \$(LDFLAGS)
 
-Makefile.dep: $what.cpp
-	\$(CXX) \$(CPPFLAGS) -MM $what.cpp  > Makefile.dep
+EOF
+}
+
+print FILE<<EOF;
+Makefile.dep: $allCpps
+	\$(CXX) \$(CPPFLAGS) -MM $allCpps  > Makefile.dep
 
 clean:
-	rm -f core* $what *.o *.ii *.tt
+	rm -f core* $allExecutables *.o *.ii *.tt
 
 include Makefile.dep
 ######## End of Makefile ########
@@ -59,16 +69,14 @@ close(FILE);
 print "Done writing Makefile\n";
 }
 
-sub getPossibilities
+sub combineAllDrivers
 {
-	open(PIPE,"ls *.cpp |") or return "";
-	my $a = "";
-	while(<PIPE>) {
-		chomp;
-		s/\.cpp$//;
-		$a .= $_." ";
+	my ($extension) = @_;
+	my $buffer = "";
+	foreach my $what (@drivers) {
+		my $tmp = $what.$extension." ";
+		$buffer .= $tmp;
 	}
-	close(PIPE);
-	return $a;
+	return $buffer;
 }
 

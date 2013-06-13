@@ -43,7 +43,7 @@ git clone https://github.com/g1257/FreeFermions
 ----------------------------------------------------
 
 cd FreeFermions/examples
-perl make.pl cicj
+perl make.pl
 ./cicj 8 4
 
 ----------------------------------------------------
