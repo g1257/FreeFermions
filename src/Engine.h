@@ -83,18 +83,16 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename RealType_,typename FieldType_,typename ConcurrencyType_>
+	template<typename RealType_,typename FieldType_>
 	class Engine {
 	
 		public:
 
 			typedef RealType_ RealType;
 			typedef FieldType_ FieldType;
-			typedef ConcurrencyType_ ConcurrencyType;
 
-			Engine(const PsimagLite::Matrix<FieldType>& geometry,ConcurrencyType& concurrency,size_t dof,bool verbose=false)
-			: concurrency_(concurrency),
-			  dof_(dof),
+			Engine(const PsimagLite::Matrix<FieldType>& geometry,size_t dof,bool verbose=false)
+			: dof_(dof),
 			  verbose_(verbose),
 			  eigenvectors_(geometry)
 			{
@@ -123,8 +121,6 @@ namespace FreeFermions {
 	
 			size_t size() const { return eigenvalues_.size(); }
 
-			ConcurrencyType& concurrency() { return concurrency_; }
-
 		private:
 		
 			void diagonalize()
@@ -142,7 +138,6 @@ namespace FreeFermions {
 				}
 			}
 
-			ConcurrencyType& concurrency_;
 			size_t dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
 			bool verbose_;
 			PsimagLite::Matrix<FieldType> eigenvectors_;

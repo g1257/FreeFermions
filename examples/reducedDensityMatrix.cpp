@@ -1,26 +1,15 @@
 
 #include "ReducedDensityMatrix.h"
-#ifdef USE_MPI
-#include "ConcurrencyMpi.h"
-#else
-#include "ConcurrencySerial.h"
-#endif
-#include "ReducedDensityMatrix.h"
+#include "Concurrency.h"
 
 // TBW FIXME
 typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef RealType FieldType;
-#ifndef USE_MPI
-typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
-#else
-typedef PsimagLite::ConcurrencyMpi<RealType> ConcurrencyType;
-#endif
-
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
-typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::Engine<RealType,FieldType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 //typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
@@ -55,8 +44,8 @@ int main(int argc,char* argv[])
 	GeometryLibraryType geometry(geometryParams);
 
 	std::cerr<<geometry;
-	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(geometry,concurrency,dof,true);
+	PsimagLite::Concurrency concurrency(argc,argv);
+	EngineType engine(geometry,dof,true);
 	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;

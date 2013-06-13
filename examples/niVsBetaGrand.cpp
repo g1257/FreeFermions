@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include "Engine.h"
 #include "GeometryLibrary.h"
-#include "ConcurrencySerial.h"
 #include "TypeToString.h"
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
@@ -15,14 +14,15 @@
 #include "LibraryOperator.h"
 #include "Combinations.h"
 #include "GeometryParameters.h"
+#include "Concurrency.h"
 
 typedef double RealType;
 typedef RealType FieldType;
-typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
+typedef PsimagLite::Concurrency ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
-typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::Engine<RealType,FieldType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::EToTheBetaH<EngineType> EtoTheBetaHType;
 typedef FreeFermions::DiagonalOperator<EtoTheBetaHType> DiagonalOperatorType;
@@ -104,7 +104,7 @@ int main(int argc,char *argv[])
 	geometry.addPotential(mu);
 
 	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(geometry,concurrency,dof,true);
+	EngineType engine(geometry,dof,true);
 
 	std::cout<<geometry;
 	std::cout<<"#site="<<site<<"\n";

@@ -8,7 +8,6 @@
 #include "unistd.h"
 #include "Engine.h"
 #include "GeometryLibrary.h"
-#include "ConcurrencySerial.h"
 #include "TypeToString.h"
 #include "Tokenizer.h" // in PsimagLite
 #include "GeometryParameters.h"
@@ -20,15 +19,16 @@
 #include "NoPthreads.h"
 #define PTHREADS_NAME PsimagLite::NoPthreads
 #endif
+#include "Concurrency.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef ComplexType FieldType;
-typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
+typedef PsimagLite::Concurrency ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
-typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::Engine<RealType,FieldType> EngineType;
 
 int main(int argc,char *argv[])
 {
@@ -79,7 +79,7 @@ int main(int argc,char *argv[])
 	std::cerr<<geometry;
 	
 	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(geometry,concurrency,dof,false);
+	EngineType engine(geometry,dof,false);
 
 	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
@@ -112,5 +112,5 @@ int main(int argc,char *argv[])
 	FieldType superdensity = helperHolonDoublon.calcSuperDensity(sites[0],sites[1]);
 	std::cout<<"#superdensity="<<superdensity<<"\n";
 
-	threadedHolonDoublon.loopCreate(total,helperHolonDoublon,concurrency);
+	threadedHolonDoublon.loopCreate(total,helperHolonDoublon);
 }

@@ -9,13 +9,6 @@ typedef double RealType;
 #include "unistd.h"
 #include "Engine.h"
 #include "GeometryLibrary.h"
-#ifdef USE_MPI
-#include "ConcurrencyMpi.h"
-typedef PsimagLite::ConcurrencyMpi<RealType> ConcurrencyType;
-#else
-#include "ConcurrencySerial.h"
-typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
-#endif
 #include "TypeToString.h"
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
@@ -25,13 +18,14 @@ typedef PsimagLite::ConcurrencySerial<RealType> ConcurrencyType;
 #include "Tokenizer.h" // in PsimagLite
 #include "GeometryParameters.h"
 #include "Range.h"
+#include "Concurrency.h"
 
 typedef std::complex<double> ComplexType;
 typedef ComplexType FieldType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
-typedef FreeFermions::Engine<RealType,FieldType,ConcurrencyType> EngineType;
+typedef FreeFermions::Engine<RealType,FieldType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
@@ -133,8 +127,8 @@ int main(int argc,char *argv[])
 
 	std::cerr<<geometry;
 	
-	ConcurrencyType concurrency(argc,argv);
-	EngineType engine(geometry,concurrency,dof,false);
+	PsimagLite::Concurrency concurrency(argc,argv);
+	EngineType engine(geometry,dof,false);
 	
 	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
@@ -152,7 +146,7 @@ int main(int argc,char *argv[])
 	for (size_t i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
 	
-	PsimagLite::Range<ConcurrencyType> range(0,total,concurrency);
+	PsimagLite::Range range(0,total);
 	enum {SPIN_UP,SPIN_DOWN};
 	
 	while(!range.end()) {
