@@ -12,19 +12,12 @@
 #include "Tokenizer.h" // in PsimagLite
 #include "GeometryParameters.h"
 #include "ParallelHolonDoublon.h"
-#ifdef USE_PTHREADS
-#include "Pthreads.h"
-#define PTHREADS_NAME PsimagLite::Pthreads
-#else
-#include "NoPthreads.h"
-#define PTHREADS_NAME PsimagLite::NoPthreads
-#endif
 #include "Concurrency.h"
+#include "Parallelizer.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef ComplexType FieldType;
-typedef PsimagLite::Concurrency ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
 typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
@@ -32,6 +25,9 @@ typedef FreeFermions::Engine<RealType,FieldType> EngineType;
 
 int main(int argc,char *argv[])
 {
+	typedef PsimagLite::Concurrency ConcurrencyType;
+	ConcurrencyType concurrency(argc,argv);
+
 	int opt;
 	PsimagLite::String file("");
 	size_t total=0;
@@ -78,7 +74,6 @@ int main(int argc,char *argv[])
 
 	std::cerr<<geometry;
 	
-	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,dof,false);
 
 	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
@@ -97,8 +92,10 @@ int main(int argc,char *argv[])
 	std::cout<<"\n";
 
 	typedef FreeFermions::ParallelHolonDoublon<RealType,FieldType,EngineType> ParallelHolonDoublonType;
-	PTHREADS_NAME<ParallelHolonDoublonType> threadedHolonDoublon;
-	PTHREADS_NAME<ParallelHolonDoublonType>::setThreads(nthreads);
+	typedef PsimagLite::Parallelizer<ParallelHolonDoublonType> ParallelizerType;
+	ParallelizerType threadedHolonDoublon;
+
+	ParallelizerType::setThreads(nthreads);
 
 	ParallelHolonDoublonType::HolonDoublonParamsType params(ne,
 															sites,

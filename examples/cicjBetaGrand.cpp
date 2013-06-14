@@ -98,12 +98,17 @@ int main(int argc,char *argv[])
 		std::cout<<"\n";
 	}
 
-	RealType sum = 0.0;
+	RealType sum1 = 0.0;
+	RealType sum2 = 0.0;
 	std::cout<<"#density = "<<density<<"\n";
 	for (size_t i=0;i<ni.size();i++) {
 		std::cout<<i<<" "<<ni[i]<<"\n";
-		sum += ni[i];
+		if (i<ni.size()/2) {
+			sum1 += ni[i];
+		} else {
+			sum2 += ni[i];
+		}
 	}
-	std::cout<<"#total density= "<<sum<<"\n";
+	std::cout<<"#total density= "<<sum1<<" "<<sum2<<" "<<(sum1+sum2)<<"\n";
 	std::cout<<"#energy= "<<energy<<"\n";
 }

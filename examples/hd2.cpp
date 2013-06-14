@@ -82,8 +82,9 @@ FieldType calcSuperDensity(size_t site,
 	return sum;
 }
 
-template<typename InfoType>
 class MyLoop {
+
+	typedef PsimagLite::Concurrency ConcurrencyType;
 
 	enum {SPIN_UP,SPIN_DOWN};
 
@@ -106,7 +107,7 @@ public:
 	void thread_function_(SizeType threadNum,
 	                      SizeType blockSize,
 	                      SizeType total,
-	                      typename InfoType::MutexType* myMutex)
+	                      typename ConcurrencyType::MutexType* myMutex)
 	{
 		for (SizeType p=0;p<blockSize;p++) {
 			SizeType it = threadNum*blockSize + p;
@@ -249,8 +250,8 @@ int main(int argc,char *argv[])
 	for (size_t i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
 	
-	typedef MyLoop<ConcurrencyType::Info> MyLoopType;
-	typedef PsimagLite::Parallelizer<ConcurrencyType,MyLoopType> ParallelizerType;
+	typedef MyLoop MyLoopType;
+	typedef PsimagLite::Parallelizer<MyLoopType> ParallelizerType;
 	ParallelizerType threadObject;
 
 	ParallelizerType::setThreads(nthreads);

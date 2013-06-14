@@ -85,6 +85,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "DiagonalOperator.h"
 #include "CreationOrDestructionOp.h"
 #include "LibraryOperator.h"
+#include "Concurrency.h"
 
 namespace FreeFermions {
 
@@ -125,6 +126,7 @@ class ParallelHolonDoublon {
 	typedef typename DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 	typedef typename OperatorType::FactoryType OpNormalFactoryType;
 	typedef typename LibraryOperatorType::FactoryType OpLibFactoryType;
+	typedef PsimagLite::Concurrency ConcurrencyType;
 
 public:
 
@@ -139,7 +141,10 @@ public:
 		}
 	}
 
-	void thread_function_(size_t threadNum,size_t blockSize,size_t total,pthread_mutex_t* myMutex)
+	void thread_function_(size_t threadNum,
+	                      size_t blockSize,
+	                      size_t total,
+	                      typename ConcurrencyType::MutexType* myMutex)
 	{
 		for (size_t p=0;p<blockSize;p++) {
 			size_t it = threadNum * blockSize + p;

@@ -112,7 +112,6 @@ namespace FreeFermions {
 		enum {CREATION = OperatorType::CREATION,
 				       DESTRUCTION = OperatorType::DESTRUCTION};
 
-		template<typename InfoType>
 		class MyLoop {
 
 		public:
@@ -132,14 +131,14 @@ namespace FreeFermions {
 			      gs_(engine_,neV_),
 			      psiV_(states),
 			      psiVv_(states),
-			      sumV_((InfoType::mode == InfoType::MPI) ? 1 : nthreads,0),
+			      sumV_(ConcurrencyType::storageSize(nthreads),0),
 			      opNormalFactory_(engine_)
 			{}
 
 			void thread_function_(SizeType threadNum,
 			                      SizeType blockSize,
 			                      SizeType total,
-			                      typename InfoType::MutexType* myMutex)
+			                      typename ConcurrencyType::MutexType* myMutex)
 			{
 				size_t each = total/10;
 
@@ -152,7 +151,7 @@ namespace FreeFermions {
 						std::cerr.flush();
 					}
 
-					SizeType ind = (InfoType::mode == InfoType::MPI) ? 0 : threadNum;
+					SizeType ind = ConcurrencyType::storageIndex(threadNum);
 
 					VectorUintType v;
 					aux_.getSites(v,i);
@@ -181,19 +180,22 @@ namespace FreeFermions {
 			template<typename SomeParallelizerType>
 			FieldType sum(SomeParallelizerType& p)
 			{
-				assert(sumV_.size()>0);
-				p.gather(sumV_);
-				FieldType tmp = sumV_[0];
-				p.broadcast(tmp);
-				return tmp;
+				if (ConcurrencyType::mode == ConcurrencyType::MPI) {
+					SizeType tmp = sumV_[0];
+					p.gather(tmp);
+					p.bcast(tmp);
+					return tmp;
+				}
+				return PsimagLite::sum(sumV_);
 			}
 
 			template<typename SomeParallelizerType>
 			const typename PsimagLite::Vector<VectorType>::Type&
 			psiVv(SomeParallelizerType& p)
 			{
-				if (p.name() != "mpi") return psiVv_;
-				p.gather(psiV_);
+				if (ConcurrencyType::mode == ConcurrencyType::MPI) {
+					p.allGather(psiVv_);
+				}
 				return psiVv_;
 			}
 
@@ -256,8 +258,8 @@ namespace FreeFermions {
 				
 				std::cout<<"#psi of size"<<states<<"x"<<states<<"\n";
 
-				typedef MyLoop<ConcurrencyType::Info> MyLoopType;
-				typedef PsimagLite::Parallelizer<ConcurrencyType,MyLoopType> ParallelizerType;
+				typedef MyLoop MyLoopType;
+				typedef PsimagLite::Parallelizer<MyLoopType> ParallelizerType;
 				ParallelizerType threadObject;
 
 				ParallelizerType::setThreads(engine_.threads());
