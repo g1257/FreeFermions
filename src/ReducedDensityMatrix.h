@@ -260,9 +260,8 @@ namespace FreeFermions {
 
 				typedef MyLoop MyLoopType;
 				typedef PsimagLite::Parallelizer<MyLoopType> ParallelizerType;
-				ParallelizerType threadObject;
-
-				ParallelizerType::setThreads(engine_.threads());
+				ParallelizerType threadObject(PsimagLite::Concurrency::npthreads,
+				                              PsimagLite::MPI::COMM_WORLD);
 
 				MyLoopType myLoop(engine_,n_,ne_,aux,states,threadObject.threads());
 

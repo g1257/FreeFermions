@@ -25,9 +25,6 @@ typedef FreeFermions::Engine<RealType,FieldType> EngineType;
 
 int main(int argc,char *argv[])
 {
-	typedef PsimagLite::Concurrency ConcurrencyType;
-	ConcurrencyType concurrency(argc,argv);
-
 	int opt;
 	PsimagLite::String file("");
 	size_t total=0;
@@ -68,6 +65,9 @@ int main(int argc,char *argv[])
 	GeometryParamsType::readLabel(nthreads,file,"Threads=");
 	assert(nthreads>0);
 
+	typedef PsimagLite::Concurrency ConcurrencyType;
+	ConcurrencyType concurrency(argc,argv,nthreads);
+
 	size_t dof = 2; // spin up and down
 
 	GeometryLibraryType geometry(geometryParams);
@@ -93,9 +93,8 @@ int main(int argc,char *argv[])
 
 	typedef FreeFermions::ParallelHolonDoublon<RealType,FieldType,EngineType> ParallelHolonDoublonType;
 	typedef PsimagLite::Parallelizer<ParallelHolonDoublonType> ParallelizerType;
-	ParallelizerType threadedHolonDoublon;
-
-	ParallelizerType::setThreads(nthreads);
+	ParallelizerType threadedHolonDoublon(PsimagLite::Concurrency::npthreads,
+	                                      PsimagLite::MPI::COMM_WORLD);
 
 	ParallelHolonDoublonType::HolonDoublonParamsType params(ne,
 															sites,

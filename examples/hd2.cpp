@@ -230,7 +230,8 @@ int main(int argc,char *argv[])
 	std::cerr<<geometry;
 
 	typedef PsimagLite::Concurrency ConcurrencyType;
-	ConcurrencyType concurrency(argc,argv);
+	SizeType npthreads = 1;
+	ConcurrencyType concurrency(argc,argv,npthreads);
 
 	EngineType engine(geometry,dof,false);
 	
@@ -252,9 +253,8 @@ int main(int argc,char *argv[])
 	
 	typedef MyLoop MyLoopType;
 	typedef PsimagLite::Parallelizer<MyLoopType> ParallelizerType;
-	ParallelizerType threadObject;
-
-	ParallelizerType::setThreads(nthreads);
+	ParallelizerType threadObject(PsimagLite::Concurrency::npthreads,
+	                              PsimagLite::MPI::COMM_WORLD);
 
 	MyLoopType myLoop(engine,step,offset,gs,sites,verbose);
 

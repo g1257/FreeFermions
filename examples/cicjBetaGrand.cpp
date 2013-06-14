@@ -70,7 +70,8 @@ int main(int argc,char *argv[])
 	size_t dof = 1; // spinless
 	GeometryLibraryType geometry(geometryParams);
 
-	ConcurrencyType concurrency(argc,argv);
+	SizeType npthreads = 1;
+	ConcurrencyType concurrency(argc,argv,npthreads);
 	EngineType engine(geometry,dof,true);
 
 	size_t n = engine.size();
