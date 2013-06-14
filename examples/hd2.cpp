@@ -107,7 +107,7 @@ public:
 	void thread_function_(SizeType threadNum,
 	                      SizeType blockSize,
 	                      SizeType total,
-	                      typename ConcurrencyType::MutexType* myMutex)
+	                      ConcurrencyType::MutexType* myMutex)
 	{
 		for (SizeType p=0;p<blockSize;p++) {
 			SizeType it = threadNum*blockSize + p;
