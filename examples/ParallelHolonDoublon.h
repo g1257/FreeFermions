@@ -146,8 +146,10 @@ public:
 	                      size_t total,
 	                      typename ConcurrencyType::MutexType* myMutex)
 	{
-		for (size_t p=0;p<blockSize;p++) {
-			size_t it = threadNum * blockSize + p;
+		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
+		SizeType npthreads = engine_.threads();
+		for (SizeType p=0;p<blockSize;p++) {
+			SizeType it = (threadNum+npthreads*mpiRank)*blockSize + p;
 			if (it>=total) continue;
 
 			OpNormalFactoryType opNormalFactory(engine_);

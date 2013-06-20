@@ -1,6 +1,5 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009 , UT-Battelle, LLC
+Copyright (c) 2009-2013, UT-Battelle, LLC
 All rights reserved
 
 [FreeFermions, Version 1.0.0]
@@ -68,9 +67,8 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
+
 /** \ingroup DMRG */
 /*@{*/
 
@@ -142,8 +140,10 @@ namespace FreeFermions {
 			{
 				size_t each = total/10;
 
+				SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
+				SizeType npthreads = engine_.threads();
 				for (SizeType p=0;p<blockSize;p++) {
-					SizeType i = threadNum*blockSize + p;
+					SizeType i = (threadNum+npthreads*mpiRank)*blockSize + p;
 					if (i>=total) break;
 
 					if (i%each ==0 && threadNum == 0) {
@@ -177,26 +177,29 @@ namespace FreeFermions {
 				}
 			}
 
-			template<typename SomeParallelizerType>
-			FieldType sum(SomeParallelizerType& p)
+			FieldType sum() const
 			{
-				if (ConcurrencyType::mode == ConcurrencyType::MPI) {
-					SizeType tmp = sumV_[0];
-					p.gather(tmp);
-					p.bcast(tmp);
-					return tmp;
-				}
-				return PsimagLite::sum(sumV_);
+				assert(sumV_.size()>0);
+				return sumV_[0];
 			}
 
-			template<typename SomeParallelizerType>
-			const typename PsimagLite::Vector<VectorType>::Type&
-			psiVv(SomeParallelizerType& p)
+			const typename PsimagLite::Vector<VectorType>::Type& psiVv() const
 			{
-				if (ConcurrencyType::mode == ConcurrencyType::MPI) {
-					p.allGather(psiVv_);
-				}
 				return psiVv_;
+			}
+
+			void sync()
+			{
+				SizeType tmp = PsimagLite::sum(sumV_);
+
+				if (ConcurrencyType::hasMpi()) {
+					PsimagLite::MPI::gather(tmp);
+					PsimagLite::MPI::bcast(tmp);
+
+					PsimagLite::MPI::allGather(psiVv_);
+				}
+
+				sumV_[0] = tmp;
 			}
 
 		private:
@@ -269,9 +272,10 @@ namespace FreeFermions {
 				std::cout<<" with "<<threadObject.threads()<<" threads.\n";
 				threadObject.loopCreate(states,myLoop);
 
-				FieldType sum = myLoop.sum(threadObject);
-				const typename PsimagLite::Vector<VectorType>::Type& psiVv =
-				        myLoop.psiVv(threadObject);
+				myLoop.sync();
+
+				FieldType sum = myLoop.sum();
+				const typename PsimagLite::Vector<VectorType>::Type& psiVv = myLoop.psiVv();
 
 //				concurrency_.gather(psiVv);
 //				concurrency_.gather(sum);
