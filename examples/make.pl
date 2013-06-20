@@ -26,6 +26,7 @@ sub writeMakefile
 {
 	my $allExecutables = combineAllDrivers("");
 	my $allCpps = combineAllDrivers(".cpp");
+	my $lapack = findLapack();
 
 open(FILE,">Makefile") or die "Cannot open Makefile for writing: $!\n";
 print FILE<<EOF;
@@ -35,8 +36,8 @@ print FILE<<EOF;
 # Platform: Linux
 # MPI: 0
 
-LDFLAGS =      -llapack    -lm  -lpthread 
-CPPFLAGS = -Werror -Wall -I../PartialPsimag  -I../../PsimagLite/src -I../src
+LDFLAGS =    $lapack    -lm  -lpthread
+CPPFLAGS = -Werror -Wall -I../../PsimagLite  -I../../PsimagLite/src -I../src
 CXX = g++ -O3 -DNDEBUG
 
 all: $allExecutables
@@ -45,7 +46,7 @@ EOF
 foreach my $what (@drivers) {
 print FILE<<EOF;
 $what.o: $what.cpp  Makefile
-	\$(CXX) \$(CPPFLAGS) -c $what.cpp  
+	\$(CXX) \$(CPPFLAGS) -c $what.cpp
 
 $what: $what.o
 	\$(CXX) -o  $what $what.o \$(LDFLAGS)
@@ -80,3 +81,39 @@ sub combineAllDrivers
 	return $buffer;
 }
 
+sub findLapack
+{
+	my $stringToTest = "-llapack -lblas";
+	my $ret = tryWith($stringToTest);
+	return $stringToTest if ($ret == 0);
+
+	$stringToTest = "/usr/lib64/liblapack.so.3 /usr/lib64/libblas.so.3";
+	$ret = tryWith($stringToTest);
+	return $stringToTest if ($ret == 0);
+
+	return "/usr/lib/liblapack.so.3 /usr/lib/libblas.so.3";
+}
+
+sub tryWith
+{
+	my ($stringToTest) = @_;
+	my $tmpfile = `mktemp XXXXXXXXXX.cpp`;
+	open(FOUT,">$tmpfile") or return 1;
+	print FOUT "int main() {}\n";
+	close(FOUT);
+	chomp($tmpfile);
+	my $ret = open(PIPE,"g++ $tmpfile $stringToTest  2>&1 | ");
+	if (!$ret) {
+	 	system("rm -f $tmpfile");
+		return 1;
+	}
+	my $buffer = "";
+	while(<PIPE>) {
+		$buffer .= $_;
+	}
+	close(PIPE);
+	system("rm -f $tmpfile");
+	$buffer =~ s/ //;
+	$ret = ($buffer eq "" or $buffer eq "\n") ? 0 : 1;
+	return $ret;
+}
