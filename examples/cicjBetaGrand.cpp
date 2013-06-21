@@ -71,7 +71,7 @@ int main(int argc,char *argv[])
 	GeometryLibraryType geometry(geometryParams);
 
 	SizeType npthreads = 1;
-	ConcurrencyType concurrency(argc,argv,npthreads);
+	ConcurrencyType concurrency(&argc,&argv,npthreads);
 	EngineType engine(geometry,dof,true);
 
 	size_t n = engine.size();

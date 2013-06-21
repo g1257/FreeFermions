@@ -233,7 +233,7 @@ int main(int argc,char *argv[])
 
 	typedef PsimagLite::Concurrency ConcurrencyType;
 	SizeType npthreads = 1;
-	ConcurrencyType concurrency(argc,argv,npthreads);
+	ConcurrencyType concurrency(&argc,&argv,npthreads);
 
 	EngineType engine(geometry,dof,false);
 	

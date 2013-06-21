@@ -192,12 +192,11 @@ namespace FreeFermions {
 			{
 				SizeType tmp = PsimagLite::sum(sumV_);
 
-				if (ConcurrencyType::hasMpi()) {
-					PsimagLite::MPI::gather(tmp);
-					PsimagLite::MPI::bcast(tmp);
+				PsimagLite::MPI::pointByPointGather(tmp);
+				PsimagLite::MPI::bcast(tmp);
 
-					PsimagLite::MPI::allGather(psiVv_);
-				}
+				PsimagLite::MPI::pointByPointGather(psiVv_);
+				PsimagLite::MPI::bcast(psiVv_);
 
 				sumV_[0] = tmp;
 			}

@@ -104,7 +104,7 @@ int main(int argc,char *argv[])
 	geometry.addPotential(mu);
 
 	SizeType npthreads = 1;
-	ConcurrencyType concurrency(argc,argv,npthreads);
+	ConcurrencyType concurrency(&argc,&argv,npthreads);
 	EngineType engine(geometry,dof,true);
 
 	std::cout<<geometry;

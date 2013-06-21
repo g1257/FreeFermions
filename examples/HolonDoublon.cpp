@@ -66,7 +66,7 @@ int main(int argc,char *argv[])
 	assert(nthreads>0);
 
 	typedef PsimagLite::Concurrency ConcurrencyType;
-	ConcurrencyType concurrency(argc,argv,nthreads);
+	ConcurrencyType concurrency(&argc,&argv,nthreads);
 
 	size_t dof = 2; // spin up and down
 
