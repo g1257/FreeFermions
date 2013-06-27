@@ -110,7 +110,7 @@ public:
 	                      ConcurrencyType::MutexType* myMutex)
 	{
 		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
-		SizeType npthreads = engine_.threads();
+		SizeType npthreads = ConcurrencyType::npthreads;
 		for (SizeType p=0;p<blockSize;p++) {
 			SizeType it = (threadNum+npthreads*mpiRank)*blockSize + p;
 			if (it>=total) break;
@@ -235,7 +235,7 @@ int main(int argc,char *argv[])
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
 
-	EngineType engine(geometry,dof,false);
+	EngineType engine(geometry.matrix(),dof,false);
 	
 	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;

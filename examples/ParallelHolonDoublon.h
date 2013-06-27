@@ -147,7 +147,7 @@ public:
 	                      typename ConcurrencyType::MutexType* myMutex)
 	{
 		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
-		SizeType npthreads = engine_.threads();
+		SizeType npthreads = ConcurrencyType::npthreads;
 		for (SizeType p=0;p<blockSize;p++) {
 			SizeType it = (threadNum+npthreads*mpiRank)*blockSize + p;
 			if (it>=total) continue;

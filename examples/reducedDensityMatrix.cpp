@@ -46,7 +46,7 @@ int main(int argc,char* argv[])
 	std::cerr<<geometry;
 	SizeType npthreads = 1;
 	PsimagLite::Concurrency concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry,dof,true);
+	EngineType engine(geometry.matrix(),dof,true);
 	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;

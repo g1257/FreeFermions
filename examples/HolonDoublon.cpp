@@ -74,7 +74,7 @@ int main(int argc,char *argv[])
 
 	std::cerr<<geometry;
 	
-	EngineType engine(geometry,dof,false);
+	EngineType engine(geometry.matrix(),dof,false);
 
 	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;

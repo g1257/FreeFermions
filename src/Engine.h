@@ -93,10 +93,8 @@ namespace FreeFermions {
 
 			Engine(const PsimagLite::Matrix<FieldType>& geometry,
 			       size_t dof,
-			       size_t nthreads,
 			       bool verbose=false)
 			: dof_(dof),
-			  nthreads_(nthreads),
 			  verbose_(verbose),
 			  eigenvectors_(geometry)
 			{
@@ -125,8 +123,6 @@ namespace FreeFermions {
 	
 			size_t size() const { return eigenvalues_.size(); }
 
-			size_t threads() const { return nthreads_; }
-
 		private:
 		
 			void diagonalize()
@@ -145,7 +141,6 @@ namespace FreeFermions {
 			}
 
 			size_t dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
-			size_t nthreads_;
 			bool verbose_;
 			PsimagLite::Matrix<FieldType> eigenvectors_;
 			typename PsimagLite::Vector<RealType>::Type eigenvalues_;

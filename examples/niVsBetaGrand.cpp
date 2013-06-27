@@ -105,7 +105,7 @@ int main(int argc,char *argv[])
 
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry,dof,true);
+	EngineType engine(geometry.matrix(),dof,true);
 
 	std::cout<<geometry;
 	std::cout<<"#site="<<site<<"\n";

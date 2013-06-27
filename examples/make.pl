@@ -3,6 +3,9 @@
 use strict;
 use warnings;
 
+use lib '../../PsimagLite/scripts';
+use Make;
+
 my @drivers = ("cicj","deltaIdeltaJ","EasyExciton","HolonDoublon",
 	       "reducedDensityMatrix","cicjBetaGrand",
 	       "dynamics","hd2","ninj","niVsBetaGrand","splusSminus","szsz");
@@ -24,96 +27,14 @@ sub backupMakefile
 
 sub writeMakefile
 {
-	my $allExecutables = combineAllDrivers("");
-	my $allCpps = combineAllDrivers(".cpp");
-	my $lapack = findLapack();
+	open(my $fh,">Makefile") or die "Cannot open Makefile for writing: $!\n";
 
-open(FILE,">Makefile") or die "Cannot open Makefile for writing: $!\n";
-print FILE<<EOF;
-# DO NOT EDIT!!! Changes will be lost. Modify configure.pl instead
-# This Makefile was written by configure.pl
-# DMRG++ (v2.0) by G.A.
-# Platform: Linux
-# MPI: 0
+	my $cppflags = "-Werror -Wall -I../../PsimagLite  -I../../PsimagLite/src -I../src";
+	my $cxx="g++ -O3 -DNDEBUG";
+	my $lapack = Make::findLapack();
 
-LDFLAGS =    $lapack    -lm  -lpthread
-CPPFLAGS = -Werror -Wall -I../../PsimagLite  -I../../PsimagLite/src -I../src
-CXX = g++ -O3 -DNDEBUG
+	Make::make($fh,\@drivers,"FreeFermions","Linux",0,"$lapack    -lm  -lpthread",$cxx,$cppflags,"true"," "," ");
 
-all: $allExecutables
-EOF
-
-foreach my $what (@drivers) {
-print FILE<<EOF;
-$what.o: $what.cpp  Makefile
-	\$(CXX) \$(CPPFLAGS) -c $what.cpp
-
-$what: $what.o
-	\$(CXX) -o  $what $what.o \$(LDFLAGS)
-
-EOF
-}
-
-print FILE<<EOF;
-Makefile.dep: $allCpps
-	\$(CXX) \$(CPPFLAGS) -MM $allCpps  > Makefile.dep
-
-clean:
-	rm -f core* $allExecutables *.o *.ii *.tt
-
-include Makefile.dep
-######## End of Makefile ########
-
-EOF
-
-close(FILE);
-print "Done writing Makefile\n";
-}
-
-sub combineAllDrivers
-{
-	my ($extension) = @_;
-	my $buffer = "";
-	foreach my $what (@drivers) {
-		my $tmp = $what.$extension." ";
-		$buffer .= $tmp;
-	}
-	return $buffer;
-}
-
-sub findLapack
-{
-	my $stringToTest = "-llapack -lblas";
-	my $ret = tryWith($stringToTest);
-	return $stringToTest if ($ret == 0);
-
-	$stringToTest = "/usr/lib64/liblapack.so.3 /usr/lib64/libblas.so.3";
-	$ret = tryWith($stringToTest);
-	return $stringToTest if ($ret == 0);
-
-	return "/usr/lib/liblapack.so.3 /usr/lib/libblas.so.3";
-}
-
-sub tryWith
-{
-	my ($stringToTest) = @_;
-	my $tmpfile = `mktemp XXXXXXXXXX.cpp`;
-	open(FOUT,">$tmpfile") or return 1;
-	print FOUT "int main() {}\n";
-	close(FOUT);
-	chomp($tmpfile);
-	my $ret = open(PIPE,"g++ $tmpfile $stringToTest  2>&1 | ");
-	if (!$ret) {
-	 	system("rm -f $tmpfile");
-		return 1;
-	}
-	my $buffer = "";
-	while(<PIPE>) {
-		$buffer .= $_;
-	}
-	close(PIPE);
-	system("rm -f $tmpfile");
-	$buffer =~ s/ //;
-	$ret = ($buffer eq "" or $buffer eq "\n") ? 0 : 1;
-	return $ret;
+	close($fh);
+	print "Done writing Makefile\n";
 }

@@ -141,7 +141,7 @@ namespace FreeFermions {
 				size_t each = total/10;
 
 				SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
-				SizeType npthreads = engine_.threads();
+				SizeType npthreads = ConcurrencyType::npthreads;
 				for (SizeType p=0;p<blockSize;p++) {
 					SizeType i = (threadNum+npthreads*mpiRank)*blockSize + p;
 					if (i>=total) break;

@@ -170,21 +170,9 @@ namespace FreeFermions {
 			}
 		}
 
-		size_t row() const
+		const MatrixType& matrix() const
 		{
-			assert(t_.n_row()==t_.n_col());
-			return t_.n_row();
-		}
-
-		size_t col() const
-		{
-			assert(t_.n_row()==t_.n_col());
-			return t_.n_col();
-		}
-
-		const RealType& operator()(size_t i,size_t j) const
-		{
-			return t_(i,j);
+			return t_;
 		}
 
 		PsimagLite::String name() const
