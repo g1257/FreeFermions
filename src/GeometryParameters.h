@@ -81,6 +81,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 #include <assert.h>
 #include "String.h"
+#include "IoSimple.h"
 
 namespace FreeFermions {
 
@@ -88,8 +89,6 @@ namespace FreeFermions {
 	struct GeometryParameters {
 
 		typedef RealType_ RealType;
-
-		enum {OPTION_NONE,OPTION_PERIODIC};
 
 		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D};
 
@@ -101,7 +100,6 @@ namespace FreeFermions {
 		  leg(0),
 		  isPeriodic(2,false),
 		  hopping(1,1.0),
-		  option(OPTION_NONE),
 		  filename(file),
 		  orbitals(1)
 		{
@@ -119,11 +117,12 @@ namespace FreeFermions {
 
 			int x = 0;
 
+			io.readline(x,"IsPeriodicX=");
+			if (x<0)
+				throw std::runtime_error("GeometryParameters: IsPeriodicX must be non negative\n");
+			isPeriodic[DIRECTION_X] = (x>0);
+
 			if (model=="HubbardOneBand" || model=="HubbardOneOrbital")  {//    Immm  Tj1Orb
-				io.readline(x,"IsPeriodicX=");
-				if (x<0)
-					throw std::runtime_error("GeometryParameters: IsPeriodicX must be non negative\n");
-				isPeriodic[DIRECTION_X] = (x>0);
 
 				if (geometry=="chain") return;
 				if (geometry!="ladder")
@@ -144,6 +143,11 @@ namespace FreeFermions {
 				leg = x;
 				return;
 			} else if (model=="FeAsBasedSc") {
+
+				io.readline(x,"IsPeriodicY=");
+				if (x<0)
+					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
+				isPeriodic[DIRECTION_Y] = (x>0);
 
 				try {
 					io.readline(x,"LadderLeg=");
@@ -232,7 +236,6 @@ namespace FreeFermions {
 		size_t leg;
 		typename PsimagLite::Vector<bool>::Type isPeriodic;
 		typename PsimagLite::Vector<RealType>::Type hopping;
-		size_t option;
 		PsimagLite::String filename;
 		size_t orbitals;
 	}; // struct GeometryParameters

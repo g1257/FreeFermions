@@ -281,7 +281,7 @@ namespace FreeFermions {
 					if (i-j==1 || j-i==1) t_(i,j) = geometryParams_.hopping[0];
 				}
 			}
-			if (geometryParams_.option==GeometryParamsType::OPTION_PERIODIC)
+			if (geometryParams_.isPeriodic[DIRECTION_X])
 				t_(0,sites-1) = t_(sites-1,0) = geometryParams_.hopping[0];
 		}
 
@@ -359,7 +359,6 @@ namespace FreeFermions {
 		{
 			size_t sites = geometryParams_.sites;
 			size_t leg = geometryParams_.leg;
-			size_t geometryOption = geometryParams_.option;
 			size_t orbitalsSquared = geometryParams_.orbitals * geometryParams_.orbitals;
 			RealType tx = oneSiteHoppings[orborb+DIRECTION_X*orbitalsSquared];
 			size_t lengthx  = sites/leg;
@@ -369,7 +368,7 @@ namespace FreeFermions {
 					if (i+1<lengthx) t(i+1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+j*lengthx) = tx;
 					if (i>0) t(i-1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i-1+j*lengthx) = tx;
 				}
-				if (geometryOption==GeometryParamsType::OPTION_PERIODIC) 
+				if (geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_X])
 					t(j*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,j*lengthx) = tx;
 			}
 
@@ -381,7 +380,7 @@ namespace FreeFermions {
 					if (j>0) t(i+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j-1)*lengthx) = ty;
 					if (j+1<leg) t(i+(j+1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j+1)*lengthx) = ty;
 				}
-				if (geometryOption==GeometryParamsType::OPTION_PERIODIC)
+				if (geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_Y])
 					t(i,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i) = ty;
 			}
 			RealType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*orbitalsSquared];
@@ -392,14 +391,14 @@ namespace FreeFermions {
 						t(i+1+(j+1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+(j+1)*lengthx) = txpy;
 					if (i+1<lengthx && j>0)
 						t(i+1+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+(j-1)*lengthx) = txmy;
-					if (geometryOption!=GeometryParamsType::OPTION_PERIODIC || i>0)
+					if (!geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_X] || i>0)
 						continue;
 					if (j+1<leg)
 						t((j+1)*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,(j+1)*lengthx) = txpy;
 					if (j>0)
 						t((j-1)*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,(j-1)*lengthx) = txmy;
 				}
-				if (geometryOption!=GeometryParamsType::OPTION_PERIODIC)
+				if (!geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_X])
 					continue;
 				if (i+1<lengthx) {
 					t(i+1,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i+1) = txpy;
