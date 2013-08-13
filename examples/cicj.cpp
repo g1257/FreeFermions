@@ -30,11 +30,15 @@ int main(int argc,char* argv[])
 {
 	int opt = 0;
 	PsimagLite::String file("");
+	bool energyOnly = false;
 
-	while ((opt = getopt(argc, argv, "f:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:e")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
+			break;
+		case 'e':
+			energyOnly=true;
 			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
@@ -61,6 +65,9 @@ int main(int argc,char* argv[])
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
+	
+	if (energyOnly) return 0;
+
 	size_t sigma = 0;
 	//MatrixType cicj(n,n);
 	size_t norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
