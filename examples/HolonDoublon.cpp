@@ -61,8 +61,12 @@ int main(int argc,char *argv[])
 	GeometryParamsType::readVector(sites,file,"TSPSites");
 	sites.resize(3);
 	sites[2] = site3;
-	size_t nthreads = 0;
-	GeometryParamsType::readLabel(nthreads,file,"Threads=");
+	size_t nthreads = 1;
+
+	try {
+		GeometryParamsType::readLabel(nthreads,file,"Threads=");
+	} catch (std::exception& e) {}
+
 	assert(nthreads>0);
 
 	typedef PsimagLite::Concurrency ConcurrencyType;
