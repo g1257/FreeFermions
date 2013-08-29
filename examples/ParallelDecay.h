@@ -98,6 +98,7 @@ struct DecayParams {
 	            SizeType numberOfSites_,
 	            const VectorSizeType& ne_,
 	            const VectorSizeType& sites_,
+	            SizeType sigma3_,
 	            const RealType& offset_,
 	            const RealType& step_,
 	            bool debug_,
@@ -106,6 +107,7 @@ struct DecayParams {
 	      numberOfSites(numberOfSites_),
 	      ne(ne_),
 	      sites(sites_),
+	      sigma3(sigma3_),
 	      offset(offset_),
 	      step(step_),
 	      debug(debug_),
@@ -116,6 +118,7 @@ struct DecayParams {
 	SizeType numberOfSites;
 	VectorSizeType ne;
 	VectorSizeType sites;
+	SizeType sigma3;
 	RealType offset;
 	RealType step;
 	bool debug;
@@ -156,6 +159,9 @@ public:
 	{
 		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
 		SizeType npthreads = ConcurrencyType::npthreads;
+
+		SizeType siteToMeasure = params_.sites[params_.sites.size()-1];
+
 		for (SizeType p=0;p<blockSize;p++) {
 			SizeType it = (threadNum+npthreads*mpiRank)*blockSize + p;
 			if (it>=total) continue;
@@ -183,6 +189,11 @@ public:
 							             opNormalFactory);
 							eihOp.applyTo(phi1);
 
+							OperatorType& myOp6 = opNormalFactory(OperatorType::DESTRUCTION,
+							                                      siteToMeasure,
+							                                      params_.sigma3);
+							myOp6.applyTo(phi1);
+
 							HilbertStateType phi2 = gs_;
 							partialDecay(phi2,
 							             orb2,
@@ -190,6 +201,7 @@ public:
 							             opNormalFactory);
 							eihOp.applyTo(phi2);
 
+							myOp6.applyTo(phi2);
 							sum += scalarProduct(phi1,phi2);
 						}
 					}

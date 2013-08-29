@@ -86,6 +86,8 @@ int main(int argc,char *argv[])
 	for (SizeType i=0;i<electronsUp;i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
 
+	SizeType sigma3 = 0;
+
 	std::cout<<"#sites= ";
 	for (SizeType i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
@@ -99,6 +101,7 @@ int main(int argc,char *argv[])
 	                                          geometryParams.sites,
 	                                          ne,
 	                                          sites,
+	                                          sigma3,
 	                                          offset,
 	                                          step,
 	                                          debug,
