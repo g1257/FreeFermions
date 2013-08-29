@@ -86,8 +86,6 @@ int main(int argc,char *argv[])
 	for (SizeType i=0;i<electronsUp;i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
 
-	SizeType sigma3 = 0;
-
 	std::cout<<"#sites= ";
 	for (SizeType i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
@@ -97,18 +95,17 @@ int main(int argc,char *argv[])
 	ParallelizerType threadedDecay(PsimagLite::Concurrency::npthreads,
 	                               PsimagLite::MPI::COMM_WORLD);
 
-	ParallelDecayType::DecayParamsType params(ne,
+	ParallelDecayType::DecayParamsType params(geometryParams.orbitals,
+	                                          geometryParams.sites,
+	                                          ne,
 	                                          sites,
-	                                          sigma3,
 	                                          offset,
 	                                          step,
 	                                          debug,
 	                                          verbose);
 	ParallelDecayType helperDecay(engine,params);
 
-	FieldType superdensity = helperDecay.calcSuperDensity(sites,
-	                                                      geometryParams.sites,
-	                                                      geometryParams.orbitals);
+	FieldType superdensity = helperDecay.calcSuperDensity();
 	std::cout<<"#superdensity="<<superdensity<<"\n";
 
 	threadedDecay.loopCreate(total,helperDecay);

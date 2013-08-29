@@ -94,25 +94,28 @@ struct DecayParams {
 
 	typedef PsimagLite::Vector<SizeType>::Type VectorSizeType;
 
-	DecayParams(const VectorSizeType& ne_,
+	DecayParams(SizeType orbitals_,
+	            SizeType numberOfSites_,
+	            const VectorSizeType& ne_,
 	            const VectorSizeType& sites_,
-	            SizeType sigma3_,
 	            const RealType& offset_,
 	            const RealType& step_,
 	            bool debug_,
 	            bool verbose_)
-	    : ne(ne_),
+	    : orbitals(orbitals_),
+	      numberOfSites(numberOfSites_),
+	      ne(ne_),
 	      sites(sites_),
-	      sigma3(sigma3_),
 	      offset(offset_),
 	      step(step_),
 	      debug(debug_),
 	      verbose(verbose_)
 	{}
 
+	SizeType orbitals;
+	SizeType numberOfSites;
 	VectorSizeType ne;
 	VectorSizeType sites;
-	SizeType sigma3;
 	RealType offset;
 	RealType step;
 	bool debug;
@@ -151,8 +154,6 @@ public:
 	                      SizeType total,
 	                      typename ConcurrencyType::MutexType* myMutex)
 	{
-		return;
-
 		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
 		SizeType npthreads = ConcurrencyType::npthreads;
 		for (SizeType p=0;p<blockSize;p++) {
@@ -160,78 +161,59 @@ public:
 			if (it>=total) continue;
 
 			OpNormalFactoryType opNormalFactory(engine_);
-			OpLibFactoryType opLibFactory(engine_);
 			OpDiagonalFactoryType opDiagonalFactory(engine_);
 
 			RealType time = it * params_.step + params_.offset;
 			EtoTheIhTimeType eih(time,engine_,0);
 			DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
 
-			HilbertStateType savedVector = gs_;
-			FieldType savedValue = 0;
 			FieldType sum = 0;
 
-			for (SizeType sigma = 0;sigma<2;sigma++) {
-				HilbertStateType phi = gs_;
-				LibraryOperatorType& myOp = opLibFactory(
-				            LibraryOperatorType::N,params_.sites[0],1-sigma);
-				myOp.applyTo(phi);
+			for (SizeType sigma1 = 0; sigma1 < 2; ++sigma1) {
+				for (SizeType sigma2 = 0; sigma2 < 2; ++sigma2) {
+					for (SizeType orb1 = 0; orb1 < params_.orbitals; ++orb1) {
+						if (orb1 == 1) continue;
+						for (SizeType orb2 = 0; orb2 < params_.orbitals; ++orb2) {
+							if (orb2 == 1) continue;
 
-				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,
-				                                      params_.sites[0],sigma);
-				myOp2.applyTo(phi);
+							HilbertStateType phi1 = gs_;
+							partialDecay(phi1,
+							             orb1,
+							             sigma1,
+							             opNormalFactory);
+							eihOp.applyTo(phi1);
 
-				for (SizeType sigma2 = 0;sigma2 < 2;sigma2++) {
-					HilbertStateType phi3 = phi;
+							HilbertStateType phi2 = gs_;
+							partialDecay(phi2,
+							             orb2,
+							             sigma2,
+							             opNormalFactory);
+							eihOp.applyTo(phi2);
 
-					LibraryOperatorType& myOp3 = opLibFactory(
-					            LibraryOperatorType::NBAR,params_.sites[1],1-sigma2);
-					myOp3.applyTo(phi3);
-
-					OperatorType& myOp4 = opNormalFactory(
-					            OperatorType::DESTRUCTION,params_.sites[1],sigma2);
-					myOp4.applyTo(phi3);
-
-					if (params_.verbose) std::cerr<<"Applying exp(iHt)\n";
-					eihOp.applyTo(phi3);
-
-					if (params_.verbose) std::cerr<<"Applying c_p\n";
-					OperatorType& myOp6 = opNormalFactory(
-					            OperatorType::DESTRUCTION,params_.sites[2],params_.sigma3);
-					myOp6.applyTo(phi3);
-
-					if (params_.verbose) std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
-
-					if (sigma ==0 && sigma2 ==0) savedVector = phi3;
-					if (sigma ==1 && sigma2 ==1) {
-						savedValue = scalarProduct(phi3,savedVector);
+							sum += scalarProduct(phi1,phi2);
+						}
 					}
-					sum += scalarProduct(phi3,phi3);
-					if (params_.verbose) std::cerr<<"Done with scalar product\n";
 				}
 			}
-			sum += 2*real(savedValue);
 			std::cout<<time<<" "<<real(sum)<<"\n";
 		}
 	}
 
-	FieldType calcSuperDensity(const VectorSizeType& sites,
-	                           SizeType numberOfSites,
-	                           SizeType orbitals)
+	FieldType calcSuperDensity()
 	{
 		FieldType sum = 0.0;
 		OpNormalFactoryType opNormalFactory(engine_);
 
 		for (SizeType sigma1 = 0; sigma1 < 2; ++sigma1) {
 			for (SizeType sigma2 = 0; sigma2 < 2; ++sigma2) {
-				for (SizeType orb1 = 0; orb1 < orbitals; ++orb1) {
+				for (SizeType orb1 = 0; orb1 < params_.orbitals; ++orb1) {
 					if (orb1 == 1) continue;
-					for (SizeType orb2 = 0; orb2 < orbitals; ++orb2) {
+					for (SizeType orb2 = 0; orb2 < params_.orbitals; ++orb2) {
 						if (orb2 == 1) continue;
 						HilbertStateType phi1 = gs_;
-						partialDecay(phi1,sites,orb1,sigma1,numberOfSites,opNormalFactory);
+						partialDecay(phi1,orb1,sigma1,opNormalFactory);
 						HilbertStateType phi2 = gs_;
-						partialDecay(phi2,sites,orb2,sigma2,numberOfSites,opNormalFactory);
+						partialDecay(phi2,orb2,sigma2,opNormalFactory);
 						sum += scalarProduct(phi1,phi2);
 					}
 				}
@@ -244,18 +226,16 @@ public:
 private:
 
 	void partialDecay(HilbertStateType& phi,
-	                  const VectorSizeType& sites,
 	                  SizeType orb,
 	                  SizeType sigma,
-	                  SizeType numberOfSites,
 	                  OpNormalFactoryType& opNormalFactory)
 	{
-		assert(sites.size()>0);
-		for (SizeType i = 0; i < sites.size() - 1; i++) {
-			SizeType site1 = sites[i] + 1*numberOfSites;
+		assert(params_.sites.size()>0);
+		for (SizeType i = 0; i < params_.sites.size() - 1; i++) {
+			SizeType site1 = params_.sites[i] + 1*params_.numberOfSites;
 			OperatorType& myOp1 = opNormalFactory(OperatorType::DESTRUCTION,site1,sigma);
 			myOp1.applyTo(phi);
-			SizeType site2 = sites[i] + orb*numberOfSites;
+			SizeType site2 = params_.sites[i] + orb*params_.numberOfSites;
 			OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,site2,sigma);
 			myOp2.applyTo(phi);
 		}
