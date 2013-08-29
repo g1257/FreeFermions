@@ -135,7 +135,10 @@ namespace FreeFermions {
 				size_t ind,
 				size_t sigma)
 		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
-		{}
+		{
+			assert(ind < engine_.size());
+			assert(sigma < engine_.dof());
+		}
 
 
 		CreationOrDestructionOp(const ThisType* op2)

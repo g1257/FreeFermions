@@ -290,6 +290,7 @@ namespace FreeFermions {
 				for (size_t i=0;i<lambda.size();i++) {
 					int loc = findLocOf(operatorsCreation_,i,sigma);
 					if (loc<0) continue;
+					assert(static_cast<SizeType>(loc) < operatorsCreation_.size());
 					prod *= operatorsCreation_[loc]->operator()(lambda[i]);
 				}
 				for (size_t i=0;i<lambda2.size();i++) {
@@ -333,6 +334,7 @@ namespace FreeFermions {
 			for (size_t i=0;i<hs.opPointers_.size();i++) {
 				if (hs.opPointers_[n1-i-1].type==CREATION) {
 					size_t x1 = hs.operatorsCreation_.size() - 1 - counter;
+					assert(x1 < hs.operatorsCreation_.size());
 					const CorDOperatorType* op = hs.operatorsCreation_[x1];
 					counter++;
 					CorDOperatorType& opCopy = opNormalFactory_(op);
