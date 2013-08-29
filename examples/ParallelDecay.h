@@ -252,7 +252,7 @@ private:
 	{
 		assert(sites.size()>0);
 		for (SizeType i = 0; i < sites.size() - 1; i++) {
-			SizeType site1 = sites[i] + orb*numberOfSites;
+			SizeType site1 = sites[i] + 1*numberOfSites;
 			OperatorType& myOp1 = opNormalFactory(OperatorType::DESTRUCTION,site1,sigma);
 			myOp1.applyTo(phi);
 			SizeType site2 = sites[i] + orb*numberOfSites;
