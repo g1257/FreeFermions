@@ -104,8 +104,8 @@ namespace FreeFermions {
 			  DIRECTION_XPY = GeometryParamsType::DIRECTION_XPY,
 			  DIRECTION_XMY = GeometryParamsType::DIRECTION_XMY};
 		
-		GeometryLibrary(GeometryParamsType& geometryParams) 
-		: geometryParams_(geometryParams)
+		GeometryLibrary(GeometryParamsType& geometryParams,bool decay = false)
+		    : geometryParams_(geometryParams),decay_(decay)
 		{
 			switch (geometryParams.type) {
 			case CHAIN:
@@ -507,8 +507,11 @@ namespace FreeFermions {
 		{
 			typename PsimagLite::Vector<RealType>::Type w;
 			PsimagLite::IoSimple::In io(filename);
+
+			bool hasPotentialT = false;
 			try {
 				io.read(w,"PotentialT");
+				hasPotentialT = true;
 			} catch (std::exception& e) {
 				std::cerr<<"INFO: No PotentialT in file "<<filename<<"\n";
 			}
@@ -517,10 +520,14 @@ namespace FreeFermions {
 			io.read(v,"potentialV");
 			if (w.size()==0) return;
 			if (v.size()>w.size()) v.resize(w.size());
-			for (size_t i=0;i<w.size();i++) v[i] += w[i];
+			for (size_t i=0;i<w.size();i++)
+				v[i] += w[i];
+
+			if (decay_ && hasPotentialT) v = w;
 		}
 
 		const GeometryParamsType& geometryParams_;
+		bool decay_;
 		MatrixType t_;
 
 	}; // GeometryLibrary

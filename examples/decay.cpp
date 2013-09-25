@@ -72,7 +72,7 @@ int main(int argc,char *argv[])
 
 	SizeType dof = 2; // spin up and down
 
-	GeometryLibraryType geometry(geometryParams);
+	GeometryLibraryType geometry(geometryParams,true);
 
 	std::cerr<<geometry;
 
