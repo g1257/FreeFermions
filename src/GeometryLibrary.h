@@ -510,7 +510,7 @@ namespace FreeFermions {
 
 			bool hasPotentialT = false;
 			try {
-				io.read(w,"PotentialT");
+				io.read(w,"potentialT");
 				hasPotentialT = true;
 			} catch (std::exception& e) {
 				std::cerr<<"INFO: No PotentialT in file "<<filename<<"\n";

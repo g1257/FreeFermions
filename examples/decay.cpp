@@ -72,7 +72,7 @@ int main(int argc,char *argv[])
 
 	SizeType dof = 2; // spin up and down
 
-	GeometryLibraryType geometry(geometryParams,true);
+	GeometryLibraryType geometry(geometryParams);
 
 	std::cerr<<geometry;
 
@@ -86,27 +86,31 @@ int main(int argc,char *argv[])
 	for (SizeType i=0;i<electronsUp;i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
 
+	typedef FreeFermions::ParallelDecay<RealType,FieldType,EngineType> ParallelDecayType;
+	ParallelDecayType::HilbertStateType gs(engine,ne,debug);
 	SizeType sigma3 = 0;
 
 	std::cout<<"#sites= ";
 	for (SizeType i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
 
-	typedef FreeFermions::ParallelDecay<RealType,FieldType,EngineType> ParallelDecayType;
+	GeometryLibraryType geometry2(geometryParams,true);
+	std::cerr<<geometry2;
+	EngineType engine2(geometry2.matrix(),dof,false);
+
+
 	typedef PsimagLite::Parallelizer<ParallelDecayType> ParallelizerType;
 	ParallelizerType threadedDecay(PsimagLite::Concurrency::npthreads,
 	                               PsimagLite::MPI::COMM_WORLD);
 
 	ParallelDecayType::DecayParamsType params(geometryParams.orbitals,
 	                                          geometryParams.sites,
-	                                          ne,
 	                                          sites,
 	                                          sigma3,
 	                                          offset,
 	                                          step,
-	                                          debug,
 	                                          verbose);
-	ParallelDecayType helperDecay(engine,params);
+	ParallelDecayType helperDecay(engine2,params,gs);
 
 	FieldType superdensity = helperDecay.calcSuperDensity();
 	std::cout<<"#superdensity="<<superdensity<<"\n";

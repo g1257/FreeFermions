@@ -96,32 +96,26 @@ struct DecayParams {
 
 	DecayParams(SizeType orbitals_,
 	            SizeType numberOfSites_,
-	            const VectorSizeType& ne_,
 	            const VectorSizeType& sites_,
 	            SizeType sigma3_,
 	            const RealType& offset_,
 	            const RealType& step_,
-	            bool debug_,
 	            bool verbose_)
 	    : orbitals(orbitals_),
 	      numberOfSites(numberOfSites_),
-	      ne(ne_),
 	      sites(sites_),
 	      sigma3(sigma3_),
 	      offset(offset_),
 	      step(step_),
-	      debug(debug_),
 	      verbose(verbose_)
 	{}
 
 	SizeType orbitals;
 	SizeType numberOfSites;
-	VectorSizeType ne;
 	VectorSizeType sites;
 	SizeType sigma3;
 	RealType offset;
 	RealType step;
-	bool debug;
 	bool verbose;
 };
 
@@ -131,7 +125,6 @@ class ParallelDecay {
 	typedef FreeFermions::EToTheIhTime<EngineType> EtoTheIhTimeType;
 	typedef FreeFermions::DiagonalOperator<EtoTheIhTimeType> DiagonalOperatorType;
 	typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
-	typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
 	typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 	typedef typename DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 	typedef typename OperatorType::FactoryType OpNormalFactoryType;
@@ -141,11 +134,14 @@ class ParallelDecay {
 
 public:
 
+	typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertStateType;
 	typedef RealType_ RealType;
 	typedef DecayParams<RealType> DecayParamsType;
 
-	ParallelDecay(const EngineType& engine,const DecayParamsType& params)
-	    : engine_(engine),params_(params),gs_(engine,params.ne,params.debug)
+	ParallelDecay(const EngineType& engine,
+	              const DecayParamsType& params,
+	              const HilbertStateType& gs)
+	    : engine_(engine),params_(params),gs_(gs)
 	{
 		if (params.sites.size()==0) {
 			throw std::runtime_error("ParallelDecay\n");
@@ -255,7 +251,7 @@ private:
 
 	const EngineType& engine_;
 	const DecayParamsType& params_;
-	HilbertStateType gs_;
+	const HilbertStateType& gs_;
 }; // class ParallelDecay
 } // namespace FreeFermions
 
