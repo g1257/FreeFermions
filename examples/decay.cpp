@@ -72,7 +72,7 @@ int main(int argc,char *argv[])
 
 	SizeType dof = 2; // spin up and down
 
-	GeometryLibraryType geometry(geometryParams);
+	GeometryLibraryType geometry(geometryParams,GeometryLibraryType::DECAY_0);
 
 	std::cerr<<geometry;
 
@@ -94,7 +94,7 @@ int main(int argc,char *argv[])
 	for (SizeType i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
 
-	GeometryLibraryType geometry2(geometryParams,true);
+	GeometryLibraryType geometry2(geometryParams,GeometryLibraryType::DECAY_1);
 	std::cerr<<geometry2;
 	EngineType engine2(geometry2.matrix(),dof,false);
 
