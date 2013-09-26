@@ -526,6 +526,7 @@ namespace FreeFermions {
 
 			if (decay_ == DECAY_1) {
 				v = w;
+				return;
 			}
 
 			if (v.size()>w.size()) v.resize(w.size());
