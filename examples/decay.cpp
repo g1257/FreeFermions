@@ -12,12 +12,15 @@
 #include "ParallelDecay.h"
 #include "Concurrency.h"
 #include "Parallelizer.h"
+#include "InputNg.h"
+#include "InputCheck.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef ComplexType FieldType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
-typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
+typedef PsimagLite::InputNg<FreeFermions::InputCheck> InputNgType;
+typedef FreeFermions::GeometryParameters<RealType,InputNgType::Readable> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
 typedef FreeFermions::Engine<RealType,FieldType> EngineType;
 
@@ -54,8 +57,12 @@ int main(int argc,char *argv[])
 
 	if (file=="") throw std::runtime_error("Wrong usage\n");
 
-	GeometryParamsType geometryParams(file);
-	SizeType electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
+	FreeFermions::InputCheck inputCheck;
+	InputNgType::Writeable ioWriteable(file,inputCheck);
+	InputNgType::Readable io(ioWriteable);
+
+	GeometryParamsType geometryParams(io);
+	size_t electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
 	PsimagLite::Vector<SizeType>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
 	sites.resize(sites.size()+1);

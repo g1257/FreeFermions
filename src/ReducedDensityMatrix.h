@@ -90,6 +90,8 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "GeometryParameters.h"
 #include "Concurrency.h"
 #include "Parallelizer.h"
+#include "InputNg.h"
+#include "InputCheck.h"
 
 namespace FreeFermions {
 	template<typename EngineType>
@@ -102,7 +104,8 @@ namespace FreeFermions {
 		typedef PsimagLite::Matrix<FieldType> MatrixType;
 		typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 		typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
-		typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
+		typedef PsimagLite::InputNg<FreeFermions::InputCheck> InputNgType;
+		typedef FreeFermions::GeometryParameters<RealType,InputNgType::Readable> GeometryParamsType;
 		typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
 		typedef typename OperatorType::FactoryType OpNormalFactoryType;
 		typedef PsimagLite::Concurrency ConcurrencyType;

@@ -81,6 +81,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 #include <assert.h>
 #include "String.h"
+#include "IoSimple.h"
 
 namespace FreeFermions {
 
