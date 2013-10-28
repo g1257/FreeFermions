@@ -81,11 +81,10 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 #include <assert.h>
 #include "String.h"
-#include "IoSimple.h"
 
 namespace FreeFermions {
 
-	template<typename RealType_>
+	template<typename RealType_,typename IoInputType>
 	struct GeometryParameters {
 
 		typedef RealType_ RealType;
@@ -94,16 +93,14 @@ namespace FreeFermions {
 
 		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 
-		GeometryParameters(const PsimagLite::String& file)
+		GeometryParameters(IoInputType& io)
 		: type(CHAIN),
 		  sites(0),
 		  leg(0),
 		  isPeriodic(2,false),
 		  hopping(1,1.0),
-		  filename(file),
 		  orbitals(1)
 		{
-			PsimagLite::IoSimple::In io(filename);
 			io.readline(sites,"TotalNumberOfSites=");
 
 			// default value
@@ -153,7 +150,6 @@ namespace FreeFermions {
 					io.readline(x,"LadderLeg=");
 				} catch (std::exception& e) {
 					x=1;
-					io.rewind();
 				}
 				if (x!=1 && x!=2)
 					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder leg must be 1 or 2 only\n");
@@ -178,16 +174,14 @@ namespace FreeFermions {
 			}
 		}
 
-		static int readElectrons(const PsimagLite::String& filename,size_t nsites)
+		static int readElectrons(IoInputType& io,size_t nsites)
 		{
-			PsimagLite::IoSimple::In io(filename);
 			int x = -1;
 			try {
 				io.readline(x,"TargetElectronsUp=");
 			} catch (std::exception& e)
 			{
 				x=-1;
-				io.rewind();
 			}
 
 			typename PsimagLite::Vector<RealType>::Type v;
@@ -196,7 +190,6 @@ namespace FreeFermions {
 			} catch (std::exception& e)
 			{
 				v.resize(0);
-				io.rewind();
 			}
 
 			if (x<0 && v.size()==0) {

@@ -13,13 +13,16 @@
 #include "Tokenizer.h"
 #include "GeometryParameters.h"
 #include "Concurrency.h"
+#include "InputNg.h"
+#include "InputCheck.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef ComplexType FieldType;
 typedef PsimagLite::Concurrency ConcurrencyType;
 typedef PsimagLite::Matrix<RealType> MatrixType;
-typedef FreeFermions::GeometryParameters<RealType> GeometryParamsType;
+typedef PsimagLite::InputNg<FreeFermions::InputCheck> InputNgType;
+typedef FreeFermions::GeometryParameters<RealType,InputNgType::Readable> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
 typedef FreeFermions::Engine<RealType,FieldType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
@@ -119,8 +122,12 @@ int main(int argc,char *argv[])
 		throw std::runtime_error("Wrong usage\n");
 	}
 
-	GeometryParamsType geometryParams(file);
-	size_t electronsUp = GeometryParamsType::readElectrons(file,geometryParams.sites);
+	FreeFermions::InputCheck inputCheck;
+	InputNgType::Writeable ioWriteable(file,inputCheck);
+	InputNgType::Readable io(ioWriteable);
+
+	GeometryParamsType geometryParams(io);
+	size_t electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
 	PsimagLite::Vector<size_t>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
 
