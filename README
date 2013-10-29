@@ -35,6 +35,12 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 ----------------------------------------------------
 
+Hash of the latest commit is also posted at
+
+https://web.ornl.gov/~gz1/hashes.html
+
+----------------------------------------------------
+
 Dependencies and how to download:
 cd someDirectory
 git clone https://github.com/g1257/PsimagLite
