@@ -100,6 +100,7 @@ namespace FreeFermions {
 		  leg(0),
 		  isPeriodic(2,false),
 		  hopping(1,1.0),
+		  filename(io.filename()),
 		  orbitals(1)
 		{
 			io.readline(sites,"TotalNumberOfSites=");
