@@ -17,11 +17,11 @@
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
-typedef RealType FieldType;
+typedef ComplexType FieldType;
 typedef PsimagLite::Concurrency ConcurrencyType;
-typedef PsimagLite::Matrix<RealType> MatrixType;
+typedef PsimagLite::Matrix<FieldType> MatrixType;
 typedef PsimagLite::InputNg<FreeFermions::InputCheck> InputNgType;
-typedef FreeFermions::GeometryParameters<RealType,InputNgType::Readable> GeometryParamsType;
+typedef FreeFermions::GeometryParameters<FieldType,InputNgType::Readable> GeometryParamsType;
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
 typedef FreeFermions::Engine<RealType,FieldType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;

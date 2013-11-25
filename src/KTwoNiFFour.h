@@ -91,6 +91,7 @@ namespace FreeFermions {
 
 		typedef std::pair<int,int> PairType;
 		typedef typename GeometryParamsType::RealType RealType;
+		typedef typename MatrixType::value_type FieldType;
 
 		enum {TYPE_O,TYPE_C};
 		enum {SUBTYPE_X,SUBTYPE_Y};
@@ -230,7 +231,7 @@ namespace FreeFermions {
 		void orbitalsForO(MatrixType& t,size_t i1,size_t i2) const
 		{
 			size_t dir = calcDir(i1,i2);
-			int sign = signChange(i1,i2);
+			RealType sign = signChange(i1,i2);
 			for (size_t orb1=0;orb1<2;orb1++) {
 				for (size_t orb2=0;orb2<2;orb2++) {
 					t(index(i1,orb1),index(i2,orb2))=ooOrbitals(dir,orb1,orb2)*sign;
@@ -241,7 +242,7 @@ namespace FreeFermions {
 		void orbitalsForCO(MatrixType& t,size_t i1,size_t i2) const
 		{
 			size_t dir = calcDir(i1,i2);
-			int sign = signChange(i1,i2);
+			RealType sign = signChange(i1,i2);
 			for (size_t orb=0;orb<2;orb++)
 				t(index(i2,orb),index(i1)) = t(index(i1),index(i2,orb)) = 
 				                             coOrbitals(dir,orb)*sign;
@@ -285,13 +286,13 @@ namespace FreeFermions {
 			return ((j%8)==0);
 		}
 
-		RealType ooOrbitals(size_t dir,size_t orb1,size_t orb2) const
+		FieldType ooOrbitals(size_t dir,size_t orb1,size_t orb2) const
 		{
 			return (dir==DIR_XPY) ? ooHoppingsXPY_(orb1,orb2) 
 			                      : ooHoppingsXMY_(orb1,orb2);
 		}
 
-		RealType coOrbitals(size_t dir,size_t orb) const
+		FieldType coOrbitals(size_t dir,size_t orb) const
 		{
 			return (dir==DIR_X) ? coHoppingsX_(orb,0) : coHoppingsY_(orb,0);
 		}

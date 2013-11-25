@@ -85,21 +85,21 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 
-	template<typename RealType_,typename IoInputType>
+	template<typename FieldType,typename IoInputType>
 	struct GeometryParameters {
 
-		typedef RealType_ RealType;
+		typedef typename PsimagLite::Real<FieldType>::Type RealType;
 
 		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D};
 
 		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 
-		GeometryParameters(IoInputType& io)
+		GeometryParameters(IoInputType& io,FieldType defaultHopping = 1.0)
 		: type(CHAIN),
 		  sites(0),
 		  leg(0),
 		  isPeriodic(2,false),
-		  hopping(1,1.0),
+		  hopping(1,defaultHopping),
 		  filename(io.filename()),
 		  orbitals(1)
 		{
@@ -114,6 +114,11 @@ namespace FreeFermions {
 			PsimagLite::String model("");
 			io.readline(model,"Model=");
 
+			PsimagLite::String hoppingOptions;
+			io.readline(hoppingOptions,"GeometryOptions=");
+
+			bool constantHoppings = (hoppingOptions == "ConstantValues") ? true : false;
+
 			int x = 0;
 
 			io.readline(x,"IsPeriodicX=");
@@ -121,15 +126,27 @@ namespace FreeFermions {
 				throw std::runtime_error("GeometryParameters: IsPeriodicX must be non negative\n");
 			isPeriodic[DIRECTION_X] = (x>0);
 
-			if (model=="HubbardOneBand" || model=="HubbardOneOrbital")  {//    Immm  Tj1Orb
+			if (model=="HubbardOneBand" ||
+			    model=="HubbardOneOrbital" ||
+			    model == "SuperHubbardExtended")  {//    Immm  Tj1Orb
 
 				if (geometry=="chain") return;
 				if (geometry!="ladder")
 					throw std::runtime_error("GeometryParameters: HubbardOneBand supports geometry chain or ladder only\n");
 
 				type = LADDER;
-				hopping.resize(2);
-				hopping[0] =  hopping[1]  = 1.0;
+				hopping.resize(sites/2 + sites - 2,defaultHopping);
+				if (!constantHoppings) {
+					typename PsimagLite::Vector<FieldType>::Type v;
+					io.read(v,"Connectors");
+					assert(v.size() == sites - 2);
+					for (SizeType i = 0; i < v.size(); ++i)
+						hopping[i] = v[i];
+					io.read(v,"Connectors");
+					assert(v.size() == sites/2);
+					for (SizeType i = 0; i < v.size(); ++i)
+						hopping[i+sites-2] = v[i];
+				}
 
 				io.readline(x,"IsPeriodicY=");
 				if (x<0)
@@ -230,7 +247,7 @@ namespace FreeFermions {
 		size_t sites;
 		size_t leg;
 		typename PsimagLite::Vector<bool>::Type isPeriodic;
-		typename PsimagLite::Vector<RealType>::Type hopping;
+		typename PsimagLite::Vector<FieldType>::Type hopping;
 		PsimagLite::String filename;
 		size_t orbitals;
 	}; // struct GeometryParameters

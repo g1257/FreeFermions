@@ -93,7 +93,8 @@ namespace FreeFermions {
 		enum DecayEnum {DECAY_NONE, DECAY_0, DECAY_1};
 
 		typedef GeometryParamsType_ GeometryParamsType;
-		typedef typename MatrixType::value_type RealType;
+		typedef typename MatrixType::value_type FieldType;
+		typedef typename PsimagLite::Real<FieldType>::Type RealType;
 
 		enum {CHAIN=GeometryParamsType::CHAIN,
 			  LADDER=GeometryParamsType::LADDER,
@@ -244,7 +245,7 @@ namespace FreeFermions {
 		{
 			typename PsimagLite::Vector<MatrixType>::Type t;
 			size_t edof = geometryParams_.orbitals;
-			typename PsimagLite::Vector<RealType>::Type oneSiteHoppings;
+			typename PsimagLite::Vector<FieldType>::Type oneSiteHoppings;
 			size_t dirs = (geometryParams_.type==FEAS1D) ? 1 : 4;
 			readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename,dirs);
 			if (oneSiteHoppings.size()!=dirs*edof*edof) {
@@ -289,21 +290,32 @@ namespace FreeFermions {
 
 		void setGeometryLadder()
 		{
-			assert(geometryParams_.hopping.size()==2);
 			size_t leg = geometryParams_.leg;
 			if (leg<2)
 				throw std::runtime_error("GeometryLibrary:: ladder must have leg>1\n");
 			assert(!geometryParams_.isPeriodic[DIRECTION_Y] || leg>2);
 			size_t sites = geometryParams_.sites;
+			assert(geometryParams_.hopping.size()==sites/2 + sites -2);
 			resizeAndZeroOut(sites,sites);
 			for (size_t i=0;i<sites;i++) {
 				PsimagLite::Vector<size_t>::Type v;
 				ladderFindNeighbors(v,i,leg,geometryParams_.isPeriodic);
 				for (size_t k=0;k<v.size();k++) {
 					size_t j = v[k];
-					RealType tmp = (ladderSameColumn(i,j,leg))? 
-					    geometryParams_.hopping[1] : geometryParams_.hopping[0];
-					t_(i,j) = t_(j,i) = tmp; 
+					SizeType ijmin = (i < j) ? i : j;
+					SizeType ijminOver2 = static_cast<SizeType>(ijmin/2);
+
+					if (ijmin & 1) {
+						ijmin = (ijmin-1)/2  + sites/2 -1  ;
+					} else {
+						ijmin = ijminOver2;
+					}
+
+					FieldType tmp = (ladderSameColumn(i,j,leg))?
+					    geometryParams_.hopping[ijminOver2 + sites-2] :
+					            geometryParams_.hopping[ijmin];
+					t_(i,j) = tmp;
+					t_(j,i) = std::conj(t_(i,j));
 				}
 			}
 		}
@@ -357,12 +369,12 @@ namespace FreeFermions {
 		// only 2 orbitals supported
 		void setGeometryFeAs(MatrixType& t,
 		                     size_t orborb,
-		                     const typename PsimagLite::Vector<RealType>::Type& oneSiteHoppings)
+		                     const typename PsimagLite::Vector<FieldType>::Type& oneSiteHoppings)
 		{
 			size_t sites = geometryParams_.sites;
 			size_t leg = geometryParams_.leg;
 			size_t orbitalsSquared = geometryParams_.orbitals * geometryParams_.orbitals;
-			RealType tx = oneSiteHoppings[orborb+DIRECTION_X*orbitalsSquared];
+			FieldType tx = oneSiteHoppings[orborb+DIRECTION_X*orbitalsSquared];
 			size_t lengthx  = sites/leg;
 			if (sites%leg!=0) throw std::runtime_error("Leg must divide number of sites.\n");
 			for (size_t j=0;j<leg;j++) {
@@ -376,7 +388,7 @@ namespace FreeFermions {
 
 			if (geometryParams_.type==FEAS1D) return;
 
-			RealType ty = oneSiteHoppings[orborb+DIRECTION_Y*orbitalsSquared];
+			FieldType ty = oneSiteHoppings[orborb+DIRECTION_Y*orbitalsSquared];
 			for (size_t i=0;i<lengthx;i++) {
 				for (size_t j=0;j<leg;j++) {
 					if (j>0) t(i+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j-1)*lengthx) = ty;
@@ -385,8 +397,8 @@ namespace FreeFermions {
 				if (geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_Y])
 					t(i,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i) = ty;
 			}
-			RealType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*orbitalsSquared];
-			RealType txmy = oneSiteHoppings[orborb+DIRECTION_XMY*orbitalsSquared];
+			FieldType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*orbitalsSquared];
+			FieldType txmy = oneSiteHoppings[orborb+DIRECTION_XMY*orbitalsSquared];
 			for (size_t i=0;i<lengthx;i++) {
 				for (size_t j=0;j<leg;j++) {
 					if (j+1<leg && i+1<lengthx)
@@ -443,7 +455,7 @@ namespace FreeFermions {
 			return y + x*leg;
 		}
 
-		void readOneSiteHoppings(typename PsimagLite::Vector<RealType>::Type& v,
+		void readOneSiteHoppings(typename PsimagLite::Vector<FieldType>::Type& v,
 		                         const PsimagLite::String& filename,
 		                         size_t dirs)
 		{
@@ -462,7 +474,7 @@ namespace FreeFermions {
 			}
 		}
 
-		void appendToVector(typename PsimagLite::Vector<RealType>::Type& v,
+		void appendToVector(typename PsimagLite::Vector<FieldType>::Type& v,
 		                    const MatrixType& m) const
 		{
 			for (size_t i=0;i<m.n_row();i++) {
