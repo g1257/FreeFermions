@@ -100,7 +100,8 @@ namespace FreeFermions {
 			  LADDER=GeometryParamsType::LADDER,
 			  FEAS=GeometryParamsType::FEAS,
 			  KTWONIFFOUR=GeometryParamsType::KTWONIFFOUR,
-			  FEAS1D=GeometryParamsType::FEAS1D};
+			  FEAS1D=GeometryParamsType::FEAS1D,
+			  CHAIN_EX = GeometryParamsType::CHAIN_EX};
 
 		enum {DIRECTION_X   = GeometryParamsType::DIRECTION_X,
 			  DIRECTION_Y   = GeometryParamsType::DIRECTION_Y,
@@ -113,6 +114,9 @@ namespace FreeFermions {
 			switch (geometryParams.type) {
 			case CHAIN:
 				setGeometryChain();
+				break;
+			case CHAIN_EX:
+				setGeometryChainEx();
 				break;
 			case LADDER:
 				setGeometryLadder();
@@ -184,6 +188,9 @@ namespace FreeFermions {
 			switch (geometryParams_.type) {
 			case CHAIN:
 				return "chain";
+				break;
+			case CHAIN_EX:
+				return "chainEx";
 				break;
 			case LADDER:
 				return "ladder";
@@ -286,6 +293,34 @@ namespace FreeFermions {
 			}
 			if (geometryParams_.isPeriodic[DIRECTION_X])
 				t_(0,sites-1) = t_(sites-1,0) = geometryParams_.hopping[0];
+		}
+		
+		void setGeometryChainEx()
+		{
+			typename PsimagLite::Vector<MatrixType>::Type t;
+			size_t edof = geometryParams_.orbitals;
+			typename PsimagLite::Vector<FieldType>::Type oneSiteHoppings;
+			size_t dirs = 2;
+			readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename,dirs);
+			if (oneSiteHoppings.size()!=dirs*edof*edof) {
+				throw std::runtime_error("Wrong number of hoppings\n");
+			}
+			size_t sites = geometryParams_.sites;
+			for (size_t i=0;i<edof*edof;i++) {
+				MatrixType oneT(sites,sites);
+				setGeometryChainEx(oneT,i,oneSiteHoppings);
+				assert(isHermitian(oneT,true));
+				t.push_back(oneT);
+			}
+
+			resizeAndZeroOut(edof*sites,edof*sites);
+			for (size_t orbitalPair=0;orbitalPair<edof*edof;orbitalPair++) {
+				size_t orb1 = (orbitalPair % geometryParams_.orbitals);
+				size_t orb2 = orbitalPair/geometryParams_.orbitals;
+				for (size_t i=0;i<sites;i++)
+					for (size_t j=0;j<sites;j++)
+						t_(i+orb1*sites,j+orb2*sites) += t[orbitalPair](i,j);
+			}
 		}
 
 		void setGeometryLadder()
@@ -423,6 +458,22 @@ namespace FreeFermions {
 				t(0+(leg-1)*lengthx,lengthx-1) = t(lengthx-1,0+(leg-1)*lengthx) = txmy;
 			}
 			
+		}
+		
+		void setGeometryChainEx(MatrixType& t,
+		                                         SizeType orborb,
+		                                         const typename PsimagLite::Vector<FieldType>::Type& oneSiteHoppings)
+		{
+			size_t sites = geometryParams_.sites;
+			size_t orbitalsSquared = geometryParams_.orbitals * geometryParams_.orbitals;
+			for (size_t i=0;i<sites;i++) {
+				for (size_t j=0;j<sites;j++) {
+					if (i-j==1 || j-i==1) t(i,j) = oneSiteHoppings[orborb+0*orbitalsSquared];
+					if (i-j==2 || j-i==2) {
+						if ((i & 1) == 0) t(i,j) = oneSiteHoppings[orborb+1*orbitalsSquared];
+					}
+				}
+			}
 		}
 
 		// from 0--1--2--...

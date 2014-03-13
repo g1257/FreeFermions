@@ -90,7 +90,7 @@ namespace FreeFermions {
 
 		typedef typename PsimagLite::Real<FieldType>::Type RealType;
 
-		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D};
+		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D,CHAIN_EX};
 
 		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 
@@ -110,7 +110,9 @@ namespace FreeFermions {
 
 			PsimagLite::String geometry("");
 			io.readline(geometry,"GeometryKind=");
-
+			
+			if (geometry=="chainEx") type = CHAIN_EX;
+			
 			PsimagLite::String model("");
 			io.readline(model,"Model=");
 
@@ -130,7 +132,7 @@ namespace FreeFermions {
 			    model=="HubbardOneOrbital" ||
 			    model == "SuperHubbardExtended")  {//    Immm  Tj1Orb
 
-				if (geometry=="chain") return;
+				if (geometry == "chain" || geometry == "chainEx") return;
 				if (geometry!="ladder")
 					throw std::runtime_error("GeometryParameters: HubbardOneBand supports geometry chain or ladder only\n");
 
@@ -160,6 +162,11 @@ namespace FreeFermions {
 				return;
 			} else if (model=="FeAsBasedSc") {
 
+				io.readline(x,"Orbitals=");
+				orbitals = x;
+				
+				if (geometry == "chain" || geometry == "chainEx") return;
+				
 				io.readline(x,"IsPeriodicY=");
 				if (x<0)
 					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
@@ -177,8 +184,6 @@ namespace FreeFermions {
 
 				if (x<1 || x>3)
 					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder orbitals must be 1, 2 or 3 only\n");
-				io.readline(x,"Orbitals=");
-				orbitals = x;
 
 			} else if (model=="Immm") {
 				type = KTWONIFFOUR;
