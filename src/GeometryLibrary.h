@@ -101,7 +101,8 @@ namespace FreeFermions {
 			  FEAS=GeometryParamsType::FEAS,
 			  KTWONIFFOUR=GeometryParamsType::KTWONIFFOUR,
 			  FEAS1D=GeometryParamsType::FEAS1D,
-			  CHAIN_EX = GeometryParamsType::CHAIN_EX};
+			  CHAIN_EX = GeometryParamsType::CHAIN_EX,
+			  LADDER_BATH = GeometryParamsType::LADDER_BATH};
 
 		enum {DIRECTION_X   = GeometryParamsType::DIRECTION_X,
 			  DIRECTION_Y   = GeometryParamsType::DIRECTION_Y,
@@ -121,6 +122,10 @@ namespace FreeFermions {
 			case LADDER:
 				setGeometryLadder();
 				break;
+			case LADDER_BATH:
+				setGeometryLadder();
+				bathify();
+				break;
 			case FEAS:
 			case FEAS1D:
 				setGeometryFeAs();
@@ -134,27 +139,6 @@ namespace FreeFermions {
 			typename PsimagLite::Vector<RealType>::Type v;
 			readPotential(v,geometryParams_.filename);
 			addPotential(v);
-		}
-
-		void bathify(const typename PsimagLite::Vector<RealType>::Type& tb)
-		{
-			size_t sites = geometryParams_.sites;
-			assert(t_.size()!=1);
-			if (sites!=t_.n_row() || sites!=t_.n_col())
-				throw std::runtime_error("GeometryLibrary::bathify(...)\n");
-			size_t nb = tb.size();
-			size_t nnew = sites*(1+nb);
-			MatrixType tnew(nnew,nnew);
-			for (size_t i=0;i<t_.n_row();i++)
-			{
-				for (size_t j=0;j<t_.n_col();j++)
-					tnew(i,j) = t_(i,j);
-				for (size_t j=0;j<nb;j++) {
-					size_t k = sites + j + nb*i;
-					tnew(i,k) = tnew(k,i) = tb[j];
-				}
-			}
-			t_ = tnew;
 		}
 
 		template<typename ComplexType>
@@ -194,6 +178,9 @@ namespace FreeFermions {
 				break;
 			case LADDER:
 				return "ladder";
+				break;
+			case LADDER_BATH:
+				return "ladderbath";
 				break;
 			case FEAS:
 				return "feas";
@@ -595,6 +582,29 @@ namespace FreeFermions {
 			if (v.size()>w.size()) v.resize(w.size());
 			for (size_t i=0;i<w.size();i++)
 				v[i] += w[i];
+		}
+		
+		void bathify()
+		{
+			size_t sites = t_.n_row();
+			size_t nb =geometryParams_.bathSitesPerSite;
+			size_t nnew = sites*(1+nb);
+			MatrixType tnew(nnew,nnew);
+			SizeType sitesOver2 = static_cast<SizeType>(sites*0.5);
+			SizeType firstC = sitesOver2*nb;
+			for (size_t i=0;i<t_.n_row();i++)
+			{
+				for (size_t j=0;j<t_.n_col();j++)
+					tnew(i+firstC,j+firstC) = t_(i,j);
+				for (size_t j=0;j<nb;j++) {
+					SizeType k = j*sitesOver2 + i;
+					SizeType k2 = j*sites + i;
+					if (i >= sitesOver2) k += sitesOver2 * (nb +1);
+					assert(k2 < geometryParams_.tb.size());
+					tnew(i+firstC,k) = tnew(k,i+firstC) =geometryParams_.tb[k2];
+				}
+			}
+			t_ = tnew;
 		}
 
 		const GeometryParamsType& geometryParams_;

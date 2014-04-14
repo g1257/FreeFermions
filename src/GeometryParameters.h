@@ -90,7 +90,7 @@ namespace FreeFermions {
 
 		typedef typename PsimagLite::Real<FieldType>::Type RealType;
 
-		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D,CHAIN_EX};
+		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D,CHAIN_EX,LADDER_BATH};
 
 		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 
@@ -133,10 +133,18 @@ namespace FreeFermions {
 			    model == "SuperHubbardExtended")  {//    Immm  Tj1Orb
 
 				if (geometry == "chain" || geometry == "chainEx") return;
-				if (geometry!="ladder")
+				if (geometry != "ladder" && geometry != "ladderbath")
 					throw std::runtime_error("GeometryParameters: HubbardOneBand supports geometry chain or ladder only\n");
-
-				type = LADDER;
+				
+				if (geometry == "ladderbath")  {
+					io.read(bathSitesPerSite,"BathSitesPerSite=");
+					sites = static_cast<SizeType>(sites/(bathSitesPerSite+1));
+					if (sites % (bathSitesPerSite+1) != 0) throw std::runtime_error("GeometryParameters:\n");
+					type = LADDER_BATH;
+				} else {
+					type = LADDER;
+				}
+				
 				hopping.resize(sites/2 + sites - 2,defaultHopping);
 				if (!constantHoppings) {
 					typename PsimagLite::Vector<FieldType>::Type v;
@@ -149,7 +157,13 @@ namespace FreeFermions {
 					for (SizeType i = 0; i < v.size(); ++i)
 						hopping[i+sites-2] = v[i];
 				}
-
+	
+				if (geometry == "ladderbath")  {
+					io.read(tb,"Connectors");
+					if (tb.size() != bathSitesPerSite * sites)
+						throw PsimagLite::RuntimeError("ladderbath Connectors\n");
+				}
+				
 				io.readline(x,"IsPeriodicY=");
 				if (x<0)
 					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
@@ -255,6 +269,8 @@ namespace FreeFermions {
 		typename PsimagLite::Vector<FieldType>::Type hopping;
 		PsimagLite::String filename;
 		size_t orbitals;
+		SizeType bathSitesPerSite;
+		typename PsimagLite::Vector<FieldType>::Type tb;
 	}; // struct GeometryParameters
 } // namespace Dmrg 
 
