@@ -260,7 +260,8 @@ private:
 				setGeometryFeAsStar(oneT,i,oneSiteHoppings);
 			else
 				setGeometryFeAs(oneT,i,oneSiteHoppings);
-			reorderLadderX(oneT,geometryParams_.leg);
+			if (geometryParams_.type != STAR)
+				reorderLadderX(oneT,geometryParams_.leg);
 			assert(isHermitian(oneT,true));
 			t.push_back(oneT);
 		}
