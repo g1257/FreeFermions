@@ -90,7 +90,7 @@ namespace FreeFermions {
 
 		typedef typename PsimagLite::Real<FieldType>::Type RealType;
 
-		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D,CHAIN_EX,LADDER_BATH};
+		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D,CHAIN_EX,LADDER_BATH,STAR};
 
 		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 
@@ -111,8 +111,9 @@ namespace FreeFermions {
 			PsimagLite::String geometry("");
 			io.readline(geometry,"GeometryKind=");
 			
-			if (geometry=="chainEx") type = CHAIN_EX;
-			
+			if (geometry == "chainEx") type = CHAIN_EX;
+			if (geometry == "star") type = STAR;
+
 			PsimagLite::String model("");
 			io.readline(model,"Model=");
 
@@ -123,7 +124,7 @@ namespace FreeFermions {
 
 			int x = 0;
 
-			io.readline(x,"IsPeriodicX=");
+			if (type != STAR) io.readline(x,"IsPeriodicX=");
 			if (x<0)
 				throw std::runtime_error("GeometryParameters: IsPeriodicX must be non negative\n");
 			isPeriodic[DIRECTION_X] = (x>0);
@@ -174,14 +175,15 @@ namespace FreeFermions {
 					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder leg must be non negative\n");
 				leg = x;
 				return;
-			} else if (model=="FeAsBasedSc") {
+			} else if (model=="FeAsBasedSc" || model == "FeAsBasedScExtended") {
 
 				io.readline(x,"Orbitals=");
 				orbitals = x;
 				
 				if (geometry == "chain" || geometry == "chainEx") return;
 				
-				io.readline(x,"IsPeriodicY=");
+				x = 0;
+				if (geometry == "ladder" || geometry == "ladderx") io.readline(x,"IsPeriodicY=");
 				if (x<0)
 					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
 				isPeriodic[DIRECTION_Y] = (x>0);
@@ -191,10 +193,12 @@ namespace FreeFermions {
 				} catch (std::exception& e) {
 					x=1;
 				}
+
 				if (x!=1 && x!=2)
 					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder leg must be 1 or 2 only\n");
 				leg = x;
-				type = (leg==1) ? FEAS1D :  FEAS;
+				if (type != STAR) 
+					type = (leg==1) ? FEAS1D :  FEAS;
 
 				if (x<1 || x>3)
 					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder orbitals must be 1, 2 or 3 only\n");

@@ -102,7 +102,8 @@ namespace FreeFermions {
 			  KTWONIFFOUR=GeometryParamsType::KTWONIFFOUR,
 			  FEAS1D=GeometryParamsType::FEAS1D,
 			  CHAIN_EX = GeometryParamsType::CHAIN_EX,
-			  LADDER_BATH = GeometryParamsType::LADDER_BATH};
+			  LADDER_BATH = GeometryParamsType::LADDER_BATH,
+			  STAR = GeometryParamsType::STAR};
 
 		enum {DIRECTION_X   = GeometryParamsType::DIRECTION_X,
 			  DIRECTION_Y   = GeometryParamsType::DIRECTION_Y,
@@ -128,6 +129,7 @@ namespace FreeFermions {
 				break;
 			case FEAS:
 			case FEAS1D:
+			case STAR:
 				setGeometryFeAs();
 				break;
 			case KTWONIFFOUR:
@@ -191,6 +193,9 @@ namespace FreeFermions {
 			case FEAS1D:
 				return "feas1d";
 				break;
+			case STAR:
+				return "star";
+				break;
 			default:
 				assert(false);
 			}
@@ -240,7 +245,7 @@ namespace FreeFermions {
 			typename PsimagLite::Vector<MatrixType>::Type t;
 			size_t edof = geometryParams_.orbitals;
 			typename PsimagLite::Vector<FieldType>::Type oneSiteHoppings;
-			size_t dirs = (geometryParams_.type==FEAS1D) ? 1 : 4;
+			size_t dirs = (geometryParams_.type==FEAS1D || geometryParams_.type==STAR) ? 1 : 4;
 			readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename,dirs);
 			if (oneSiteHoppings.size()!=dirs*edof*edof) {
 				throw std::runtime_error("Wrong number of hoppings\n");
@@ -248,7 +253,10 @@ namespace FreeFermions {
 			size_t sites = geometryParams_.sites;
 			for (size_t i=0;i<edof*edof;i++) { // orbital*orbital cases: aa ab ba bb etc
 				MatrixType oneT(sites,sites);
-				setGeometryFeAs(oneT,i,oneSiteHoppings);
+				if (geometryParams_.type == STAR) 
+					setGeometryFeAsStar(oneT,i,oneSiteHoppings);
+				else
+					setGeometryFeAs(oneT,i,oneSiteHoppings);
 				reorderLadderX(oneT,geometryParams_.leg);
 				assert(isHermitian(oneT,true));
 				t.push_back(oneT);
@@ -446,7 +454,19 @@ namespace FreeFermions {
 			}
 			
 		}
-		
+
+		void setGeometryFeAsStar(MatrixType& t,
+		                                           size_t orborb,
+		                                           const typename PsimagLite::Vector<FieldType>::Type& oneSiteHoppings)
+		{
+			assert(geometryParams_.type == STAR);
+			size_t sites = geometryParams_.sites;
+			size_t orbitalsSquared = geometryParams_.orbitals * geometryParams_.orbitals;
+			FieldType tx = oneSiteHoppings[orborb+DIRECTION_X*orbitalsSquared];
+			
+			for (size_t i=1;i<sites;++i) t(0,i) = t(i,0) = tx;
+		}
+
 		void setGeometryChainEx(MatrixType& t,
 		                                         SizeType orborb,
 		                                         const typename PsimagLite::Vector<FieldType>::Type& oneSiteHoppings)
