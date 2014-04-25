@@ -141,7 +141,7 @@ namespace FreeFermions {
 			                      SizeType total,
 			                      typename ConcurrencyType::MutexType* myMutex)
 			{
-				size_t each = total/10;
+				RealType each = 0.1 * total;
 
 				SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
 				SizeType npthreads = ConcurrencyType::npthreads;
@@ -149,7 +149,7 @@ namespace FreeFermions {
 					SizeType i = (threadNum+npthreads*mpiRank)*blockSize + p;
 					if (i>=total) break;
 
-					if (i%each ==0 && threadNum == 0) {
+					if (i%static_cast<SizeType>(each) ==0 && threadNum == 0) {
 						std::cerr<<"Done "<<(i*10/each)<<"%\n";
 						std::cerr.flush();
 					}
@@ -193,10 +193,8 @@ namespace FreeFermions {
 
 			void sync()
 			{
-				SizeType tmp = PsimagLite::sum(sumV_);
-
-				PsimagLite::MPI::pointByPointGather(tmp);
-				PsimagLite::MPI::bcast(tmp);
+				PsimagLite::MPI::allReduce(sumV_);
+				FieldType tmp = PsimagLite::sum(sumV_);
 
 				PsimagLite::MPI::pointByPointGather(psiVv_);
 				PsimagLite::MPI::bcast(psiVv_);
@@ -282,6 +280,9 @@ namespace FreeFermions {
 //				concurrency_.gather(psiVv);
 //				concurrency_.gather(sum);
 				std::cerr<<"sum="<<sum<<"\n";
+				if (fabs(sum) < 1e-6)
+					PsimagLite::RuntimeError("Sum is too small\n");
+
 				for (size_t i=0;i<psiVv.size();i++)
 					for (size_t j=0;j<psiVv[i].size();j++)
 						psi(i,j) = psiVv[i][j]/sqrt(sum);
