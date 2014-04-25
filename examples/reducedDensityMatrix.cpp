@@ -57,8 +57,9 @@ int main(int argc,char* argv[])
 	RealType sum = 0;
 	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
-	
-	ReducedDensityMatrixType reducedDensityMatrix(engine,geometryParams.sites,electronsUp);
+
+	SizeType halfSites = static_cast<SizeType>(0.5*geometryParams.sites);	
+	ReducedDensityMatrixType reducedDensityMatrix(engine,halfSites,electronsUp);
 	
 	PsimagLite::Vector<double>::Type e(reducedDensityMatrix.rank());
 	reducedDensityMatrix.diagonalize(e);
