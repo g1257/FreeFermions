@@ -142,6 +142,7 @@ namespace FreeFermions {
 			                      typename ConcurrencyType::MutexType* myMutex)
 			{
 				RealType each = 0.1 * total;
+				SizeType eachInteger = static_cast<SizeType>(each);
 
 				SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
 				SizeType npthreads = ConcurrencyType::npthreads;
@@ -149,7 +150,7 @@ namespace FreeFermions {
 					SizeType i = (threadNum+npthreads*mpiRank)*blockSize + p;
 					if (i>=total) break;
 
-					if (i%static_cast<SizeType>(each) ==0 && threadNum == 0) {
+					if (eachInteger > 0 && i%eachInteger == 0 && threadNum == 0) {
 						std::cerr<<"Done "<<(i*10/each)<<"%\n";
 						std::cerr.flush();
 					}
@@ -259,7 +260,7 @@ namespace FreeFermions {
 				size_t states = aux.states();
 				psi.resize(states,states);
 				
-				std::cout<<"#psi of size"<<states<<"x"<<states<<"\n";
+				std::cout<<"#psi of size "<<states<<"x"<<states<<"\n";
 
 				typedef MyLoop MyLoopType;
 				typedef PsimagLite::Parallelizer<MyLoopType> ParallelizerType;

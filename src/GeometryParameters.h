@@ -139,8 +139,8 @@ namespace FreeFermions {
 				
 				if (geometry == "ladderbath")  {
 					io.read(bathSitesPerSite,"BathSitesPerSite=");
-					sites = static_cast<SizeType>(sites/(bathSitesPerSite+1));
 					if (sites % (bathSitesPerSite+1) != 0) throw std::runtime_error("GeometryParameters:\n");
+					sites = static_cast<SizeType>(sites/(bathSitesPerSite+1));
 					type = LADDER_BATH;
 				} else {
 					type = LADDER;
