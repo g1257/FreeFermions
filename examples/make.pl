@@ -29,7 +29,8 @@ sub writeMakefile
 {
 	open(my $fh,">Makefile") or die "Cannot open Makefile for writing: $!\n";
 
-	my $cppflags = "-Werror -Wall -I../../PsimagLite  -I../../PsimagLite/src -I../src";
+	my $cppflags = "-Werror -Wall -Wstrict-overflow=5 -I../../PsimagLite ";
+	$cppflags .= " -I../../PsimagLite/src -I../src";
 	my $cxx="g++ -O3 -DNDEBUG";
 	my $lapack = Make::findLapack();
 
