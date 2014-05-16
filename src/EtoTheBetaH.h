@@ -101,10 +101,10 @@ namespace FreeFermions {
 
 			template<typename FreeOperatorsType>
 			FieldType operator()(const FreeOperatorsType& freeOps,
-			                     size_t loc) const
+			                     SizeType loc) const
 			{
 				RealType sum = 0;
-				for (size_t i=0;i<loc;i++) {
+				for (SizeType i=0;i<loc;i++) {
 // 					if (freeOps[i].type != FreeOperatorsType::CREATION &&
 // 						freeOps[i].type != FreeOperatorsType::DESTRUCTION)
 // 						   continue;

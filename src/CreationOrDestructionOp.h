@@ -100,13 +100,13 @@ namespace FreeFermions {
 
 		friend class OperatorFactory<ThisType>;
 
-		size_t type() const { return type_; }
+		SizeType type() const { return type_; }
 
-		size_t sigma() const { return sigma_; }
+		SizeType sigma() const { return sigma_; }
 
-		size_t index() const { return ind_; }
+		SizeType index() const { return ind_; }
 
-		FieldType const operator()(size_t j) const
+		FieldType const operator()(SizeType j) const
 		{
 			if (type_==CREATION) return engine_.eigenvector(ind_,j);
 			return std::conj(engine_.eigenvector(ind_,j));
@@ -131,9 +131,9 @@ namespace FreeFermions {
 
 		//! Use the factory to create objects of this type
 		CreationOrDestructionOp(const EngineType& engine,
-				size_t type,
-				size_t ind,
-				size_t sigma)
+				SizeType type,
+				SizeType ind,
+				SizeType sigma)
 		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
 		{
 			assert(ind < engine_.size());
@@ -160,7 +160,7 @@ namespace FreeFermions {
 		}
 
 		const EngineType& engine_;
-		size_t type_,ind_,sigma_;
+		SizeType type_,ind_,sigma_;
 	}; // CreationOrDestructionOp
 } // namespace Dmrg 
 

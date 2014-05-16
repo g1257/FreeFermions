@@ -33,10 +33,10 @@ typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
 void doOneBeta(const EngineType& engine,
-               PsimagLite::Vector<size_t>::Type& ne,
+               PsimagLite::Vector<SizeType>::Type& ne,
                OpLibFactoryType& opLibFactory,
-               size_t site,
-               size_t sigma,
+               SizeType site,
+               SizeType sigma,
                RealType beta)
 {
 	RealType sum = 0;
@@ -44,15 +44,15 @@ void doOneBeta(const EngineType& engine,
 	RealType denominator = 0;
 	RealType energy = 0;
 	FreeFermions::Combinations combinations(engine.size(),ne[0]);
-	size_t factorToMakeItSmaller = 1;
-	for (size_t i = 0; i<combinations.size(); ++i) {
+	SizeType factorToMakeItSmaller = 1;
+	for (SizeType i = 0; i<combinations.size(); ++i) {
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		EtoTheBetaHType ebh(beta,engine,0);
 		DiagonalOperatorType& eibOp = opDiagonalFactory(ebh);
 		
-		PsimagLite::Vector<size_t>::Type vTmp(engine.size(),0);
-		for (size_t j=0;j<combinations(i).size();++j) vTmp[combinations(i)[j]]=1;
-		PsimagLite::Vector<PsimagLite::Vector<size_t>::Type>::Type occupations(1,vTmp);
+		PsimagLite::Vector<SizeType>::Type vTmp(engine.size(),0);
+		for (SizeType j=0;j<combinations(i).size();++j) vTmp[combinations(i)[j]]=1;
+		PsimagLite::Vector<PsimagLite::Vector<SizeType>::Type>::Type occupations(1,vTmp);
 		HilbertStateType thisState(engine,occupations);
 		HilbertStateType phi = thisState;
 		eibOp.applyTo(phi);
@@ -72,12 +72,12 @@ void doOneBeta(const EngineType& engine,
 int main(int argc,char *argv[])
 {
 	int opt;
-	size_t n =0;
-	size_t electronsUp=0;
+	SizeType n =0;
+	SizeType electronsUp=0;
 	RealType step = 0;
 	RealType offset=0;
-	size_t total=0;
-	size_t site = 0;
+	SizeType total=0;
+	SizeType site = 0;
 	bool ladder = false;
 	PsimagLite::Vector<RealType>::Type v;
 	PsimagLite::Vector<PsimagLite::String>::Type str;
@@ -106,7 +106,7 @@ int main(int argc,char *argv[])
 					s += " Expecting pairs for -p\n";
 					throw std::runtime_error(s.c_str());
 				}
-				for (size_t i=0;i<str.size();i+=2) {
+				for (SizeType i=0;i<str.size();i+=2) {
 					v[atoi(str[i].c_str())] = atof(str[i+1].c_str());
 				}
 				break;
@@ -128,7 +128,7 @@ int main(int argc,char *argv[])
 	}
 	if (n==0 || total==0) throw std::runtime_error("Wrong usage\n");
 
-	size_t dof = 1; // spinless
+	SizeType dof = 1; // spinless
 	GeometryParamsType geometryParams;
 	geometryParams.sites = n;
 	GeometryLibraryType* geometry;
@@ -149,16 +149,16 @@ int main(int argc,char *argv[])
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(*geometry,concurrency,dof,true);
 
-	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
 
-	size_t sigma =0;
+	SizeType sigma =0;
 	std::cout<<(*geometry);
 	std::cout<<"#site="<<site<<"\n";
 
 	OpLibFactoryType opLibFactory(engine);
-	for (size_t i=0;i<total;++i) {
+	for (SizeType i=0;i<total;++i) {
 		RealType beta = i*step + offset;
 		doOneBeta(engine,ne,opLibFactory,site,sigma,beta);
 	}

@@ -57,32 +57,32 @@ int main(int argc,char* argv[])
 	InputNgType::Readable io(ioWriteable);
 
 	GeometryParamsType geometryParams(io);
-	size_t electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
 
-	size_t dof = 1; // spinless
+	SizeType dof = 1; // spinless
 
 	GeometryLibraryType geometry(geometryParams);
 
 	std::cerr<<geometry;
-	size_t npthreads = 1;
+	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
 	EngineType engine(geometry.matrix(),dof,true);
-	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
-	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
+	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
 	
 	if (energyOnly) return 0;
 
-	size_t sigma = 0;
+	SizeType sigma = 0;
 	//MatrixType cicj(n,n);
-	size_t norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
-	for (size_t orbital=0; orbital<norb; orbital++) {
-		for (size_t site = 0; site<geometryParams.sites ; site++) {
+	SizeType norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
+	for (SizeType orbital=0; orbital<norb; orbital++) {
+		for (SizeType site = 0; site<geometryParams.sites ; site++) {
 			OpNormalFactoryType opNormalFactory(engine);
 			OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,site+orbital*geometryParams.sites,sigma);
-			for (size_t site2=0; site2<geometryParams.sites; site2++) {
+			for (SizeType site2=0; site2<geometryParams.sites; site2++) {
 				HilbertStateType phi = gs;
 				myOp.applyTo(phi);
 				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,site2+orbital*geometryParams.sites,sigma);

@@ -92,7 +92,7 @@ namespace FreeFermions {
 			typedef FieldType_ FieldType;
 
 			Engine(const PsimagLite::Matrix<FieldType>& geometry,
-			       size_t dof,
+			       SizeType dof,
 			       bool verbose=false)
 			: dof_(dof),
 			  verbose_(verbose),
@@ -105,23 +105,23 @@ namespace FreeFermions {
 				}
 			}
 
-			FieldType energy(size_t ne) const
+			FieldType energy(SizeType ne) const
 			{
 				RealType sum = 0;
-				for (size_t i=0;i<ne;i++) sum += eigenvalues_[i];
+				for (SizeType i=0;i<ne;i++) sum += eigenvalues_[i];
 				return sum;
 			}
 
-			const RealType& eigenvalue(size_t i) const { return eigenvalues_[i]; }
+			const RealType& eigenvalue(SizeType i) const { return eigenvalues_[i]; }
 
-			const FieldType& eigenvector(size_t i,size_t j) const
+			const FieldType& eigenvector(SizeType i,SizeType j) const
 			{
 				return eigenvectors_(i,j);
 			}
 
-			size_t dof() const { return dof_; }
+			SizeType dof() const { return dof_; }
 	
-			size_t size() const { return eigenvalues_.size(); }
+			SizeType size() const { return eigenvalues_.size(); }
 
 		private:
 		
@@ -140,7 +140,7 @@ namespace FreeFermions {
 				}
 			}
 
-			size_t dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
+			SizeType dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
 			bool verbose_;
 			PsimagLite::Matrix<FieldType> eigenvectors_;
 			typename PsimagLite::Vector<RealType>::Type eigenvalues_;

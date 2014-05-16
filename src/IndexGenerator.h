@@ -89,13 +89,13 @@ namespace FreeFermions {
 	
 	class IndexGenerator {
 	public:
-		typedef size_t value_type;
-		IndexGenerator(size_t n,size_t ne) : data_(n,0),ne_(ne) {}
+		typedef SizeType value_type;
+		IndexGenerator(SizeType n,SizeType ne) : data_(n,0),ne_(ne) {}
 
 		bool increase()
 		{
 			if (data_.size()==0) return false;
-			size_t c = 0;
+			SizeType c = 0;
 			while(true) {
 				data_[c]++;
 				if (data_[c]==ne_) {
@@ -109,23 +109,23 @@ namespace FreeFermions {
 			return true;
 		}
 
-		size_t operator[](size_t i) const
+		SizeType operator[](SizeType i) const
 		{
 			return data_[i];
 		}
 
-		size_t size() const { return data_.size(); }
+		SizeType size() const { return data_.size(); }
 
-// 		size_t max() const { return ne_; }
+// 		SizeType max() const { return ne_; }
 
 	private:
-		PsimagLite::Vector<size_t>::Type data_;
-		size_t ne_;
+		PsimagLite::Vector<SizeType>::Type data_;
+		SizeType ne_;
 	}; // IndexGenerator
 	
 	std::ostream& operator<<(std::ostream& os,const IndexGenerator& ig)
 	{
-		for (size_t i=0;i<ig.size();i++) os<<ig[i]<<" ";
+		for (SizeType i=0;i<ig.size();i++) os<<ig[i]<<" ";
 		return os;
 	}
 

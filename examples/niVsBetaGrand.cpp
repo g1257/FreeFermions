@@ -36,23 +36,23 @@ typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
 void doOneBeta(const EngineType& engine,
-               size_t site,
+               SizeType site,
                RealType beta)
 {
 	RealType density = 0;
-	for (size_t i = 0; i<engine.size(); ++i) {
+	for (SizeType i = 0; i<engine.size(); ++i) {
 		RealType fermiFactor = 1.0/(1.0 + exp(beta*engine.eigenvalue(i)));
 		density +=  fermiFactor;
 	}
 
 	RealType energy = 0;
-	for (size_t i = 0; i<engine.size(); ++i) {
+	for (SizeType i = 0; i<engine.size(); ++i) {
 		RealType fermiFactor = engine.eigenvalue(i)/(1.0 + exp(beta*engine.eigenvalue(i)));
 		energy +=  fermiFactor;
 	}
 
 	RealType sum = 0;
-	for (size_t i = 0; i<engine.size(); ++i) {
+	for (SizeType i = 0; i<engine.size(); ++i) {
 		RealType fermiFactor = 1.0/(1.0 + exp(beta*engine.eigenvalue(i)));
 		sum += std::conj(engine.eigenvector(site,i)) * engine.eigenvector(site,i)* fermiFactor;
 	}
@@ -66,8 +66,8 @@ int main(int argc,char *argv[])
 	PsimagLite::String file("");
 	RealType step = 0;
 	RealType offset=0;
-	size_t total=0;
-	size_t site = 0;
+	SizeType total=0;
+	SizeType site = 0;
 	RealType mu = 0;
 
 	while ((opt = getopt(argc, argv, "f:s:t:o:i:m:")) != -1) {
@@ -105,7 +105,7 @@ int main(int argc,char *argv[])
 
 	GeometryParamsType geometryParams(io);
 
-	size_t dof = 1; // spinless
+	SizeType dof = 1; // spinless
 	GeometryLibraryType geometry(geometryParams);
 
 	geometry.addPotential(mu);
@@ -117,7 +117,7 @@ int main(int argc,char *argv[])
 	std::cout<<geometry;
 	std::cout<<"#site="<<site<<"\n";
 
-	for (size_t i=0;i<total;++i) {
+	for (SizeType i=0;i<total;++i) {
 		RealType beta = i*step + offset;
 		doOneBeta(engine,site,beta);
 	}

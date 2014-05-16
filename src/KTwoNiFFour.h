@@ -117,21 +117,21 @@ namespace FreeFermions {
 
 		void fillMatrix(MatrixType& t) const
 		{
-			size_t sites = geometryParams_.sites;
+			SizeType sites = geometryParams_.sites;
 
 			resizeAndZeroOutMatrix(t);
-			for (size_t i=0;i<sites;i++) {
-				size_t type1 = findTypeOfSite(i).first;
-				for (size_t j=0;j<sites;j++) {
+			for (SizeType i=0;i<sites;i++) {
+				SizeType type1 = findTypeOfSite(i).first;
+				for (SizeType j=0;j<sites;j++) {
 					if (!connected(i,j)) continue;
-					size_t type2 = findTypeOfSite(j).first;
+					SizeType type2 = findTypeOfSite(j).first;
 					if (type1==type2 && type1==TYPE_C) continue;
 					if (type1==type2 && type1==TYPE_O) {
 						orbitalsForO(t,i,j);
 						continue;
 					}
-					size_t newi = (type1==TYPE_C) ? i : j;
-					size_t newj = (type1==TYPE_C) ? j : i;
+					SizeType newi = (type1==TYPE_C) ? i : j;
+					SizeType newj = (type1==TYPE_C) ? j : i;
 					orbitalsForCO(t,newi,newj);
 				}
 			}
@@ -145,23 +145,23 @@ namespace FreeFermions {
 			if (!geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_Y])
 				return;
 		
-			size_t n = geometryParams_.sites;
+			SizeType n = geometryParams_.sites;
 
 			// 0 --> N-1 Cu-O
-			for (size_t orb=0;orb<2;orb++)
+			for (SizeType orb=0;orb<2;orb++)
 				t(orb*n,n-1) = t(n-1,orb*n) = coOrbitals(DIR_X,orb);
 
 			// 0 --> N-2 O-O
-			for (size_t orb1=0;orb1<2;orb1++) {
-				for (size_t orb2=0;orb2<2;orb2++) {
+			for (SizeType orb1=0;orb1<2;orb1++) {
+				for (SizeType orb2=0;orb2<2;orb2++) {
 					t(index(0,orb1),index(n-2,orb2))=ooOrbitals(DIR_XPY,orb1,orb2);
 					t(index(n-2,orb2),index(0,orb1))=ooOrbitals(DIR_XPY,orb1,orb2);
 				}
 			}
 
 			// 0 --> N-3 O-O
-			for (size_t orb1=0;orb1<2;orb1++) {
-				for (size_t orb2=0;orb2<2;orb2++) {
+			for (SizeType orb1=0;orb1<2;orb1++) {
+				for (SizeType orb2=0;orb2<2;orb2++) {
 					t(index(0,orb1),index(n-3,orb2))=ooOrbitals(DIR_XMY,orb1,orb2);
 					t(index(n-3,orb2),index(0,orb1))=ooOrbitals(DIR_XMY,orb1,orb2);
 				}
@@ -170,32 +170,32 @@ namespace FreeFermions {
 
 		void resizeAndZeroOutMatrix(MatrixType& t) const
 		{
-			size_t rank = matrixRank();
+			SizeType rank = matrixRank();
 			resizeAndZeroOut(t,rank,rank);
 		}
 
-		void resizeAndZeroOut(MatrixType& t,size_t nrow,size_t ncol) const
+		void resizeAndZeroOut(MatrixType& t,SizeType nrow,SizeType ncol) const
 		{
 			t.resize(nrow,ncol);
-			for (size_t i=0;i<nrow;i++)
-				for(size_t j=0;j<ncol;j++)
+			for (SizeType i=0;i<nrow;i++)
+				for(SizeType j=0;j<ncol;j++)
 					t(i,j)=0;
 		}
 
-		size_t matrixRank() const
+		SizeType matrixRank() const
 		{
-			size_t sites = geometryParams_.sites;
-			size_t no = 0;
-			size_t nc = 0;
-			for (size_t i=0;i<sites;i++) {
-				size_t type1 = findTypeOfSite(i).first;
+			SizeType sites = geometryParams_.sites;
+			SizeType no = 0;
+			SizeType nc = 0;
+			for (SizeType i=0;i<sites;i++) {
+				SizeType type1 = findTypeOfSite(i).first;
 				if (type1==TYPE_C) nc++;
 				else no++;
 			}
 			return 2*no+nc;
 		}
 
-		bool connected(size_t i1,size_t i2) const
+		bool connected(SizeType i1,SizeType i2) const
 		{
 			if (i1==i2) return false;
 			PairType type1 = findTypeOfSite(i1);
@@ -208,8 +208,8 @@ namespace FreeFermions {
 			if (type1.first == type2.first) {
 				assert(type1.first == TYPE_O);
 				if (type1.second==type2.second) return false;
-				size_t newi1 = (type1.second==SUBTYPE_X) ? i1 : i2;
-				size_t newi2 = (type1.second==SUBTYPE_X) ? i2 : i1;
+				SizeType newi1 = (type1.second==SUBTYPE_X) ? i1 : i2;
+				SizeType newi2 = (type1.second==SUBTYPE_X) ? i2 : i1;
 				if (newi1>newi2) {
 					assert(newi1>=4);
 					if (newi1-2==newi2 || newi1-3==newi2) return true;
@@ -220,53 +220,53 @@ namespace FreeFermions {
 				return false;
 			}
 			//! o-c or c-o
-			size_t newi1 = (type1.first==TYPE_O) ? i1 : i2;
-			size_t newi2 = (type1.first==TYPE_O) ? i2 : i1;
+			SizeType newi1 = (type1.first==TYPE_O) ? i1 : i2;
+			SizeType newi2 = (type1.first==TYPE_O) ? i2 : i1;
 			assert(newi2>=3);
 			if (newi2-1==newi1 || newi2-2==newi1 || newi2-3==newi1 || newi2+1==newi1)
 				return true;
 			return false;
 		}
 
-		void orbitalsForO(MatrixType& t,size_t i1,size_t i2) const
+		void orbitalsForO(MatrixType& t,SizeType i1,SizeType i2) const
 		{
-			size_t dir = calcDir(i1,i2);
+			SizeType dir = calcDir(i1,i2);
 			RealType sign = signChange(i1,i2);
-			for (size_t orb1=0;orb1<2;orb1++) {
-				for (size_t orb2=0;orb2<2;orb2++) {
+			for (SizeType orb1=0;orb1<2;orb1++) {
+				for (SizeType orb2=0;orb2<2;orb2++) {
 					t(index(i1,orb1),index(i2,orb2))=ooOrbitals(dir,orb1,orb2)*sign;
 				}
 			}
 		}
 
-		void orbitalsForCO(MatrixType& t,size_t i1,size_t i2) const
+		void orbitalsForCO(MatrixType& t,SizeType i1,SizeType i2) const
 		{
-			size_t dir = calcDir(i1,i2);
+			SizeType dir = calcDir(i1,i2);
 			RealType sign = signChange(i1,i2);
-			for (size_t orb=0;orb<2;orb++)
+			for (SizeType orb=0;orb<2;orb++)
 				t(index(i2,orb),index(i1)) = t(index(i1),index(i2,orb)) = 
 				                             coOrbitals(dir,orb)*sign;
 		}
 
-		size_t index(size_t i,size_t orb) const
+		SizeType index(SizeType i,SizeType orb) const
 		{
 			if (orb==0) return i;
-			size_t sites = geometryParams_.sites;
-			size_t tmp = (i+1)/4;
+			SizeType sites = geometryParams_.sites;
+			SizeType tmp = (i+1)/4;
 			assert(sites+i>=tmp);
 			return sites+i-tmp;
 		}
 
-		size_t index(size_t i) const
+		SizeType index(SizeType i) const
 		{
 			return i;
 		}
 
-		int signChange(size_t i1,size_t i2) const
+		int signChange(SizeType i1,SizeType i2) const
 		{
 			// change the sign of Cu-O
-			size_t newi1 = std::min(i1,i2);
-			size_t newi2 = std::max(i1,i2);
+			SizeType newi1 = std::min(i1,i2);
+			SizeType newi2 = std::max(i1,i2);
 			PairType type1 = findTypeOfSite(newi1);
 			PairType type2 = findTypeOfSite(newi2);
 			int sign1 = 1;
@@ -280,47 +280,47 @@ namespace FreeFermions {
 			return (isInverted(i1) || isInverted(i2)) ? signChange_*sign1 : sign1;
 		}
 
-		bool isInverted(size_t i) const
+		bool isInverted(SizeType i) const
 		{
-			size_t j = i+4;
+			SizeType j = i+4;
 			return ((j%8)==0);
 		}
 
-		FieldType ooOrbitals(size_t dir,size_t orb1,size_t orb2) const
+		FieldType ooOrbitals(SizeType dir,SizeType orb1,SizeType orb2) const
 		{
 			return (dir==DIR_XPY) ? ooHoppingsXPY_(orb1,orb2) 
 			                      : ooHoppingsXMY_(orb1,orb2);
 		}
 
-		FieldType coOrbitals(size_t dir,size_t orb) const
+		FieldType coOrbitals(SizeType dir,SizeType orb) const
 		{
 			return (dir==DIR_X) ? coHoppingsX_(orb,0) : coHoppingsY_(orb,0);
 		}
 
 		// assumes i1 and i2 are connected
-		size_t calcDir(size_t i1,size_t i2) const
+		SizeType calcDir(SizeType i1,SizeType i2) const
 		{
 			PairType type1 = findTypeOfSite(i1);
 			PairType type2 = findTypeOfSite(i2);
 			//! o-o
 			if (type1.first == type2.first && type1.first == TYPE_O) {
 				assert(type1.second!=type2.second);
-				size_t newi1 = (type1.second==SUBTYPE_X) ? i1 : i2;
-				size_t newi2 = (type1.second==SUBTYPE_X) ? i2 : i1;
+				SizeType newi1 = (type1.second==SUBTYPE_X) ? i1 : i2;
+				SizeType newi2 = (type1.second==SUBTYPE_X) ? i2 : i1;
 				if (newi1>newi2) {
 					assert(newi1>=4);
-					size_t distance = newi1-newi2;
+					SizeType distance = newi1-newi2;
 					if (distance==2) return DIR_XPY; 
 					assert(distance==3);
 					return DIR_XMY;
 				}
-				size_t distance = newi2-newi1;
+				SizeType distance = newi2-newi1;
 				if (distance==1)  return DIR_XPY; 
 				assert(distance==2);
 				return DIR_XMY;
 			}
 			//! o-c or c-o
-			size_t newi1 = (type1.first==TYPE_O) ? i1 : i2;
+			SizeType newi1 = (type1.first==TYPE_O) ? i1 : i2;
 			type1 = findTypeOfSite(newi1);
 			return (type1.second==SUBTYPE_X) ? DIR_X : DIR_Y;
 		}
@@ -328,10 +328,10 @@ namespace FreeFermions {
 		//! Given as a pair, first number is the type,
 		//! If first number == TYPE_C then second number is bogus
 		//! If first number == TYPE_O then second number is the subtype
-		PairType findTypeOfSite(size_t site) const
+		PairType findTypeOfSite(SizeType site) const
 		{
-			size_t sitePlusOne = site + 1;
-			size_t r = sitePlusOne%4;
+			SizeType sitePlusOne = site + 1;
+			SizeType r = sitePlusOne%4;
 			if (r==0) return PairType(TYPE_C,0);
 			
 			if (r==1) return PairType(TYPE_O,SUBTYPE_X);

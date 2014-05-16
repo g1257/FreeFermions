@@ -49,26 +49,26 @@ int main(int argc,char* argv[])
 	InputNgType::Readable io(ioWriteable);
 
 	GeometryParamsType geometryParams(io);
-	size_t electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
 
-	size_t dof = 2; // spin
+	SizeType dof = 2; // spin
 
 	GeometryLibraryType geometry(geometryParams);
 	std::cerr<<geometry;
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
 	EngineType engine(geometry.matrix(),dof,true);
-	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
-	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
+	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
 
-	size_t n = geometryParams.sites;
-	size_t norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
-	for (size_t orbital1=0; orbital1<norb; orbital1++) {
-		for (size_t orbital2=0; orbital2<norb; orbital2++) {
-			for (size_t site = 0; site<n ; site++) {
+	SizeType n = geometryParams.sites;
+	SizeType norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
+	for (SizeType orbital1=0; orbital1<norb; orbital1++) {
+		for (SizeType orbital2=0; orbital2<norb; orbital2++) {
+			for (SizeType site = 0; site<n ; site++) {
 				OpNormalFactoryType opNormalFactory(engine);
 				OperatorType& myOp1 = opNormalFactory(OperatorType::DESTRUCTION,site+orbital1*n,SPIN_DOWN);
 				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,site+orbital1*n,SPIN_UP);
@@ -80,7 +80,7 @@ int main(int argc,char* argv[])
 				HilbertStateType phi2 = gs;
 				myOp3.applyTo(phi2);
 				myOp4.applyTo(phi2);
-				for (size_t site2=0; site2<n; site2++) {
+				for (SizeType site2=0; site2<n; site2++) {
 					OperatorType& myOp5 = opNormalFactory(OperatorType::DESTRUCTION,site2+orbital2*n,SPIN_DOWN);
 					OperatorType& myOp6 = opNormalFactory(OperatorType::CREATION,site2+orbital2*n,SPIN_UP);
 					OperatorType& myOp7 = opNormalFactory(OperatorType::DESTRUCTION,site2+orbital2*n,SPIN_UP);

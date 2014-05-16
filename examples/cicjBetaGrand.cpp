@@ -74,14 +74,14 @@ int main(int argc,char *argv[])
 
 	GeometryParamsType geometryParams(io);
 
-	size_t dof = 1; // spinless
+	SizeType dof = 1; // spinless
 	GeometryLibraryType geometry(geometryParams);
 
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
 	EngineType engine(geometry.matrix(),dof,true);
 
-	size_t n = engine.size();
+	SizeType n = engine.size();
 
 	std::cout<<geometry;
 	std::cout<<"#beta="<<beta<<" mu="<<mu<<"\n";
@@ -89,10 +89,10 @@ int main(int argc,char *argv[])
 	PsimagLite::Vector<RealType>::Type ni(n);
 	RealType density = 0.0;
 	RealType energy = 0.0;
-	for (size_t i=0;i<n;i++) {
-		for (size_t j=0;j<n;j++) {
+	for (SizeType i=0;i<n;i++) {
+		for (SizeType j=0;j<n;j++) {
 			RealType value = 0;
-			for (size_t k=0;k<n;k++) {
+			for (SizeType k=0;k<n;k++) {
 				value += std::conj(engine.eigenvector(i,k))*engine.eigenvector(j,k)*
 						fermi(beta*(engine.eigenvalue(k)-mu));
 				if (i == j && i == 0) {
@@ -109,7 +109,7 @@ int main(int argc,char *argv[])
 	RealType sum1 = 0.0;
 	RealType sum2 = 0.0;
 	std::cout<<"#density = "<<density<<"\n";
-	for (size_t i=0;i<ni.size();i++) {
+	for (SizeType i=0;i<ni.size();i++) {
 		std::cout<<i<<" "<<ni[i]<<"\n";
 		if (i<ni.size()/2) {
 			sum1 += ni[i];

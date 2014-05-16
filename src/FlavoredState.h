@@ -86,37 +86,37 @@ namespace FreeFermions {
 	// All interactions == 0
 	template<typename LevelsType,typename OperatorType>
 	class FlavoredState {
-			//static size_t const SPIN_UP=0,SPIN_DOWN=1;
+			//static SizeType const SPIN_UP=0,SPIN_DOWN=1;
 			typedef FlavoredState<LevelsType,OperatorType> ThisType;
 			static int const FERMION_SIGN = -1;
 			enum {CREATION = OperatorType::CREATION,
 			       DESTRUCTION = OperatorType::DESTRUCTION};
 
 		public:
-			FlavoredState(size_t dof,size_t size)
+			FlavoredState(SizeType dof,SizeType size)
 			{
 
-				for (size_t i=0;i<dof;i++) {
+				for (SizeType i=0;i<dof;i++) {
 					LevelsType tmpV(size,false);
 					data_.push_back(tmpV);
 				}
 			}
 
-			void pushInto(size_t sigma,const LevelsType& portion)
+			void pushInto(SizeType sigma,const LevelsType& portion)
 			{
 				data_[sigma] = portion;
 			}
 			
-//			void fill(const typename PsimagLite::Vector<size_t>::Type& ne)
+//			void fill(const typename PsimagLite::Vector<SizeType>::Type& ne)
 //			{
 //				if (ne.size()!=data_.size()) throw std::runtime_error(
 //						"FlavoredState::fill()\n");
-//				for (size_t i=0;i<ne.size();i++) { // sum over spins
+//				for (SizeType i=0;i<ne.size();i++) { // sum over spins
 //					fillInternal(data_[i],ne[i]);
 //				}
 //			}
 			
-			int apply(size_t label,size_t flavor,size_t lambda)
+			int apply(SizeType label,SizeType flavor,SizeType lambda)
 			{
 				if (flavor>=data_.size())
 					throw std::runtime_error("FlavoredState::create()\n");
@@ -128,17 +128,17 @@ namespace FreeFermions {
 			}
 			
 			
-//			void occupations(typename PsimagLite::Vector<size_t>::Type& ns,size_t flavor) const
+//			void occupations(typename PsimagLite::Vector<SizeType>::Type& ns,SizeType flavor) const
 //			{
 //				ns.resize(size_);
-//				for (size_t i = 0; i < size_; i++) ns[i] = 0;
+//				for (SizeType i = 0; i < size_; i++) ns[i] = 0;
 //
-//				for (size_t counter=0;counter<data_[flavor].size();counter++) {
+//				for (SizeType counter=0;counter<data_[flavor].size();counter++) {
 //					ns[counter] = (data_[flavor][counter]) ? 1 : 0;
 //				}
 //			}
 			
-			size_t flavors() const { return data_.size(); }
+			SizeType flavors() const { return data_.size(); }
 			
 			template<typename T,typename U>
 			friend std::ostream& operator<<(std::ostream& os,
@@ -162,16 +162,16 @@ namespace FreeFermions {
 			
 		private:
 			
-			void fillInternal(LevelsType& x,size_t ne)
+			void fillInternal(LevelsType& x,SizeType ne)
 			{
 				if (ne>x.size())
 					throw std::runtime_error("FlavoredState::fillInternal\n");
-				for (size_t i=0;i<x.size();i++) x[i] = (i<ne) ? true : false;
+				for (SizeType i=0;i<x.size();i++) x[i] = (i<ne) ? true : false;
 			}
 			
-			int applyInternal(size_t label,LevelsType& x,size_t lambda)
+			int applyInternal(SizeType label,LevelsType& x,SizeType lambda)
 			{
-				size_t nflips = statesBetween(x,lambda);
+				SizeType nflips = statesBetween(x,lambda);
 				if (label == CREATION) {
 					if (x[lambda]) return 0; // can't create, there's already one
 					x[lambda] = true;
@@ -185,27 +185,27 @@ namespace FreeFermions {
 				return FERMION_SIGN;
 			}
 			
-			size_t statesBetween(LevelsType x,size_t lambda) const
+			SizeType statesBetween(LevelsType x,SizeType lambda) const
 			{
-				size_t sum = 0;
-				for (size_t counter = 0;counter < lambda ; counter++)
+				SizeType sum = 0;
+				for (SizeType counter = 0;counter < lambda ; counter++)
 					if (x[counter]) sum ++;
 				return sum;
 			}
 			
-			size_t calcInterElectrons(size_t flavor)
+			SizeType calcInterElectrons(SizeType flavor)
 			{
-				size_t sum = 0;
-				for (size_t flavor2 = 0; flavor2 < flavor; flavor2++) {
+				SizeType sum = 0;
+				for (SizeType flavor2 = 0; flavor2 < flavor; flavor2++) {
 					sum += numberOfDigits(data_[flavor2]);
 				}
 				return sum;
 			}
 			
-			size_t numberOfDigits(const LevelsType& x)
+			SizeType numberOfDigits(const LevelsType& x)
 			{
-				size_t sum = 0;
-				for (size_t i=0;i<x.size();i++) {
+				SizeType sum = 0;
+				for (SizeType i=0;i<x.size();i++) {
 					if (x[i]) sum ++;
 				}
 				return sum;
@@ -218,7 +218,7 @@ namespace FreeFermions {
 	std::ostream& operator<<(std::ostream& os,const FlavoredState<T,U>& v)
 	{
 		os<<"size="<<v.data_.size()<<"\n";
-		for (size_t i=0;i<v.data_.size();i++) {
+		for (SizeType i=0;i<v.data_.size();i++) {
 			os<<v.data_[i]<<" ";
 		}
 		return os;
@@ -230,14 +230,14 @@ namespace FreeFermions {
 		// eliminated due to performance reasons:
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
 
-		for (size_t i=0;i<v1.data_.size();i++)
+		for (SizeType i=0;i<v1.data_.size();i++)
 			if (v1.data_[i]!=v2.data_[i]) return false;
 		return true;
 	}
 
 	inline bool operator<(const PsimagLite::Vector<bool>::Type& v1,const PsimagLite::Vector<bool>::Type& v2)
 	{
-		for (size_t i=0;i<v1.size();i++) {
+		for (SizeType i=0;i<v1.size();i++) {
 			if (v1[i] && !v2[i]) return false;
 			if (!v1[i] && v2[i]) return true;
 		}
@@ -250,7 +250,7 @@ namespace FreeFermions {
 		// eliminated due to performance reasons:
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
 		
-		for (size_t i=0;i<v1.data_.size();i++) {
+		for (SizeType i=0;i<v1.data_.size();i++) {
 			if (v1.data_[i]>v2.data_[i]) return false;
 			if (v1.data_[i]<v2.data_[i]) return true;
 		}
@@ -263,7 +263,7 @@ namespace FreeFermions {
 //		// eliminated due to performance reasons:
 //		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
 //
-//		for (size_t i=0;i<v1.data_.size();i++) {
+//		for (SizeType i=0;i<v1.data_.size();i++) {
 //			if (!v1.data_[i] && v2.data_[i]) return false;
 //			if (v1.data_[i]&& !v2.data_[i]) return true;
 //		}
@@ -276,7 +276,7 @@ namespace FreeFermions {
 //		// eliminated due to performance reasons:
 //		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
 //
-//		for (size_t i=0;i<v1.data_.size();i++) {
+//		for (SizeType i=0;i<v1.data_.size();i++) {
 //			if (v1.data_[i] && !v2.data_[i]) return false;
 //			if (!v1.data_[i] && v2.data_[i]) return true;
 //		}

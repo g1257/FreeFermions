@@ -32,15 +32,15 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 enum {SPIN_UP,SPIN_DOWN};
 
 // <phi | H |phi>
-FieldType phiHPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const PsimagLite::Vector<size_t>::Type& sites,DiagonalOperatorType& h,const PsimagLite::Vector<ComplexType>::Type& weights)
+FieldType phiHPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const PsimagLite::Vector<SizeType>::Type& sites,DiagonalOperatorType& h,const PsimagLite::Vector<ComplexType>::Type& weights)
 {
 	FieldType sum = 0;
-	for (size_t i = 0;i<sites.size();i++) {
+	for (SizeType i = 0;i<sites.size();i++) {
 		 HilbertStateType backvector = gs;
 		 OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],SPIN_UP);
 		 cdaggerI.applyTo(backvector);
 		 h.applyTo(backvector);
-		 for (size_t j = 0;j<sites.size();j++) {
+		 for (SizeType j = 0;j<sites.size();j++) {
 			 HilbertStateType tmp = gs;
 			 OperatorType& cdaggerJ = opNormalFactory(OperatorType::CREATION,sites[j],SPIN_UP);
 			 cdaggerJ.applyTo(tmp);
@@ -52,12 +52,12 @@ FieldType phiHPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& g
 }
 
 // <phi| n_p | phi>
-FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,size_t siteP,const PsimagLite::Vector<size_t>::Type& sites,size_t sigma,DiagonalOperatorType& eihOp,const PsimagLite::Vector<ComplexType>::Type& weights)
+FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,SizeType siteP,const PsimagLite::Vector<SizeType>::Type& sites,SizeType sigma,DiagonalOperatorType& eihOp,const PsimagLite::Vector<ComplexType>::Type& weights)
 {
 	FieldType sum = 0;
 	OperatorType& cdaggerP = opNormalFactory(OperatorType::CREATION,siteP,sigma);
 	OperatorType& cP = opNormalFactory(OperatorType::DESTRUCTION,siteP,sigma);
-	for (size_t i = 0;i<sites.size();i++) {
+	for (SizeType i = 0;i<sites.size();i++) {
 		HilbertStateType backvector = gs;
 		OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],SPIN_UP);
 		cdaggerI.applyTo(backvector);
@@ -66,7 +66,7 @@ FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& 
 		cP.applyTo(backvector);
 		cdaggerP.applyTo(backvector);
 
-		for (size_t j = 0;j<sites.size();j++) {
+		for (SizeType j = 0;j<sites.size();j++) {
 				HilbertStateType tmp = gs; 
 				OperatorType& cdaggerJ= opNormalFactory(OperatorType::CREATION,sites[j],SPIN_UP);
 				cdaggerJ.applyTo(tmp);
@@ -79,15 +79,15 @@ FieldType phiNpPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& 
 }
 
 // <phi| | phi>
-FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const PsimagLite::Vector<size_t>::Type& sites,size_t sigma,DiagonalOperatorType& eihOp,const PsimagLite::Vector<ComplexType>::Type& weights)
+FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs,const PsimagLite::Vector<SizeType>::Type& sites,SizeType sigma,DiagonalOperatorType& eihOp,const PsimagLite::Vector<ComplexType>::Type& weights)
 {
 	FieldType sum = 0;
-	for (size_t i = 0;i<sites.size();i++) {
+	for (SizeType i = 0;i<sites.size();i++) {
 		HilbertStateType backvector = gs;
 		OperatorType& cdaggerI = opNormalFactory(OperatorType::CREATION,sites[i],SPIN_UP);
 		cdaggerI.applyTo(backvector);
 		//eihOp.applyTo(backvector);
-		for (size_t j = 0;j<sites.size();j++) {
+		for (SizeType j = 0;j<sites.size();j++) {
 				HilbertStateType tmp = gs; 
 				OperatorType& cdaggerJ = opNormalFactory(OperatorType::CREATION,sites[j],SPIN_UP);
 				cdaggerJ.applyTo(tmp);
@@ -101,11 +101,11 @@ FieldType phiPhi(OpNormalFactoryType& opNormalFactory,const HilbertStateType& gs
 int main(int argc,char* argv[])
 {
 	int argce = 5;
-	size_t whatGeometry = GeometryLibraryType::CHAIN; // FEAS; //CHAIN; // KTWONIFFOUR;
+	SizeType whatGeometry = GeometryLibraryType::CHAIN; // FEAS; //CHAIN; // KTWONIFFOUR;
 	PsimagLite::String s = "Needs " + ttos(argce) + " argument(s)\n";
 	if (argc<argce) throw std::runtime_error(s.c_str());
-	size_t n = atoi(argv[1]); // n. of  sites
-	size_t dof = 1; // spinless
+	SizeType n = atoi(argv[1]); // n. of  sites
+	SizeType dof = 1; // spinless
 	GeometryParamsType geometryParams;
 	geometryParams.sites = n;
 	geometryParams.type =whatGeometry;
@@ -131,25 +131,25 @@ int main(int argc,char* argv[])
 // 	io.rewind();
 // 	typename PsimagLite::Vector<RealType>::Type v;
 // 	io.read(v,"potentialV");
-// 	for (size_t i=0;i<v.size();i++) v[i] += w[i];
+// 	for (SizeType i=0;i<v.size();i++) v[i] += w[i];
 // 
 //  	geometry.addPotential(v);
 	std::cerr<<geometry;
 	ConcurrencyType concurrency(argc,argv);
 	EngineType engine(geometry,concurrency,dof,true);
-	PsimagLite::Vector<size_t>::Type ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
+	PsimagLite::Vector<SizeType>::Type ne(dof,atoi(argv[2])); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
-	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
+	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";	
 	
 	OpNormalFactoryType opNormalFactory(engine);
 	
 	//MatrixType cicj(n,n);
-	//size_t norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
-	PsimagLite::Vector<size_t>::Type sites(n-2);
+	//SizeType norb = (whatGeometry == GeometryLibraryType::FEAS) ? 2 : 1;
+	PsimagLite::Vector<SizeType>::Type sites(n-2);
 	PsimagLite::Vector<ComplexType>::Type weights(n-2);
-	for (size_t i=1;i<15;i++) {
+	for (SizeType i=1;i<15;i++) {
 		sites[i-1]=i;
 		RealType tmp123 = (i-n/2)*(i-n/2)/8.;
 		weights[i-1] = exp(-tmp123);
@@ -158,7 +158,7 @@ int main(int argc,char* argv[])
 
 //	std::cout<<"site\tvalue\tnumerator\tdenominator\n";
 	std::cout<<"time ";
-	for (size_t site = 0; site<n ; site++) std::cout<<site<<" ";
+	for (SizeType site = 0; site<n ; site++) std::cout<<site<<" ";
 	std::cout<<"\n";
 	for (RealType time=0;time<timeMax;time+=timeStep)  {
 		FieldType total = 0;
@@ -167,7 +167,7 @@ int main(int argc,char* argv[])
 		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
 		FieldType denominator = phiPhi(opNormalFactory,gs,sites,SPIN_UP,eihOp,weights);
 		std::cout<<time<<" ";
-		for (size_t site = 0; site<n ; site++) {
+		for (SizeType site = 0; site<n ; site++) {
 			FieldType numerator = phiNpPhi(opNormalFactory,gs,site,sites,SPIN_UP,eihOp,weights);
 			FieldType value = numerator/denominator;
 			//std::cout<<site<<" "<<value<<" "<<numerator<<" "<<denominator<<"\n";

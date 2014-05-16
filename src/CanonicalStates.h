@@ -86,13 +86,13 @@ namespace FreeFermions {
 	
 	class CanonicalStates {
 		
-		typedef PsimagLite::Vector<size_t>::Type VectorUintType;
+		typedef PsimagLite::Vector<SizeType>::Type VectorUintType;
 		typedef unsigned int long long BinaryNumberType;
 		
 		public:
 			// note: handles all (real space) states
 			// on a block of size n with up to and including ne electrons
-			CanonicalStates(size_t n,size_t ne,size_t dof=1)
+			CanonicalStates(SizeType n,SizeType ne,SizeType dof=1)
 			{
 				BinaryNumberType total = (1<<n);
 				for (BinaryNumberType i=0;i<total;i++) {
@@ -101,9 +101,9 @@ namespace FreeFermions {
 				}
 			}
 			
-			size_t states() const { return states_.size(); }
+			SizeType states() const { return states_.size(); }
 			
-			void getSites(VectorUintType& v,size_t i) const
+			void getSites(VectorUintType& v,SizeType i) const
 			{
 				BinaryNumberType x = states_[i];
 				getSitesInternal(v,x);
@@ -112,7 +112,7 @@ namespace FreeFermions {
 
 		private:
 			
-			size_t electronsOf(BinaryNumberType x) const
+			SizeType electronsOf(BinaryNumberType x) const
 			{
 				VectorUintType v;
 				getSitesInternal(v,x);
@@ -122,7 +122,7 @@ namespace FreeFermions {
 			void getSitesInternal(VectorUintType& v,BinaryNumberType x) const
 			{
 				v.clear();
-				size_t counter = 0;
+				SizeType counter = 0;
 				while(x>0) {
 					if (x & 1) v.push_back(counter);
 					counter++;

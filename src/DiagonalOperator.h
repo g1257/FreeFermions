@@ -99,7 +99,7 @@ namespace FreeFermions {
 
 			template<typename FreeOperatorsType>
 			FieldType operator()(const FreeOperatorsType& freeOps,
-			                      size_t loc) const
+			                      SizeType loc) const
 			{
 				return backend_(freeOps,loc);
 			}

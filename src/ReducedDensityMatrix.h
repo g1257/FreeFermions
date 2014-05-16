@@ -97,7 +97,7 @@ namespace FreeFermions {
 	template<typename EngineType>
 	class ReducedDensityMatrix {
 		
-		typedef typename PsimagLite::Vector<size_t>::Type VectorUintType;
+		typedef typename PsimagLite::Vector<SizeType>::Type VectorUintType;
 		typedef typename EngineType::FieldType FieldType;
 		typedef typename EngineType::RealType RealType;
 		typedef typename PsimagLite::Vector<FieldType>::Type VectorType;
@@ -162,7 +162,7 @@ namespace FreeFermions {
 					HilbertStateType phi(engine_,zeroV_);
 					psiOneBlock(phi,v,CREATION,opNormalFactory_);
 					//std::cout<<phi;
-					for (size_t j=0;j<total;j++) {
+					for (SizeType j=0;j<total;j++) {
 						VectorUintType w;
 						aux_.getSites(w,j);
 						if (v.size()+w.size()!=ne_) {
@@ -207,13 +207,13 @@ namespace FreeFermions {
 
 			void psiOneBlock(HilbertStateType& phi,
 			                   const VectorUintType& v,
-			                   size_t label,
+			                   SizeType label,
 			                   OpNormalFactoryType& opNormalFactory,
-			                   size_t offset = 0)
+			                   SizeType offset = 0)
 			{
-				size_t sigma = 0;
-				for (size_t i=0;i<v.size();i++) {
-					size_t site = v[i] + offset;
+				SizeType sigma = 0;
+				for (SizeType i=0;i<v.size();i++) {
+					SizeType site = v[i] + offset;
 					OperatorType& myOp = opNormalFactory(label,site,sigma);
 					myOp.applyTo(phi);
 				}
@@ -235,7 +235,7 @@ namespace FreeFermions {
 		public:
 
 			// note: right and left blocks are assumed equal and of size n
-			ReducedDensityMatrix(EngineType& engine,size_t n,size_t ne)
+			ReducedDensityMatrix(EngineType& engine,SizeType n,SizeType ne)
 			: engine_(engine),n_(n),ne_(ne)
 			{
 				assert(engine_.dof()==1);
@@ -245,7 +245,7 @@ namespace FreeFermions {
 				calculateRdm(rho_,psi_);
 			}
 			
-			size_t rank() const { return rho_.n_row(); }
+			SizeType rank() const { return rho_.n_row(); }
 			
 			void diagonalize(typename PsimagLite::Vector<RealType>::Type& e)
 			{
@@ -257,7 +257,7 @@ namespace FreeFermions {
 			void calculatePsi(MatrixType& psi)
 			{
 				CanonicalStates aux(n_,ne_);
-				size_t states = aux.states();
+				SizeType states = aux.states();
 				psi.resize(states,states);
 				
 				std::cout<<"#psi of size "<<states<<"x"<<states<<"\n";
@@ -284,14 +284,14 @@ namespace FreeFermions {
 				if (fabs(sum) < 1e-6)
 					PsimagLite::RuntimeError("Sum is too small\n");
 
-				for (size_t i=0;i<psiVv.size();i++)
-					for (size_t j=0;j<psiVv[i].size();j++)
+				for (SizeType i=0;i<psiVv.size();i++)
+					for (SizeType j=0;j<psiVv[i].size();j++)
 						psi(i,j) = psiVv[i][j]/sqrt(sum);
 			}
 			
 			void calculateRdm(MatrixType& rho,const MatrixType& psi)
 			{
-				size_t states=psi.n_row();
+				SizeType states=psi.n_row();
 				rho.resize(states,states);
 				//std::cout<<"#rho of size "<<states<<"x"<<states<<"\n";
 				RealType alpha = 1.0;
@@ -303,8 +303,8 @@ namespace FreeFermions {
 			}
 			
 			EngineType& engine_;
-			size_t n_; // number of sites for one block only (both blocks are assumed equal)
-			size_t ne_; // number of electrons in the combined lattice (right+left)
+			SizeType n_; // number of sites for one block only (both blocks are assumed equal)
+			SizeType ne_; // number of electrons in the combined lattice (right+left)
 			MatrixType psi_; // the overlap of the g.s. with the product state
 			MatrixType rho_; // the reduced density matrix (reduced over right block)
 	}; // ReducedDensityMatrix

@@ -216,7 +216,7 @@ namespace FreeFermions {
 			}
 		}
 
-		static int readElectrons(IoInputType& io,size_t nsites)
+		static int readElectrons(IoInputType& io,SizeType nsites)
 		{
 			int x = -1;
 			try {
@@ -249,7 +249,7 @@ namespace FreeFermions {
 				PsimagLite::String str("Incorrect TargetQuantumNumbers line\n");
 				throw std::runtime_error(str.c_str());
 			}
-			return static_cast<size_t>(round(v[0]*nsites));
+			return static_cast<SizeType>(round(v[0]*nsites));
 		}
 
 		template<typename VectorLikeType>
@@ -266,13 +266,13 @@ namespace FreeFermions {
 			io.readline(v,label);
 		}
 
-		size_t type;
-		size_t sites;
-		size_t leg;
+		SizeType type;
+		SizeType sites;
+		SizeType leg;
 		typename PsimagLite::Vector<bool>::Type isPeriodic;
 		typename PsimagLite::Vector<FieldType>::Type hopping;
 		PsimagLite::String filename;
-		size_t orbitals;
+		SizeType orbitals;
 		SizeType bathSitesPerSite;
 		typename PsimagLite::Vector<FieldType>::Type tb;
 	}; // struct GeometryParameters

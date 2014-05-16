@@ -92,7 +92,7 @@ namespace FreeFermions {
 	public:
 		typedef FieldType value_type;
 
-		ArrangementsWithoutRepetition(size_t n,size_t k)
+		ArrangementsWithoutRepetition(SizeType n,SizeType k)
 		: data_(n),k_(k)
 		{
 			if (k==0 || n<k) throw std::runtime_error(
@@ -111,8 +111,8 @@ namespace FreeFermions {
 		bool increase()
 		{
 			if (data_.size()==0) return false;
-			size_t n = data_.size();
-			size_t i = k_ - 1;
+			SizeType n = data_.size();
+			SizeType i = k_ - 1;
 			++data_[i];
 			while (data_[i] >= n - k_ + 1 + i) {
 				if (i==0) break;
@@ -130,24 +130,24 @@ namespace FreeFermions {
 		}
 
 
-		size_t operator[](size_t i) const
+		SizeType operator[](SizeType i) const
 		{
 			return data_[i];
 		}
 
-		size_t size() const { return k_; }
+		SizeType size() const { return k_; }
 
 	private:
 
-		typename PsimagLite::Vector<size_t>::Type data_;
-		size_t k_;
+		typename PsimagLite::Vector<SizeType>::Type data_;
+		SizeType k_;
 	}; // ArrangementsWithoutRepetition
 	
 	template<typename T>
 	std::ostream& operator<<(std::ostream& os,
 	                          const ArrangementsWithoutRepetition<T>& ig)
 	{
-		for (size_t i=0;i<ig.size();i++) os<<ig[i]<<" ";
+		for (SizeType i=0;i<ig.size();i++) os<<ig[i]<<" ";
 		return os;
 	}
 } // namespace Dmrg 

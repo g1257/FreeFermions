@@ -42,9 +42,9 @@ int main(int argc,char* argv[])
 	InputNgType::Readable io(ioWriteable);
 
 	GeometryParamsType geometryParams(io);
-	size_t electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
 
-	size_t dof = 1; // spinless
+	SizeType dof = 1; // spinless
 
 	GeometryLibraryType geometry(geometryParams);
 
@@ -52,10 +52,10 @@ int main(int argc,char* argv[])
 	SizeType npthreads = 1;
 	PsimagLite::Concurrency concurrency(&argc,&argv,npthreads);
 	EngineType engine(geometry.matrix(),dof,true);
-	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
-	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
+	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
 
 	SizeType halfSites = static_cast<SizeType>(0.5*engine.size());	

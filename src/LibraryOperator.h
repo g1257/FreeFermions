@@ -133,9 +133,9 @@ namespace FreeFermions {
 
 		//! Use OperatorFactory to create objects of this class
 		LibraryOperator(const EngineType& engine,
-				size_t type,
-				size_t ind,
-				size_t sigma)
+				SizeType type,
+				SizeType ind,
+				SizeType sigma)
 		: opNormalFactory_(engine),type_(type),ind_(ind),sigma_(sigma)
 		{}
 
@@ -152,7 +152,7 @@ namespace FreeFermions {
 		}
 
 		OpNormalFactoryType opNormalFactory_;
-		size_t type_,ind_,sigma_;
+		SizeType type_,ind_,sigma_;
 	}; // LibraryOperator
 	
 

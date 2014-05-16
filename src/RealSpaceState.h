@@ -99,7 +99,7 @@ namespace FreeFermions {
 		typedef typename CorDOperatorType_::FieldType FieldType;
 		typedef  FlavoredState<typename PsimagLite::Vector<bool>::Type,CorDOperatorType_> FlavoredStateType;
 		typedef RealSpaceState<CorDOperatorType_> ThisType;
-		typedef ArrangementsWithoutRepetition<typename PsimagLite::Vector<size_t>::Type >
+		typedef ArrangementsWithoutRepetition<typename PsimagLite::Vector<SizeType>::Type >
 						ArrangementsWithoutRepetitionType;
 		typedef PsimagLite::Permutations<ArrangementsWithoutRepetitionType> PermutationsType;
 
@@ -113,17 +113,17 @@ namespace FreeFermions {
 
 		// it's the g.s. for now, FIXME change it later to allow more flex.
 		RealSpaceState(const EngineType& engine,
-		              const typename PsimagLite::Vector<size_t>::Type& ne,
+		              const typename PsimagLite::Vector<SizeType>::Type& ne,
 		              bool debug = false)
 		:  engine_(&engine),ne_(ne),debug_(debug),sorted_(false),zeroVals_(0)
 		{
-			for (size_t i=0;i<engine_->dof();i++)
+			for (SizeType i=0;i<engine_->dof();i++)
 				initTerms(i);
 		}
 
 		void pushInto(const CorDOperatorType& op)
 		{
-			for (size_t i=0;i<terms_.size();i++) {
+			for (SizeType i=0;i<terms_.size();i++) {
 				if (fabs(values_[i])<1e-8) continue;
 				int x = terms_[i].apply(op.type(),op.sigma(),op.index());
 				values_[i] *= x;
@@ -140,12 +140,12 @@ namespace FreeFermions {
 			simplify();
 			other.simplify();
 			FieldType sum = 0;
-			size_t j=0;
+			SizeType j=0;
 //			std::cout<<"size1="<<terms_.size()<<" size2=";
 //			std::cout<<other.terms_.size()<<"\n";
-			for (size_t i=0;i<other.terms_.size();i++) {
+			for (SizeType i=0;i<other.terms_.size();i++) {
 				while (j<terms_.size() && terms_[j]<other.terms_[i]) j++;
-				size_t k = j;
+				SizeType k = j;
 				while(k<terms_.size() && terms_[k]==other.terms_[i]) {
 					sum += std::conj(values_[k]) * other.values_[i];
 					k++;
@@ -170,7 +170,7 @@ namespace FreeFermions {
 			values_.clear();
 			terms_.push_back(prev);
 			values_.push_back(values_[0]);
-			for (size_t i=1;i<terms2.size();i++) {
+			for (SizeType i=1;i<terms2.size();i++) {
 				if (terms2[i] == prev) continue;
 				terms_.push_back(terms2[i]);
 				values_.push_back(values2[i]);
@@ -180,11 +180,11 @@ namespace FreeFermions {
 		void sort()
 		{
 			if (terms_.size()<2 || sorted_) return;
-			typename PsimagLite::Vector<size_t>::Type iperm(terms_.size());
+			typename PsimagLite::Vector<SizeType>::Type iperm(terms_.size());
 			PsimagLite::Sort<typename PsimagLite::Vector<FlavoredStateType>::Type > mysort;
 			mysort.sort(terms_,iperm);
 			typename PsimagLite::Vector<FieldType>::Type valuesNew(values_.size());
-			for (size_t i=0;i<values_.size();i++)
+			for (SizeType i=0;i<values_.size();i++)
 				valuesNew[i]=values_[iperm[i]];
 			values_=valuesNew;
 			sorted_ = true;
@@ -194,10 +194,10 @@ namespace FreeFermions {
 		// U_{lambda(0),p(0)} U_{lambda(1),p(1)} U_{lambda(2),p(2)}
 		// ... c^\dagger_{p(0)} c^\dagger_{p(1)} c^\dagger_{p(2)}...
 		// where the sum is over all permutations p of 0,1,2 ... N-1
-		void initTerms(size_t sigma)
+		void initTerms(SizeType sigma)
 		{
 			assert(engine_->dof()==1);
-			size_t n = engine_->size();
+			SizeType n = engine_->size();
 			typename PsimagLite::Vector<bool>::Type v(n,false);
 			if (ne_[sigma]==0) {
 				FlavoredStateType fl(engine_->dof(),v.size());
@@ -212,13 +212,13 @@ namespace FreeFermions {
 			while (ap.increase()) {
 				PermutationsType p(ap);
 				//std::cerr<<"p.size="<<p.size()<<" terms="<<terms_.size()<<"\n";
-				for (size_t i=0;i<v.size();i++) v[i] = false;
-				for (size_t i=0;i<ne_[sigma];i++) v[p[i]] = true;
+				for (SizeType i=0;i<v.size();i++) v[i] = false;
+				for (SizeType i=0;i<ne_[sigma];i++) v[p[i]] = true;
 				RealType sum = 0;
 				do {
 //					std::cerr<<"--------> "<<p<<" <---------\n";
 					RealType prod = (isArrangementOdd(p)) ? -1.0 : 1.0;
-					for (size_t i=0;i<ne_[sigma];i++) {
+					for (SizeType i=0;i<ne_[sigma];i++) {
 						prod *= engine_->eigenvector(p[i],i);
 					}
 					sum += prod;
@@ -236,14 +236,14 @@ namespace FreeFermions {
 			// make a copy because sort will modify it:
 			typedef typename SomeVectorType::value_type SomeElementType;
 			typename PsimagLite::Vector<SomeElementType>::Type w(v.size());
-			for (size_t i=0;i<v.size();i++) w[i] = v[i];
+			for (SizeType i=0;i<v.size();i++) w[i] = v[i];
 			PsimagLite::Sort<typename PsimagLite::Vector<SomeElementType>::Type > mysort;
-			typename PsimagLite::Vector<size_t>::Type iperm(w.size());
+			typename PsimagLite::Vector<SizeType>::Type iperm(w.size());
 			mysort.sort(w,iperm);
 			return isOdd(iperm);
 		}
 
-		bool isOdd(const typename PsimagLite::Vector<size_t>::Type& x)
+		bool isOdd(const typename PsimagLite::Vector<SizeType>::Type& x)
 		{
 			//Return even parity for the permutation
 			int temp =  (x.size() - ncycles(x));
@@ -259,7 +259,7 @@ namespace FreeFermions {
 			values_.clear();
 			terms_.push_back(prev);
 			values_.push_back(values_[0]);
-			for (size_t i=1;i<terms2.size();i++) {
+			for (SizeType i=1;i<terms2.size();i++) {
 				if (fabs(values2[i])<1e-8) continue;
 				terms_.push_back(terms2[i]);
 				values_.push_back(values2[i]);
@@ -269,7 +269,7 @@ namespace FreeFermions {
 
 //		void killZeroVals()
 //		{
-//			for (size_t i=1;i<terms_.size();i++) {
+//			for (SizeType i=1;i<terms_.size();i++) {
 //				if (fabs(values_[i])<1e-8) {
 //					terms_.erase(terms_.begin()+i);
 //					values_.erase(values_.begin()+i);
@@ -279,16 +279,16 @@ namespace FreeFermions {
 //			zeroVals_=0;
 //		}
 
-		size_t ncycles(const typename PsimagLite::Vector<size_t>::Type& x)
+		SizeType ncycles(const typename PsimagLite::Vector<SizeType>::Type& x)
 		{
-			size_t ncycles = 0;
+			SizeType ncycles = 0;
 			typename PsimagLite::Vector<bool>::Type seen(x.size(),false);
 
-			for (size_t i=0;i<seen.size();i++) {
+			for (SizeType i=0;i<seen.size();i++) {
 				if (seen[i]) continue;
 				ncycles++;
 				//mark indices that belong to the cycle
-				size_t j = i;
+				SizeType j = i;
 				while (!seen[j]) {
 					seen[j] = true;
 					j = x[j];
@@ -297,10 +297,10 @@ namespace FreeFermions {
 			return ncycles;
 		}
 		const EngineType* engine_;
-		typename PsimagLite::Vector<size_t>::Type ne_;
+		typename PsimagLite::Vector<SizeType>::Type ne_;
 		bool debug_;
 		bool sorted_;
-		size_t zeroVals_;
+		SizeType zeroVals_;
 		typename PsimagLite::Vector<FlavoredStateType>::Type terms_;
 		typename PsimagLite::Vector<FieldType>::Type values_;
 	}; // RealSpaceState

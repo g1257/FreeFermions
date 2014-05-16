@@ -120,7 +120,7 @@ template<typename OperatorType,typename OpPointerType>
 
 	private:
 
-		void pairUp(//const typename PsimagLite::Vector<size_t>::Type& occupations,
+		void pairUp(//const typename PsimagLite::Vector<SizeType>::Type& occupations,
 		            FreeOperatorsType& freeOps)
 		{
 			// pair up daggers with non-daggers
@@ -129,7 +129,7 @@ template<typename OperatorType,typename OpPointerType>
 				if (freeOps.notCreationOrDestruction(freeOps[0].type))
 					continue;
 				// take first operator's lambda:
-				size_t thisLambda = freeOps[0].lambda;
+				SizeType thisLambda = freeOps[0].lambda;
 				// find next operator with same lambda:
 				int x = freeOps.findOpGivenLambda(thisLambda,1);
 				
@@ -143,7 +143,7 @@ template<typename OperatorType,typename OpPointerType>
 				// let's deal with the (anti)occupation first:
 
 				bool nNormal = (freeOps[0].type == CREATION) ? true : false;
-				size_t occupationForThisLamda = 0; //occupations[thisLambda];
+				SizeType occupationForThisLamda = 0; //occupations[thisLambda];
 				if (nNormal && occupationForThisLamda==0) {
 					value_=0;
 					return;

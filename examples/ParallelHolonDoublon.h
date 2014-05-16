@@ -91,9 +91,9 @@ namespace FreeFermions {
 
 template<typename RealType>
 struct HolonDoublonParams {
-	HolonDoublonParams(const typename PsimagLite::Vector<size_t>::Type& ne_,
-					   const typename PsimagLite::Vector<size_t>::Type& sites_,
-					   size_t sigma3_,
+	HolonDoublonParams(const typename PsimagLite::Vector<SizeType>::Type& ne_,
+					   const typename PsimagLite::Vector<SizeType>::Type& sites_,
+					   SizeType sigma3_,
 					   const RealType& offset_,
 					   const RealType& step_,
 					   bool debug_,
@@ -106,9 +106,9 @@ struct HolonDoublonParams {
 		  debug(debug_),
 		  verbose(verbose_)
 	{}
-	typename PsimagLite::Vector<size_t>::Type ne;
-	typename PsimagLite::Vector<size_t>::Type sites;
-	size_t sigma3;
+	typename PsimagLite::Vector<SizeType>::Type ne;
+	typename PsimagLite::Vector<SizeType>::Type sites;
+	SizeType sigma3;
 	RealType offset;
 	RealType step;
 	bool debug;
@@ -141,9 +141,9 @@ public:
 		}
 	}
 
-	void thread_function_(size_t threadNum,
-	                      size_t blockSize,
-	                      size_t total,
+	void thread_function_(SizeType threadNum,
+	                      SizeType blockSize,
+	                      SizeType total,
 	                      typename ConcurrencyType::MutexType* myMutex)
 	{
 		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
@@ -164,7 +164,7 @@ public:
 			FieldType savedValue = 0;
 			FieldType sum = 0;
 
-			for (size_t sigma = 0;sigma<2;sigma++) {
+			for (SizeType sigma = 0;sigma<2;sigma++) {
 				HilbertStateType phi = gs_;
 				LibraryOperatorType& myOp = opLibFactory(
 											  LibraryOperatorType::N,params_.sites[0],1-sigma);
@@ -174,7 +174,7 @@ public:
 												 params_.sites[0],sigma);
 				myOp2.applyTo(phi);
 
-				for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
+				for (SizeType sigma2 = 0;sigma2 < 2;sigma2++) {
 					HilbertStateType phi3 = phi;
 
 
@@ -209,8 +209,8 @@ public:
 		}
 	}
 
-	FieldType calcSuperDensity(size_t site,
-								 size_t site2)
+	FieldType calcSuperDensity(SizeType site,
+								 SizeType site2)
 	{
 		HilbertStateType savedVector = gs_;
 		FieldType savedValue = 0;
@@ -218,7 +218,7 @@ public:
 		OpNormalFactoryType opNormalFactory(engine_);
 		OpLibFactoryType opLibFactory(engine_);
 
-		for (size_t sigma = 0;sigma<2;sigma++) {
+		for (SizeType sigma = 0;sigma<2;sigma++) {
 			HilbertStateType phi = gs_;
 
 			LibraryOperatorType& myOp = opLibFactory(
@@ -230,7 +230,7 @@ public:
 
 			myOp2.applyTo(phi);
 
-			for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
+			for (SizeType sigma2 = 0;sigma2 < 2;sigma2++) {
 				HilbertStateType phi3 = phi;
 				LibraryOperatorType& myOp3 = opLibFactory(
 										 LibraryOperatorType::NBAR,site2,1-sigma2);

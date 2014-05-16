@@ -36,10 +36,10 @@ int main(int argc,char *argv[])
 {
 	int opt;
 	PsimagLite::String file("");
-	size_t total=0;
+	SizeType total=0;
 	RealType offset = 0;
 	RealType step = 0;
-	size_t site3 = 0;
+	SizeType site3 = 0;
 
 	while ((opt = getopt(argc, argv, "f:t:o:i:p:")) != -1) {
 		switch (opt) {
@@ -72,13 +72,13 @@ int main(int argc,char *argv[])
 	InputNgType::Readable io(ioWriteable);
 
 	GeometryParamsType geometryParams(io);
-	size_t electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
-	PsimagLite::Vector<size_t>::Type sites;
+	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	PsimagLite::Vector<SizeType>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
 	sites.resize(3);
 	sites[2] = site3;
 
-	size_t dof = 1; // spinless
+	SizeType dof = 1; // spinless
 
 	GeometryLibraryType geometry(geometryParams);
 
@@ -88,11 +88,11 @@ int main(int argc,char *argv[])
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
 	EngineType engine(geometry.matrix(),dof,true);
 
-	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
 
-	size_t sigma =0;
+	SizeType sigma =0;
 	OpNormalFactoryType opNormalFactory(engine);
 	OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,sites[0],sigma);
 	HilbertStateType phi2 = gs;
@@ -103,7 +103,7 @@ int main(int argc,char *argv[])
 	
 	std::cout<<"#site="<<sites[0]<<"\n";
 	std::cout<<"#site2="<<sites[1]<<"\n";
-	for (size_t it = 0; it<total; it++) {
+	for (SizeType it = 0; it<total; it++) {
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		RealType time = it * step + offset;
 		EtoTheIhTimeType eih(time,engine,0);

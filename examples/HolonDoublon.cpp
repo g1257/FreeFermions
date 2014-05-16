@@ -30,9 +30,9 @@ int main(int argc,char *argv[])
 {
 	int opt;
 	PsimagLite::String file("");
-	size_t total=0;
+	SizeType total=0;
 	RealType offset = 0;
-	size_t site3 = 0;
+	SizeType site3 = 0;
 
 	RealType step = 0;
 	while ((opt = getopt(argc, argv, "f:p:t:o:i:")) != -1) {
@@ -63,12 +63,12 @@ int main(int argc,char *argv[])
 	InputNgType::Readable io(ioWriteable);
 
 	GeometryParamsType geometryParams(io);
-	size_t electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
-	PsimagLite::Vector<size_t>::Type sites;
+	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	PsimagLite::Vector<SizeType>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
 	sites.resize(3);
 	sites[2] = site3;
-	size_t nthreads = 1;
+	SizeType nthreads = 1;
 
 	try {
 		GeometryParamsType::readLabel(nthreads,file,"Threads=");
@@ -79,7 +79,7 @@ int main(int argc,char *argv[])
 	typedef PsimagLite::Concurrency ConcurrencyType;
 	ConcurrencyType concurrency(&argc,&argv,nthreads);
 
-	size_t dof = 2; // spin up and down
+	SizeType dof = 2; // spin up and down
 
 	GeometryLibraryType geometry(geometryParams);
 
@@ -87,19 +87,19 @@ int main(int argc,char *argv[])
 	
 	EngineType engine(geometry.matrix(),dof,false);
 
-	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	bool verbose = false;
 
 	
 	RealType sum = 0;
-	for (size_t i=0;i<electronsUp;i++) sum += engine.eigenvalue(i);
+	for (SizeType i=0;i<electronsUp;i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
 
-	size_t sigma3 = 0;
+	SizeType sigma3 = 0;
 
 	std::cout<<"#sites= ";
-	for (size_t i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
+	for (SizeType i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
 
 	typedef FreeFermions::ParallelHolonDoublon<RealType,FieldType,EngineType> ParallelHolonDoublonType;

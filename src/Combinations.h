@@ -88,7 +88,7 @@ namespace FreeFermions {
 	class Combinations {
 	public:
 
-		Combinations(size_t n,size_t k)
+		Combinations(SizeType n,SizeType k)
 		: k_(k)
 		{
 			if (k==0 || n<k) throw std::runtime_error(
@@ -96,25 +96,25 @@ namespace FreeFermions {
 			mainLoop(n);
 		}
 		
-		const PsimagLite::Vector<size_t>::Type& operator()(size_t i) const
+		const PsimagLite::Vector<SizeType>::Type& operator()(SizeType i) const
 		{
 			return data_[i];
 		}
 		
-		size_t size() const { return data_.size(); }
+		SizeType size() const { return data_.size(); }
 
 	private:
-		void mainLoop(size_t n)
+		void mainLoop(SizeType n)
 		{
 			PsimagLite::Vector<int>::Type c(k_+3);
-			PsimagLite::Vector<size_t>::Type tmpVec(k_);
+			PsimagLite::Vector<SizeType>::Type tmpVec(k_);
 			int x = 0;
 			for (int i=1; i <= int(k_); i++) c[i] = i;
 			c[k_+1] = n+1;
 			c[k_+2] = 0;
 			int j = k_;
 visit:
-			size_t counter = 0;
+			SizeType counter = 0;
 			for (int i=k_; i >= 1; i--)
 				tmpVec[counter++] = c[i]-1;
 			data_.push_back(tmpVec);
@@ -136,14 +136,14 @@ incr:
 			goto visit;
 		}
 
-		size_t k_;
-		PsimagLite::Vector<PsimagLite::Vector<size_t>::Type>::Type data_;
+		SizeType k_;
+		PsimagLite::Vector<PsimagLite::Vector<SizeType>::Type>::Type data_;
 	}; // Combinations
 	
 	std::ostream& operator<<(std::ostream& os,const Combinations& ig)
 	{
-		for (size_t i=0;i<ig.size();++i) {
-			for (size_t j=0;j<ig(i).size();++j)
+		for (SizeType i=0;i<ig.size();++i) {
+			for (SizeType j=0;j<ig(i).size();++j)
 				os<<ig(i)[j]<<" ";
 			os<<"\n";
 		}

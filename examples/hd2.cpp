@@ -38,8 +38,8 @@ typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 
-FieldType calcSuperDensity(size_t site,
-						   size_t site2,
+FieldType calcSuperDensity(SizeType site,
+						   SizeType site2,
 						   const HilbertStateType& gs,
 						   const EngineType& engine)
 {
@@ -49,7 +49,7 @@ FieldType calcSuperDensity(size_t site,
 	OpNormalFactoryType opNormalFactory(engine);
 	OpLibFactoryType opLibFactory(engine);
 	
-	for (size_t sigma = 0;sigma<2;sigma++) {
+	for (SizeType sigma = 0;sigma<2;sigma++) {
 		HilbertStateType phi = gs;
 		
 		LibraryOperatorType& myOp = opLibFactory(
@@ -61,7 +61,7 @@ FieldType calcSuperDensity(size_t site,
 		
 		myOp2.applyTo(phi);
 		
-		for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
+		for (SizeType sigma2 = 0;sigma2 < 2;sigma2++) {
 			HilbertStateType phi3 = phi;
 			LibraryOperatorType& myOp3 = opLibFactory(
 				LibraryOperatorType::NBAR,site2,1-sigma2);
@@ -128,7 +128,7 @@ public:
 
 			PsimagLite::Vector<HilbertStateType*>::Type savedVector(4);
 
-			for (size_t sigma = 0;sigma<2;sigma++) {
+			for (SizeType sigma = 0;sigma<2;sigma++) {
 				HilbertStateType phi = gs_;
 				LibraryOperatorType& myOp = opLibFactory(
 				            LibraryOperatorType::N,sites_[0],1-sigma);
@@ -138,7 +138,7 @@ public:
 				                                      sites_[0],sigma);
 				myOp2.applyTo(phi);
 
-				for (size_t sigma2 = 0;sigma2 < 2;sigma2++) {
+				for (SizeType sigma2 = 0;sigma2 < 2;sigma2++) {
 					savedVector[sigma+sigma2*2] = new HilbertStateType(phi);
 
 
@@ -165,14 +165,14 @@ public:
 				}
 			}
 			FieldType sum = 0;
-			size_t total = savedVector.size()*savedVector.size()/2;
-			for (size_t x=0;x<total;x++) {
-				size_t sigma = (x & 3);
-				size_t sigma2 = (x & 12);
+			SizeType total = savedVector.size()*savedVector.size()/2;
+			for (SizeType x=0;x<total;x++) {
+				SizeType sigma = (x & 3);
+				SizeType sigma2 = (x & 12);
 				sigma2 >>= 2;
 				sum += scalarProduct(*savedVector[sigma],*savedVector[sigma2]);
 			}
-			for (size_t x=0;x<savedVector.size();x++) delete savedVector[x];
+			for (SizeType x=0;x<savedVector.size();x++) delete savedVector[x];
 
 			std::cout<<time<<" "<<(2.0*sum)<<"\n";
 		}
@@ -192,10 +192,10 @@ int main(int argc,char *argv[])
 {
 	int opt;
 	PsimagLite::String file("");
-	size_t total=0;
+	SizeType total=0;
 	RealType offset = 0;
 	RealType step = 0;
-	size_t site3=0;
+	SizeType site3=0;
 
 	while ((opt = getopt(argc, argv, "f:p:t:o:i:")) != -1) {
 		switch (opt) {
@@ -225,16 +225,16 @@ int main(int argc,char *argv[])
 	InputNgType::Readable io(ioWriteable);
 
 	GeometryParamsType geometryParams(io);
-	size_t electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
 
-	PsimagLite::Vector<size_t>::Type sites;
+	PsimagLite::Vector<SizeType>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
 	SizeType nthreads = 1;
 	GeometryParamsType::readLabel(nthreads,file,"Threads=");
 	sites.resize(3);
 	sites[2]=site3;
 
-	size_t dof = 2; // spin up and down
+	SizeType dof = 2; // spin up and down
 	GeometryLibraryType geometry(geometryParams);
 
 	std::cerr<<geometry;
@@ -245,20 +245,20 @@ int main(int argc,char *argv[])
 
 	EngineType engine(geometry.matrix(),dof,false);
 	
-	PsimagLite::Vector<size_t>::Type ne(dof,electronsUp); // 8 up and 8 down
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	bool verbose = false;
 	HilbertStateType gs(engine,ne,debug);
 
 	RealType sum = 0;
-	for (size_t i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
+	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
 
 	FieldType superdensity = calcSuperDensity(sites[0],sites[1],gs,engine);
 	std::cout<<"#superdensity="<<superdensity<<"\n";
 
 	std::cout<<"#sites= ";
-	for (size_t i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
+	for (SizeType i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
 	
 	typedef MyLoop MyLoopType;

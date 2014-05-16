@@ -97,11 +97,11 @@ namespace FreeFermions {
 
 			~OperatorFactory()
 			{
-				for (size_t i=0;i<garbage_.size();i++)
+				for (SizeType i=0;i<garbage_.size();i++)
 					delete garbage_[i];
 			}
 
-			OpType& operator()(size_t x,size_t site,size_t sigma)
+			OpType& operator()(SizeType x,SizeType site,SizeType sigma)
 			{
 				OpType* op = new OpType(*engine_,x,site,sigma);
 				garbage_.push_back(op);
