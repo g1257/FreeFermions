@@ -81,115 +81,188 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
  */
 #ifndef FLAVORED_STATE_H
 #define FLAVORED_STATE_H
+#include "Vector.h"
+#include "BitManip.h"
 
 namespace FreeFermions {
 	// All interactions == 0
-	template<typename LevelsType,typename OperatorType>
+	template<typename OperatorType>
 	class FlavoredState {
 			//static SizeType const SPIN_UP=0,SPIN_DOWN=1;
-			typedef FlavoredState<LevelsType,OperatorType> ThisType;
+			typedef FlavoredState<OperatorType> ThisType;
 			static int const FERMION_SIGN = -1;
 			enum {CREATION = OperatorType::CREATION,
 			       DESTRUCTION = OperatorType::DESTRUCTION};
 
-		public:
-			FlavoredState(SizeType dof,SizeType size)
-			{
+			typedef typename PsimagLite::Vector<bool>::Type LevelsType_;
+			typedef typename PsimagLite::Vector<unsigned char>::Type VectorUcharType;
 
-				for (SizeType i=0;i<dof;i++) {
-					LevelsType tmpV(size,false);
-					data_.push_back(tmpV);
+			class Tstorage {
+			
+			public:
+				
+				static void init(SizeType dof, SizeType blockSize)
+				{
+					dof_ = dof;
+					blockSize_ = blockSize;
+					assert(blockSize_ < x_.size());
 				}
+				
+				static void set(const LevelsType_& portion)
+				{
+					SizeType c = 0;
+					SizeType j = 0;
+					bytes_ = 0;
+					for (SizeType i = 0; i < portion.size(); ++i) {
+						SizeType mask = 1;
+						mask <<= j;
+						c |= mask;
+						j++;
+						if (j == 8) {
+							assert(bytes_ < x_.size());
+							x_[bytes_++] = c;
+							j = 0;
+							c = 0;
+						}
+					}
+					
+					if (j > 0) {
+						assert(bytes_ < x_.size());
+						x_[bytes_] = c;
+					}
+				}
+				
+				static void set(const VectorUcharType& d,SizeType flavor)
+				{
+					SizeType index = flavor * dof_;
+					for (SizeType i = 0; i < blockSize_; ++i)
+						x_[i] = d[index++];
+					bytes_ = blockSize_;
+				}
+				
+				static SizeType numberOfDigits()
+				{
+					SizeType sum = 0;
+					for (SizeType i = 0; i < blockSize_; ++i)
+						sum += PsimagLite::BitManip::count(x_[i]);
+					return sum;
+				}
+				
+				static SizeType size() {return bytes_; }
+				
+				static unsigned char byte(SizeType i)
+				{
+					assert(i < bytes_);
+					assert(i < x_.size());
+					return  x_[i];
+				}
+				
+				static bool bitAt(SizeType lambda)
+				{
+					SizeType index = getIndex(0,lambda);
+					SizeType offset = lambda % 8;
+					SizeType mask = (1<<offset);
+					return ((x_[index] & mask) > 0); 
+				}
+
+				static SizeType getIndex(SizeType flavor, SizeType lambda)
+				{
+					SizeType index = flavor * dof_;
+					return index +static_cast<SizeType>(lambda/8);
+				}
+				
+			private:
+				
+				static SizeType dof_;
+				static SizeType blockSize_;
+				static SizeType bytes_;
+				static VectorUcharType x_;
+			};
+
+			typedef Tstorage TstorageType;
+
+		public:
+
+			typedef LevelsType_ LevelsType;
+
+			FlavoredState(SizeType dof,SizeType size)
+			: dof_(dof)
+			{
+				blockSize_ = static_cast<SizeType>(size/8);
+				if (blockSize_ % 8 != 0) blockSize_++;
+				data_.resize(blockSize_*dof,0);
+				TstorageType::init(dof_,blockSize_);
 			}
 
 			void pushInto(SizeType sigma,const LevelsType& portion)
 			{
-				data_[sigma] = portion;
+				TstorageType::set(portion);
+				SizeType index = sigma*blockSize_;
+				for (SizeType i = 0; i < TstorageType::size(); ++i) {
+					data_[index++] = TstorageType::byte(i);
+				}
 			}
-			
-//			void fill(const typename PsimagLite::Vector<SizeType>::Type& ne)
-//			{
-//				if (ne.size()!=data_.size()) throw std::runtime_error(
-//						"FlavoredState::fill()\n");
-//				for (SizeType i=0;i<ne.size();i++) { // sum over spins
-//					fillInternal(data_[i],ne[i]);
-//				}
-//			}
-			
+
 			int apply(SizeType label,SizeType flavor,SizeType lambda)
 			{
-				if (flavor>=data_.size())
-					throw std::runtime_error("FlavoredState::create()\n");
-				if (lambda>=data_[0].size())
-					throw std::runtime_error("FlavoredState::create()\n");
-				int interSign =
-						(calcInterElectrons(flavor) %2) ? 1 : FERMION_SIGN;
-				return applyInternal(label,data_[flavor],lambda)*interSign;
+				assert(flavor < dof_);
+				int interSign = (calcInterElectrons(flavor) %2) ? 1 : FERMION_SIGN;
+				bool b = false;
+				int s = applyInternal(b,label,flavor,lambda)*interSign;
+				setData(flavor,lambda,b);
+				return s;
 			}
 			
+			SizeType flavors() const { return dof_; }
 			
-//			void occupations(typename PsimagLite::Vector<SizeType>::Type& ns,SizeType flavor) const
-//			{
-//				ns.resize(size_);
-//				for (SizeType i = 0; i < size_; i++) ns[i] = 0;
-//
-//				for (SizeType counter=0;counter<data_[flavor].size();counter++) {
-//					ns[counter] = (data_[flavor][counter]) ? 1 : 0;
-//				}
-//			}
+			bool equalEqual(const ThisType& other) const
+			{
+				return true;
+			}
 			
-			SizeType flavors() const { return data_.size(); }
-			
-			template<typename T,typename U>
-			friend std::ostream& operator<<(std::ostream& os,
-			                                  const FlavoredState<T,U>& v);
-			
-			template<typename T,typename U>
-			friend bool operator==(const FlavoredState<T,U>& v1,
-			                         const FlavoredState<T,U>& v2);
-			
-			template<typename T,typename U>
-			friend bool operator<(const FlavoredState<T,U>& v1,
-			                         const FlavoredState<T,U>& v2);
-					
-			template<typename T,typename U>
-			friend bool operator>(const FlavoredState<T,U>& v1,
-			                         const FlavoredState<T,U>& v2);
-					
-			template<typename T,typename U>
-			friend bool operator<=(const FlavoredState<T,U>& v1,
-			                         const FlavoredState<T,U>& v2);
+			bool lessThan(const ThisType& other) const
+			{
+				return false;
+			}
 			
 		private:
 			
-			void fillInternal(LevelsType& x,SizeType ne)
+			void setData(SizeType flavor,SizeType lambda,bool b)
 			{
-				if (ne>x.size())
-					throw std::runtime_error("FlavoredState::fillInternal\n");
-				for (SizeType i=0;i<x.size();i++) x[i] = (i<ne) ? true : false;
+				SizeType index = Tstorage::getIndex(flavor,lambda);
+				SizeType offset = lambda % 8;
+				SizeType mask = (1<<offset);
+				if (b)
+					data_[index] |= mask;
+				else
+					data_[index] &= (!mask);
 			}
-			
-			int applyInternal(SizeType label,LevelsType& x,SizeType lambda)
+
+			int applyInternal(bool& result,SizeType label,SizeType flavor,SizeType lambda)
 			{
-				SizeType nflips = statesBetween(x,lambda);
+				TstorageType::set(data_,flavor);
+				SizeType nflips = statesBetween(lambda);
 				if (label == CREATION) {
-					if (x[lambda]) return 0; // can't create, there's already one
-					x[lambda] = true;
+					if (TstorageType::bitAt(lambda)) return 0; // can't create, there's already one
+					result = true;
 				} else if (label == DESTRUCTION) {
-					if (!x[lambda]) return 0; // can't destroy, there's nothing
-					x[lambda] =false;
+					if (!TstorageType::bitAt(lambda)) return 0; // can't destroy, there's nothing
+					result =false;
 				} else {
 					throw std::runtime_error("FlavoredState::applyInternal()\n");
 				}
+
 				if (nflips ==0 || nflips % 2 ==0) return 1;
 				return FERMION_SIGN;
 			}
 			
-			SizeType statesBetween(LevelsType x,SizeType lambda) const
+			SizeType statesBetween(SizeType lambda) const
 			{
 				SizeType sum = 0;
-				for (SizeType counter = 0;counter < lambda ; counter++)
-					if (x[counter]) sum ++;
+				for (SizeType counter = 0;counter < lambda ; counter++) {
+					if (TstorageType::bitAt(counter)) sum ++;
+				}
+
 				return sum;
 			}
 			
@@ -197,42 +270,35 @@ namespace FreeFermions {
 			{
 				SizeType sum = 0;
 				for (SizeType flavor2 = 0; flavor2 < flavor; flavor2++) {
-					sum += numberOfDigits(data_[flavor2]);
+					TstorageType::set(data_,flavor2);
+					sum += TstorageType::numberOfDigits();
 				}
+
 				return sum;
 			}
 			
-			SizeType numberOfDigits(const LevelsType& x)
-			{
-				SizeType sum = 0;
-				for (SizeType i=0;i<x.size();i++) {
-					if (x[i]) sum ++;
-				}
-				return sum;
-			}
-
-			typename PsimagLite::Vector<LevelsType>::Type data_;
+			SizeType dof_;
+			SizeType blockSize_;
+			VectorUcharType data_;
 	}; // FlavoredState
 	
-	template<typename T,typename U>
-	std::ostream& operator<<(std::ostream& os,const FlavoredState<T,U>& v)
+	template<typename U>
+	std::ostream& operator<<(std::ostream& os,const FlavoredState<U>& v)
 	{
-		os<<"size="<<v.data_.size()<<"\n";
-		for (SizeType i=0;i<v.data_.size();i++) {
-			os<<v.data_[i]<<" ";
-		}
+		v.print(os);
 		return os;
 	}
 	
-	template<typename T,typename U>
-	inline bool operator==(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
+	template<typename U>
+	inline bool operator==(const FlavoredState<U>& v1,const FlavoredState<U>& v2)
 	{
+		return v1.equalEqual(v2);
 		// eliminated due to performance reasons:
 		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
 
-		for (SizeType i=0;i<v1.data_.size();i++)
-			if (v1.data_[i]!=v2.data_[i]) return false;
-		return true;
+		//~ for (SizeType i=0;i<v1.flavors();i++)
+			//~ if (v1.dataOfFlavor(i)!=v2.dataOfFlavor(i)) return false;
+		//~ return true;
 	}
 
 	inline bool operator<(const PsimagLite::Vector<bool>::Type& v1,const PsimagLite::Vector<bool>::Type& v2)
@@ -244,44 +310,28 @@ namespace FreeFermions {
 		return false;
 	}
 
-	template<typename T,typename U>
-	inline bool operator<(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
+	template<typename U>
+	inline bool operator<(const FlavoredState<U>& v1,const FlavoredState<U>& v2)
 	{
-		// eliminated due to performance reasons:
-		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
-		
-		for (SizeType i=0;i<v1.data_.size();i++) {
-			if (v1.data_[i]>v2.data_[i]) return false;
-			if (v1.data_[i]<v2.data_[i]) return true;
-		}
-		return false;
+		return v1.lessThan(v2);
+		//~ for (SizeType i=0;i<v1.flavors();i++) {
+			//~ if (v1.dataOfFlavor(i)>v2.dataOfFlavor(i)) return false;
+			//~ if (v1.dataOfFlavor(i)<v2.dataOfFlavor(i)) return true;
+		//~ }
+		//~ return false;
 	}
 	
-//	template<typename T,typename U>
-//	inline bool operator>(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
-//	{
-//		// eliminated due to performance reasons:
-//		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
-//
-//		for (SizeType i=0;i<v1.data_.size();i++) {
-//			if (!v1.data_[i] && v2.data_[i]) return false;
-//			if (v1.data_[i]&& !v2.data_[i]) return true;
-//		}
-//		return false;
-//	}
-//
-//	template<typename T,typename U>
-//	inline bool operator<=(const FlavoredState<T,U>& v1,const FlavoredState<T,U>& v2)
-//	{
-//		// eliminated due to performance reasons:
-//		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
-//
-//		for (SizeType i=0;i<v1.data_.size();i++) {
-//			if (v1.data_[i] && !v2.data_[i]) return false;
-//			if (!v1.data_[i] && v2.data_[i]) return true;
-//		}
-//		return true;
-//	}
+template<typename U>
+typename PsimagLite::Vector<unsigned char>::Type FlavoredState<U>::Tstorage::x_(100);
+	
+template<typename U>
+SizeType FlavoredState<U>::Tstorage::bytes_ = 0;
+	
+template<typename U>
+SizeType FlavoredState<U>::Tstorage::dof_ = 0;
+
+template<typename U>
+SizeType FlavoredState<U>::Tstorage::blockSize_ = 0;
 } // namespace Dmrg 
 
 /*@}*/
