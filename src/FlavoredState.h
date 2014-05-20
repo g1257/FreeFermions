@@ -131,7 +131,7 @@ namespace FreeFermions {
 					
 					if (j > 0) {
 						assert(bytes_ < x_.size());
-						x_[bytes_] = c;
+						x_[bytes_++] = c;
 					}
 				}
 				
