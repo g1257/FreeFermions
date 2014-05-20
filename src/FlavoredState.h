@@ -114,9 +114,12 @@ namespace FreeFermions {
 					SizeType j = 0;
 					bytes_ = 0;
 					for (SizeType i = 0; i < portion.size(); ++i) {
-						SizeType mask = 1;
-						mask <<= j;
-						c |= mask;
+						bool b = portion[i];
+						SizeType mask = (1<<j);
+						if (b)
+							c |= mask;
+						else
+							c &= (~mask);
 						j++;
 						if (j == 8) {
 							assert(bytes_ < x_.size());
@@ -168,7 +171,7 @@ namespace FreeFermions {
 				static SizeType getIndex(SizeType flavor, SizeType lambda)
 				{
 					SizeType index = flavor * dof_;
-					return index +static_cast<SizeType>(lambda/8);
+					return index + static_cast<SizeType>(lambda/8);
 				}
 				
 			private:
@@ -189,7 +192,7 @@ namespace FreeFermions {
 			: dof_(dof)
 			{
 				blockSize_ = static_cast<SizeType>(size/8);
-				if (blockSize_ % 8 != 0) blockSize_++;
+				if (size % 8 != 0) blockSize_++;
 				data_.resize(blockSize_*dof,0);
 				TstorageType::init(dof_,blockSize_);
 			}
@@ -217,11 +220,25 @@ namespace FreeFermions {
 			
 			bool equalEqual(const ThisType& other) const
 			{
+				assert(data_.size() == other.data_.size());
+				for (SizeType i = 0; i < data_.size(); ++i) {
+					SizeType a = data_[i];
+					SizeType b = other.data_[i];
+					if (a != b) return false;
+				}
 				return true;
 			}
 			
 			bool lessThan(const ThisType& other) const
 			{
+				assert(data_.size() == other.data_.size());
+				for (SizeType i = 0; i < data_.size(); ++i) {
+					SizeType  a = data_[i];
+					SizeType b = other.data_[i];
+					if (a > b) return false;
+					if (a < b) return true;
+				}
+				
 				return false;
 			}
 			
@@ -232,10 +249,11 @@ namespace FreeFermions {
 				SizeType index = Tstorage::getIndex(flavor,lambda);
 				SizeType offset = lambda % 8;
 				SizeType mask = (1<<offset);
+				assert(index < data_.size());
 				if (b)
 					data_[index] |= mask;
 				else
-					data_[index] &= (!mask);
+					data_[index] &= (~mask);
 			}
 
 			int applyInternal(bool& result,SizeType label,SizeType flavor,SizeType lambda)
@@ -283,42 +301,15 @@ namespace FreeFermions {
 	}; // FlavoredState
 	
 	template<typename U>
-	std::ostream& operator<<(std::ostream& os,const FlavoredState<U>& v)
-	{
-		v.print(os);
-		return os;
-	}
-	
-	template<typename U>
 	inline bool operator==(const FlavoredState<U>& v1,const FlavoredState<U>& v2)
 	{
 		return v1.equalEqual(v2);
-		// eliminated due to performance reasons:
-		//if (size_!=b.size_ || data_.size()!=b.data_.size()) return false;
-
-		//~ for (SizeType i=0;i<v1.flavors();i++)
-			//~ if (v1.dataOfFlavor(i)!=v2.dataOfFlavor(i)) return false;
-		//~ return true;
-	}
-
-	inline bool operator<(const PsimagLite::Vector<bool>::Type& v1,const PsimagLite::Vector<bool>::Type& v2)
-	{
-		for (SizeType i=0;i<v1.size();i++) {
-			if (v1[i] && !v2[i]) return false;
-			if (!v1[i] && v2[i]) return true;
-		}
-		return false;
 	}
 
 	template<typename U>
 	inline bool operator<(const FlavoredState<U>& v1,const FlavoredState<U>& v2)
 	{
 		return v1.lessThan(v2);
-		//~ for (SizeType i=0;i<v1.flavors();i++) {
-			//~ if (v1.dataOfFlavor(i)>v2.dataOfFlavor(i)) return false;
-			//~ if (v1.dataOfFlavor(i)<v2.dataOfFlavor(i)) return true;
-		//~ }
-		//~ return false;
 	}
 	
 template<typename U>

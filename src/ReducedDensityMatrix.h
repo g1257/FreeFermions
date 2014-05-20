@@ -142,6 +142,7 @@ namespace FreeFermions {
 			                      typename ConcurrencyType::MutexType* myMutex)
 			{
 				RealType each = 0.1 * total;
+				if (each < 1) each = 1;
 				SizeType eachInteger = static_cast<SizeType>(each);
 
 				SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
@@ -177,8 +178,9 @@ namespace FreeFermions {
 					}
 					psiVv_[i]=psiV_;
 					sumV_[ind] += psiV_*psiV_;
-					//std::cout<<"\n";
+					std::cout<<"p="<<p<<" ind="<<ind<<" sum="<<sumV_[ind]<<"\n";
 				}
+				std::cout<<"stop\n";
 			}
 
 			FieldType sum() const
@@ -282,7 +284,7 @@ namespace FreeFermions {
 //				concurrency_.gather(sum);
 				std::cerr<<"sum="<<sum<<"\n";
 				if (fabs(sum) < 1e-6)
-					PsimagLite::RuntimeError("Sum is too small\n");
+					throw PsimagLite::RuntimeError("Sum is too small\n");
 
 				for (SizeType i=0;i<psiVv.size();i++)
 					for (SizeType j=0;j<psiVv[i].size();j++)
