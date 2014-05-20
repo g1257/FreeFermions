@@ -85,21 +85,21 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "BitManip.h"
 
 namespace FreeFermions {
-	
+
 class Tstorage {
 
 public:
 
 	typedef typename PsimagLite::Vector<bool>::Type LevelsType;
 	typedef typename PsimagLite::Vector<unsigned char>::Type VectorUcharType;
-	
+
 	static void init(SizeType dof, SizeType blockSize)
 	{
 		dof_ = dof;
 		blockSize_ = blockSize;
 		assert(blockSize_ < x_.size());
 	}
-	
+
 	static void set(const LevelsType& portion)
 	{
 		SizeType c = 0;
@@ -120,13 +120,13 @@ public:
 				c = 0;
 			}
 		}
-		
+
 		if (j > 0) {
 			assert(bytes_ < x_.size());
 			x_[bytes_++] = c;
 		}
 	}
-	
+
 	static void set(const VectorUcharType& d,SizeType flavor)
 	{
 		SizeType index = flavor * dof_;
@@ -134,7 +134,7 @@ public:
 			x_[i] = d[index++];
 		bytes_ = blockSize_;
 	}
-	
+
 	static SizeType numberOfDigits()
 	{
 		SizeType sum = 0;
@@ -142,9 +142,9 @@ public:
 			sum += PsimagLite::BitManip::count(x_[i]);
 		return sum;
 	}
-	
+
 	static SizeType size() {return bytes_; }
-	
+
 	static unsigned char byte(SizeType i)
 	{
 		assert(i < bytes_);
@@ -166,13 +166,13 @@ public:
 		sum += PsimagLite::BitManip::count(x);
 		return sum;
 	}
-	
+
 	static bool bitAt(SizeType lambda)
 	{
 		SizeType index = getIndex(0,lambda);
 		SizeType offset = lambda % 8;
 		SizeType mask = (1<<offset);
-		return ((x_[index] & mask) > 0); 
+		return ((x_[index] & mask) > 0);
 	}
 
 	static SizeType getIndex(SizeType flavor, SizeType lambda)
@@ -180,9 +180,9 @@ public:
 		SizeType index = flavor * dof_;
 		return index + static_cast<SizeType>(lambda/8);
 	}
-	
+
 private:
-	
+
 	static SizeType dof_;
 	static SizeType blockSize_;
 	static SizeType bytes_;
@@ -233,9 +233,9 @@ public:
 		setData(flavor,lambda,b);
 		return s;
 	}
-	
+
 	SizeType flavors() const { return dof_; }
-	
+
 	bool equalEqual(const ThisType& other) const
 	{
 		assert(data_.size() == other.data_.size());
@@ -246,7 +246,7 @@ public:
 		}
 		return true;
 	}
-	
+
 	bool lessThan(const ThisType& other) const
 	{
 		assert(data_.size() == other.data_.size());
@@ -256,12 +256,12 @@ public:
 			if (a > b) return false;
 			if (a < b) return true;
 		}
-		
+
 		return false;
 	}
-	
+
 private:
-	
+
 	void setData(SizeType flavor,SizeType lambda,bool b)
 	{
 		SizeType index = Tstorage::getIndex(flavor,lambda);
@@ -291,7 +291,7 @@ private:
 		if (nflips ==0 || nflips % 2 ==0) return 1;
 		return FERMION_SIGN;
 	}
-	
+
 	SizeType calcInterElectrons(SizeType flavor)
 	{
 		SizeType sum = 0;
@@ -302,28 +302,28 @@ private:
 
 		return sum;
 	}
-	
+
 	SizeType dof_;
 	SizeType blockSize_;
 	VectorUcharType data_;
-	}; // FlavoredState
-	
-	template<typename U>
-	inline bool operator==(const FlavoredState<U>& v1,const FlavoredState<U>& v2)
-	{
-return v1.equalEqual(v2);
-	}
+}; // class FlavoredState
 
-	template<typename U>
-	inline bool operator<(const FlavoredState<U>& v1,const FlavoredState<U>& v2)
-	{
-return v1.lessThan(v2);
-	}
-	
+template<typename U>
+inline bool operator==(const FlavoredState<U>& v1,const FlavoredState<U>& v2)
+{
+	return v1.equalEqual(v2);
+}
+
+template<typename U>
+inline bool operator<(const FlavoredState<U>& v1,const FlavoredState<U>& v2)
+{
+	return v1.lessThan(v2);
+}
+
 Tstorage::VectorUcharType Tstorage::x_(100);
 
 SizeType Tstorage::bytes_ = 0;
-	
+
 SizeType Tstorage::dof_ = 0;
 
 SizeType Tstorage::blockSize_ = 0;
@@ -331,3 +331,4 @@ SizeType Tstorage::blockSize_ = 0;
 
 /*@}*/
 #endif
+
