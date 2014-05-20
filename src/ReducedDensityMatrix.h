@@ -178,8 +178,8 @@ namespace FreeFermions {
 					}
 					psiVv_[i]=psiV_;
 					sumV_[ind] += psiV_*psiV_;
-					std::cout<<"p="<<p<<" ind="<<ind<<" sum="<<sumV_[ind]<<"\n";
 				}
+
 				std::cout<<"stop\n";
 			}
 

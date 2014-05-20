@@ -129,10 +129,6 @@ namespace FreeFermions {
 				values_[i] *= x;
 				if (x==0) zeroVals_++;
 			}
-			//if (zeroVals_>2000) {
-				killZeroVals();
-				//std::cerr<<"zerovals\n";
-			//}
 		}
 
 		FieldType scalarProduct(ThisType& other)
