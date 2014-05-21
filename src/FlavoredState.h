@@ -90,8 +90,8 @@ class Tstorage {
 
 public:
 
-	typedef typename PsimagLite::Vector<bool>::Type LevelsType;
-	typedef typename PsimagLite::Vector<unsigned char>::Type VectorUcharType;
+	typedef PsimagLite::Vector<bool>::Type LevelsType;
+	typedef PsimagLite::Vector<unsigned char>::Type VectorUcharType;
 
 	static void init(SizeType dof, SizeType blockSize)
 	{
