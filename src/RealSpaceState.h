@@ -113,12 +113,13 @@ namespace FreeFermions {
 
 		// it's the g.s. for now, FIXME change it later to allow more flex.
 		RealSpaceState(const EngineType& engine,
-		              const typename PsimagLite::Vector<SizeType>::Type& ne,
-		              bool debug = false)
+		               const typename PsimagLite::Vector<SizeType>::Type& ne,
+		               SizeType threadNum,
+		               bool debug)
 		:  engine_(&engine),ne_(ne),debug_(debug),sorted_(false),zeroVals_(0)
 		{
 			for (SizeType i=0;i<engine_->dof();i++)
-				initTerms(i);
+				initTerms(i,threadNum);
 		}
 
 		void pushInto(const CorDOperatorType& op)
@@ -190,13 +191,13 @@ namespace FreeFermions {
 		// U_{lambda(0),p(0)} U_{lambda(1),p(1)} U_{lambda(2),p(2)}
 		// ... c^\dagger_{p(0)} c^\dagger_{p(1)} c^\dagger_{p(2)}...
 		// where the sum is over all permutations p of 0,1,2 ... N-1
-		void initTerms(SizeType sigma)
+		void initTerms(SizeType sigma, SizeType threadNum)
 		{
 			assert(engine_->dof()==1);
 			SizeType n = engine_->size();
 			typename PsimagLite::Vector<bool>::Type v(n,false);
 			if (ne_[sigma]==0) {
-				FlavoredStateType fl(engine_->dof(),v.size());
+				FlavoredStateType fl(engine_->dof(),v.size(),threadNum);
 				fl.pushInto(sigma,v);
 				terms_.push_back(fl);
 				values_.push_back(1.0);
@@ -219,7 +220,7 @@ namespace FreeFermions {
 					}
 					sum += prod;
 				} while (p.increase());
-				FlavoredStateType fl(engine_->dof(),v.size());
+				FlavoredStateType fl(engine_->dof(),v.size(),threadNum);
 				fl.pushInto(sigma,v);
 				terms_.push_back(fl);
 				values_.push_back(sum);

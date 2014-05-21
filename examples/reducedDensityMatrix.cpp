@@ -49,11 +49,16 @@ int main(int argc,char* argv[])
 	GeometryLibraryType geometry(geometryParams);
 
 	std::cerr<<geometry;
+
 	SizeType npthreads = 1;
+	try {
+		io.readline(npthreads,"Threads=");
+	} catch (std::exception& e) {}
+
 	PsimagLite::Concurrency concurrency(&argc,&argv,npthreads);
 	EngineType engine(geometry.matrix(),dof,true);
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
-	HilbertStateType gs(engine,ne);
+	HilbertStateType gs(engine,ne,0,false);
 	RealType sum = 0;
 	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";

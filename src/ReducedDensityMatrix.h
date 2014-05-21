@@ -101,6 +101,7 @@ namespace FreeFermions {
 		typedef typename EngineType::FieldType FieldType;
 		typedef typename EngineType::RealType RealType;
 		typedef typename PsimagLite::Vector<FieldType>::Type VectorType;
+		typedef typename PsimagLite::Vector<VectorType>::Type VectorVectorType;
 		typedef PsimagLite::Matrix<FieldType> MatrixType;
 		typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
 		typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
@@ -129,21 +130,26 @@ namespace FreeFermions {
 			      aux_(aux),
 			      neV_(engine_.dof(),ne_),
 			      zeroV_(engine_.dof(),0),
-			      gs_(engine_,neV_),
-			      psiV_(states),
+			      psiV_(nthreads),
 			      psiVv_(states),
-			      sumV_(ConcurrencyType::storageSize(nthreads),0),
-			      opNormalFactory_(engine_)
-			{}
+			      sumV_(ConcurrencyType::storageSize(nthreads),0)
+			{
+				for (SizeType i = 0; i < psiV_.size(); ++i)
+					psiV_[i].resize(states);
+			}
 
 			void thread_function_(SizeType threadNum,
 			                      SizeType blockSize,
 			                      SizeType total,
 			                      typename ConcurrencyType::MutexType* myMutex)
 			{
+				std::cerr<<"threadnum= "<<threadNum<<" blockSize = "<<blockSize;
+				std::cerr<<"total= "<<total<<"\n";	
+				OpNormalFactoryType opNormalFactory(engine_);
 				RealType each = 0.1 * total;
 				if (each < 1) each = 1;
 				SizeType eachInteger = static_cast<SizeType>(each);
+				HilbertStateType gs(engine_,neV_,threadNum,false);
 
 				SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
 				SizeType npthreads = ConcurrencyType::npthreads;
@@ -160,27 +166,25 @@ namespace FreeFermions {
 
 					VectorUintType v;
 					aux_.getSites(v,i);
-					HilbertStateType phi(engine_,zeroV_);
-					psiOneBlock(phi,v,CREATION,opNormalFactory_);
+					HilbertStateType phi(engine_,zeroV_,threadNum,false);
+					psiOneBlock(phi,v,CREATION,opNormalFactory);
 					//std::cout<<phi;
 					for (SizeType j=0;j<total;j++) {
 						VectorUintType w;
 						aux_.getSites(w,j);
 						if (v.size()+w.size()!=ne_) {
-							psiV_[j] = 0;
+							psiV_[threadNum][j] = 0;
 							continue;
 						}
 
-						HilbertStateType phi2 = gs_;
-						psiOneBlock(phi2,w,DESTRUCTION,opNormalFactory_,n_);
-						psiV_[j] = scalarProduct(phi2,phi);
+						HilbertStateType phi2 = gs;
+						psiOneBlock(phi2,w,DESTRUCTION,opNormalFactory,n_);
+						psiV_[threadNum][j] = scalarProduct(phi2,phi);
 						//std::cout<<psi(i,j)<<" ";
 					}
-					psiVv_[i]=psiV_;
-					sumV_[ind] += psiV_*psiV_;
+					psiVv_[i]=psiV_[threadNum];
+					sumV_[ind] += psiV_[threadNum]*psiV_[threadNum];
 				}
-
-				std::cout<<"stop\n";
 			}
 
 			FieldType sum() const
@@ -227,11 +231,9 @@ namespace FreeFermions {
 			CanonicalStates aux_;
 			VectorUintType neV_;
 			VectorUintType zeroV_;
-			HilbertStateType gs_;
-			VectorType psiV_;
+			VectorVectorType psiV_;
 			typename PsimagLite::Vector<VectorType>::Type psiVv_;
 			typename PsimagLite::Vector<FieldType>::Type sumV_;
-			OpNormalFactoryType opNormalFactory_;
 		}; // class MyLoop
 
 		public:
@@ -273,6 +275,7 @@ namespace FreeFermions {
 
 				std::cout<<"Using "<<threadObject.name();
 				std::cout<<" with "<<threadObject.threads()<<" threads.\n";
+				std::cout<<"npthreads= "<<PsimagLite::Concurrency::npthreads<<"\n";
 				threadObject.loopCreate(states,myLoop);
 
 				myLoop.sync();

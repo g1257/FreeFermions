@@ -92,19 +92,26 @@ public:
 
 	typedef PsimagLite::Vector<bool>::Type LevelsType;
 	typedef PsimagLite::Vector<unsigned char>::Type VectorUcharType;
+	typedef PsimagLite::Vector<VectorUcharType>::Type VectorVectorUcharType;
+	typedef PsimagLite::Vector<SizeType>::Type VectorSizeType;
 
-	static void init(SizeType dof, SizeType blockSize)
+	static void init(SizeType dof, SizeType blockSize, SizeType threadNum)
 	{
+		if (dof_ == dof) return;
+
+		for (SizeType i = 0; i < x_.size(); ++i)
+			x_[i].resize(100);
+
 		dof_ = dof;
 		blockSize_ = blockSize;
-		assert(blockSize_ < x_.size());
+		assert(blockSize_ < x_[threadNum].size());
 	}
 
-	static void set(const LevelsType& portion)
+	static void set(const LevelsType& portion, SizeType threadNum)
 	{
 		SizeType c = 0;
 		SizeType j = 0;
-		bytes_ = 0;
+		bytes_[threadNum] = 0;
 		for (SizeType i = 0; i < portion.size(); ++i) {
 			bool b = portion[i];
 			SizeType mask = (1<<j);
@@ -114,65 +121,71 @@ public:
 				c &= (~mask);
 			j++;
 			if (j == 8) {
-				assert(bytes_ < x_.size());
-				x_[bytes_++] = c;
+				assert(bytes_[threadNum] < x_[threadNum].size());
+				SizeType offset = bytes_[threadNum];
+				x_[threadNum][offset] = c;
+				bytes_[threadNum]++;
 				j = 0;
 				c = 0;
 			}
 		}
 
 		if (j > 0) {
-			assert(bytes_ < x_.size());
-			x_[bytes_++] = c;
+			assert(bytes_[threadNum] < x_[threadNum].size());
+			SizeType offset = bytes_[threadNum];
+			x_[threadNum][offset] = c;
+			bytes_[threadNum]++;
 		}
 	}
 
-	static void set(const VectorUcharType& d,SizeType flavor)
+	static void set(const VectorUcharType& d,
+	                SizeType flavor,
+	                SizeType threadNum)
 	{
 		SizeType index = flavor * dof_;
 		for (SizeType i = 0; i < blockSize_; ++i)
-			x_[i] = d[index++];
-		bytes_ = blockSize_;
+			x_[threadNum][i] = d[index++];
+		bytes_[threadNum] = blockSize_;
 	}
 
-	static SizeType numberOfDigits()
+	static SizeType numberOfDigits(SizeType threadNum)
 	{
 		SizeType sum = 0;
 		for (SizeType i = 0; i < blockSize_; ++i)
-			sum += PsimagLite::BitManip::count(x_[i]);
+			sum += PsimagLite::BitManip::count(x_[threadNum][i]);
 		return sum;
 	}
 
-	static SizeType size() {return bytes_; }
+	static SizeType size(SizeType threadNum) {return bytes_[threadNum]; }
 
-	static unsigned char byte(SizeType i)
+	static unsigned char byte(SizeType i, SizeType threadNum)
 	{
-		assert(i < bytes_);
-		assert(i < x_.size());
-		return  x_[i];
+		assert(i < bytes_[threadNum]);
+		assert(i < x_[threadNum].size());
+		return  x_[threadNum][i];
 	}
 
-	static SizeType statesBetween(SizeType lambda)
+	static SizeType statesBetween(SizeType lambda, SizeType threadNum)
 	{
 		SizeType index = getIndex(0,lambda);
 		SizeType sum = 0;
 		for (SizeType i = 0; i < index; ++i)
-			sum += PsimagLite::BitManip::count(x_[i]);
+			sum += PsimagLite::BitManip::count(x_[threadNum][i]);
 		SizeType offset = lambda % 8;
 		offset++;
 		SizeType mask = (1<<offset);
 		mask--;
-		SizeType x = x_[index] & mask;
+		SizeType x = x_[threadNum][index] & mask;
 		sum += PsimagLite::BitManip::count(x);
 		return sum;
 	}
 
-	static bool bitAt(SizeType lambda)
+	static bool bitAt(SizeType lambda, SizeType threadNum)
 	{
 		SizeType index = getIndex(0,lambda);
 		SizeType offset = lambda % 8;
 		SizeType mask = (1<<offset);
-		return ((x_[index] & mask) > 0);
+		return ((x_[threadNum][index] & mask) > 0);
 	}
 
 	static SizeType getIndex(SizeType flavor, SizeType lambda)
@@ -185,8 +198,8 @@ private:
 
 	static SizeType dof_;
 	static SizeType blockSize_;
-	static SizeType bytes_;
-	static VectorUcharType x_;
+	static VectorSizeType bytes_;
+	static VectorVectorUcharType x_;
 };
 
 // All interactions == 0
@@ -206,21 +219,21 @@ public:
 
 	typedef Tstorage::LevelsType LevelsType;
 
-	FlavoredState(SizeType dof,SizeType size)
-	: dof_(dof)
+	FlavoredState(SizeType dof,SizeType size, SizeType threadNum)
+	: dof_(dof),threadNum_(threadNum)
 	{
 		blockSize_ = static_cast<SizeType>(size/8);
 		if (size % 8 != 0) blockSize_++;
 		data_.resize(blockSize_*dof,0);
-		TstorageType::init(dof_,blockSize_);
+		TstorageType::init(dof_,blockSize_,threadNum_);
 	}
 
 	void pushInto(SizeType sigma,const LevelsType& portion)
 	{
-		TstorageType::set(portion);
+		TstorageType::set(portion,threadNum_);
 		SizeType index = sigma*blockSize_;
-		for (SizeType i = 0; i < TstorageType::size(); ++i) {
-			data_[index++] = TstorageType::byte(i);
+		for (SizeType i = 0; i < TstorageType::size(threadNum_); ++i) {
+			data_[index++] = TstorageType::byte(i,threadNum_);
 		}
 	}
 
@@ -276,13 +289,13 @@ private:
 
 	int applyInternal(bool& result,SizeType label,SizeType flavor,SizeType lambda)
 	{
-		TstorageType::set(data_,flavor);
-		SizeType nflips = TstorageType::statesBetween(lambda);
+		TstorageType::set(data_,flavor,threadNum_);
+		SizeType nflips = TstorageType::statesBetween(lambda,threadNum_);
 		if (label == CREATION) {
-			if (TstorageType::bitAt(lambda)) return 0; // can't create, there's already one
+			if (TstorageType::bitAt(lambda,threadNum_)) return 0; // can't create, there's already one
 			result = true;
 		} else if (label == DESTRUCTION) {
-			if (!TstorageType::bitAt(lambda)) return 0; // can't destroy, there's nothing
+			if (!TstorageType::bitAt(lambda,threadNum_)) return 0; // can't destroy, there's nothing
 			result =false;
 		} else {
 			throw std::runtime_error("FlavoredState::applyInternal()\n");
@@ -296,14 +309,15 @@ private:
 	{
 		SizeType sum = 0;
 		for (SizeType flavor2 = 0; flavor2 < flavor; flavor2++) {
-			TstorageType::set(data_,flavor2);
-			sum += TstorageType::numberOfDigits();
+			TstorageType::set(data_,flavor2,threadNum_);
+			sum += TstorageType::numberOfDigits(threadNum_);
 		}
 
 		return sum;
 	}
 
 	SizeType dof_;
+	SizeType threadNum_;
 	SizeType blockSize_;
 	VectorUcharType data_;
 }; // class FlavoredState
@@ -320,9 +334,9 @@ inline bool operator<(const FlavoredState<U>& v1,const FlavoredState<U>& v2)
 	return v1.lessThan(v2);
 }
 
-Tstorage::VectorUcharType Tstorage::x_(100);
+Tstorage::VectorVectorUcharType Tstorage::x_(100);
 
-SizeType Tstorage::bytes_ = 0;
+Tstorage::VectorSizeType Tstorage::bytes_(100);
 
 SizeType Tstorage::dof_ = 0;
 
