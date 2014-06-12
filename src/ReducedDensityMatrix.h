@@ -143,8 +143,6 @@ namespace FreeFermions {
 			                      SizeType total,
 			                      typename ConcurrencyType::MutexType* myMutex)
 			{
-				std::cerr<<"threadnum= "<<threadNum<<" blockSize = "<<blockSize;
-				std::cerr<<"total= "<<total<<"\n";	
 				OpNormalFactoryType opNormalFactory(engine_);
 				RealType each = 0.1 * total;
 				if (each < 1) each = 1;
@@ -157,7 +155,7 @@ namespace FreeFermions {
 					SizeType i = (threadNum+npthreads*mpiRank)*blockSize + p;
 					if (i>=total) break;
 
-					if (eachInteger > 0 && i%eachInteger == 0 && threadNum == 0) {
+					if (eachInteger > 0 && i%eachInteger == 0) {
 						std::cerr<<"Done "<<(i*10/each)<<"%\n";
 						std::cerr.flush();
 					}
