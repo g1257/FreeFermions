@@ -155,6 +155,11 @@ int main(int argc,char *argv[])
 	HilbertStateType phiKet = gs;
 	opKet.applyTo(phiKet);
 
+	if (sites.size() == 1) {
+		sites.resize(2);
+		sites[1] = sites[0];
+	}
+
 	OperatorType& opBra = opNormalFactory(creatOrDest,sites[1],sigma);
 	HilbertStateType phiBra = gs;
 	opBra.applyTo(phiBra);

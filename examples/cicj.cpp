@@ -77,7 +77,8 @@ int main(int argc,char* argv[])
 
 	SizeType sigma = 0;
 	//MatrixType cicj(n,n);
-	SizeType norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
+	SizeType norb = 1;
+	io.readline(norb,"Orbitals=");
 	for (SizeType orbital=0; orbital<norb; orbital++) {
 		for (SizeType site = 0; site<geometryParams.sites ; site++) {
 			OpNormalFactoryType opNormalFactory(engine);
