@@ -90,7 +90,15 @@ struct GeometryParameters {
 
 	typedef typename PsimagLite::Real<FieldType>::Type RealType;
 
-	enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D,CHAIN_EX,LADDER_BATH,STAR};
+	enum {CHAIN,
+	      LADDER,
+	      FEAS,
+	      KTWONIFFOUR,
+	      FEAS1D,
+	      CHAIN_EX,
+	      LADDER_BATH,
+	      STAR,
+	      KANE_MELE_HUBBARD};
 
 	enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 
@@ -233,6 +241,32 @@ struct GeometryParameters {
 			}
 
 			isPeriodic[DIRECTION_Y] = (x>0);
+		} else if (model=="KaneMeleHubbard") {
+			type = KANE_MELE_HUBBARD;
+			io.readline(x,"NumberOfTerms=");
+			if (x != 2) {
+				PsimagLite::String str("GeometryParameters: KaneMeleHubbard expects");
+				throw std::runtime_error(str + " 2 terms\n");
+			}
+
+			if (geometry != "ladderx" || constantHoppings) {
+				PsimagLite::String str("GeometryParameters: KaneMeleHubbard expects");
+				throw std::runtime_error(str + " ladderx with non-constant\n");
+			}
+
+			if (constantHoppings) {
+				PsimagLite::String str("GeometryParameters: KaneMeleHubbard expects");
+				throw std::runtime_error(str + " non constant hoppings");
+			}
+
+			io.readline(geometry,"GeometryKind=");
+			io.readline(hoppingOptions,"GeometryOptions=");
+
+			if (geometry != "longchain" || hoppingOptions != "ConstantValues") {
+				PsimagLite::String str("GeometryParameters: KaneMeleHubbard expects");
+				throw std::runtime_error(str + " longchain with ConstantValues\n");
+			}
+
 		} else {
 			PsimagLite::String str("GeometryParameters: unknown model ");
 			str += model + "\n";

@@ -96,6 +96,7 @@ public:
 	typedef GeometryParamsType_ GeometryParamsType;
 	typedef typename MatrixType::value_type FieldType;
 	typedef typename PsimagLite::Real<FieldType>::Type RealType;
+	typedef typename PsimagLite::Vector<FieldType>::Type VectorType;
 
 	enum {CHAIN=GeometryParamsType::CHAIN,
 	      LADDER=GeometryParamsType::LADDER,
@@ -104,8 +105,8 @@ public:
 	      FEAS1D=GeometryParamsType::FEAS1D,
 	      CHAIN_EX = GeometryParamsType::CHAIN_EX,
 	      LADDER_BATH = GeometryParamsType::LADDER_BATH,
-	      STAR = GeometryParamsType::STAR
-	     };
+	      STAR = GeometryParamsType::STAR,
+		  KANE_MELE_HUBBARD = GeometryParamsType::KANE_MELE_HUBBARD};
 
 	enum {DIRECTION_X   = GeometryParamsType::DIRECTION_X,
 	      DIRECTION_Y   = GeometryParamsType::DIRECTION_Y,
@@ -138,9 +139,13 @@ public:
 		case KTWONIFFOUR:
 			setGeometryKniffour();
 			break;
+		case KANE_MELE_HUBBARD:
+			setGeometryKaneMeleHubbard();
+			break;
 		default:
 			assert(false);
 		}
+
 		typename PsimagLite::Vector<RealType>::Type v;
 		readPotential(v,geometryParams_.filename);
 		addPotential(v);
@@ -153,7 +158,7 @@ public:
 	{
 		SizeType n = src.n_row();
 		if (n!=geometryParams_.sites)
-			throw std::runtime_error("src must have the same number of sites as lattice\n");
+			throw PsimagLite::RuntimeError("src must have the same number of sites as lattice\n");
 		PsimagLite::Matrix<ComplexType> B(n,n);
 		getFourierMatrix(B,leg);
 		for (SizeType k=0; k<n; k++) {
@@ -199,6 +204,9 @@ public:
 		case STAR:
 			return "star";
 			break;
+		case KANE_MELE_HUBBARD:
+			return "KaneMeleHubbard";
+			break;
 		default:
 			assert(false);
 		}
@@ -238,7 +246,7 @@ private:
 			str += " " + ttos(__LINE__) + "\n";
 			str += "addPotential(...): expecting " + ttos(t_.n_row());
 			str += " numbers but " + ttos(p.size()) + " found instead.\n";
-			throw std::runtime_error(str.c_str());
+			throw PsimagLite::RuntimeError(str.c_str());
 		}
 		for (SizeType i=0; i<p.size(); i++) t_(i,i) = p[i];
 	}
@@ -247,11 +255,11 @@ private:
 	{
 		typename PsimagLite::Vector<MatrixType>::Type t;
 		SizeType edof = geometryParams_.orbitals;
-		typename PsimagLite::Vector<FieldType>::Type oneSiteHoppings;
+		VectorType oneSiteHoppings;
 		SizeType dirs = (geometryParams_.type==FEAS1D || geometryParams_.type==STAR) ? 1 : 4;
 		readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename,dirs);
 		if (oneSiteHoppings.size()!=dirs*edof*edof) {
-			throw std::runtime_error("Wrong number of hoppings\n");
+			throw PsimagLite::RuntimeError("Wrong number of hoppings\n");
 		}
 		SizeType sites = geometryParams_.sites;
 		for (SizeType i=0; i<edof*edof; i++) { // orbital*orbital cases: aa ab ba bb etc
@@ -298,11 +306,11 @@ private:
 	{
 		typename PsimagLite::Vector<MatrixType>::Type t;
 		SizeType edof = geometryParams_.orbitals;
-		typename PsimagLite::Vector<FieldType>::Type oneSiteHoppings;
+		VectorType oneSiteHoppings;
 		SizeType dirs = 2;
 		readOneSiteHoppings(oneSiteHoppings,geometryParams_.filename,dirs);
 		if (oneSiteHoppings.size()!=dirs*edof*edof) {
-			throw std::runtime_error("Wrong number of hoppings\n");
+			throw PsimagLite::RuntimeError("Wrong number of hoppings\n");
 		}
 		SizeType sites = geometryParams_.sites;
 		for (SizeType i=0; i<edof*edof; i++) {
@@ -326,7 +334,7 @@ private:
 	{
 		SizeType leg = geometryParams_.leg;
 		if (leg<2)
-			throw std::runtime_error("GeometryLibrary:: ladder must have leg>1\n");
+			throw PsimagLite::RuntimeError("GeometryLibrary:: ladder must have leg>1\n");
 		assert(!geometryParams_.isPeriodic[DIRECTION_Y] || leg>2);
 		SizeType sites = geometryParams_.sites;
 		assert(geometryParams_.hopping.size()==sites/2 + sites -2);
@@ -403,14 +411,14 @@ private:
 	// only 2 orbitals supported
 	void setGeometryFeAs(MatrixType& t,
 	                     SizeType orborb,
-	                     const typename PsimagLite::Vector<FieldType>::Type& oneSiteHoppings)
+	                     const VectorType& oneSiteHoppings)
 	{
 		SizeType sites = geometryParams_.sites;
 		SizeType leg = geometryParams_.leg;
 		SizeType orbitalsSquared = geometryParams_.orbitals * geometryParams_.orbitals;
 		FieldType tx = oneSiteHoppings[orborb+DIRECTION_X*orbitalsSquared];
 		SizeType lengthx  = sites/leg;
-		if (sites%leg!=0) throw std::runtime_error("Leg must divide number of sites.\n");
+		if (sites%leg!=0) throw PsimagLite::RuntimeError("Leg must divide number of sites.\n");
 		for (SizeType j=0; j<leg; j++) {
 			for (SizeType i=0; i<lengthx; i++) {
 				if (i+1<lengthx) t(i+1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+j*lengthx) = tx;
@@ -461,7 +469,7 @@ private:
 
 	void setGeometryFeAsStar(MatrixType& t,
 	                         SizeType orborb,
-	                         const typename PsimagLite::Vector<FieldType>::Type& oneSiteHoppings)
+	                         const VectorType& oneSiteHoppings)
 	{
 		assert(geometryParams_.type == STAR);
 		SizeType sites = geometryParams_.sites;
@@ -471,9 +479,79 @@ private:
 		for (SizeType i=1; i<sites; ++i) t(0,i) = t(i,0) = tx;
 	}
 
+	void setGeometryKaneMeleHubbard()
+	{
+		resizeAndZeroOut(geometryParams_.sites,geometryParams_.sites);
+		typename PsimagLite::IoSimple::In io(geometryParams_.filename);
+		SizeType dirs = 5;
+		SizeType distance = 1;
+		io.readline(distance,"LongChainDistance=");
+		io.rewind();
+
+		for (SizeType dir = 0; dir < dirs; ++dir) {
+			VectorType v;
+			io.readMatrix(v,"Connectors");
+			setKaneMeleHubbard(v,dir,distance);
+		}
+	}
+
+	void setKaneMeleHubbard(const VectorType& v, SizeType dir, SizeType distance)
+	{
+		SizeType linSize = geometryParams_.sites;
+		assert(!(linSize&1));
+		SizeType half = static_cast<SizeType>(linSize*0.5);
+
+		if (dir == 0) {
+			assert(linSize - 2 == v.size());
+			for (SizeType i = 0; i < half - 1; ++i) {
+				t_(2*i,2*(i+1)) += v[i];
+				t_(2*i+1,2*i+3) += v[i+half-1];
+			}
+		} else if (dir == 1) {
+			assert(half == v.size());
+			for (SizeType i = 0; i < half; ++i) {
+				t_(2*i,2*i+1) += v[i];
+			}
+		} else if (dir == 2) {
+			assert(half == v.size());
+			for (SizeType i = 0; i < half; ++i) {
+				SizeType j = 2*i+3;
+				while (j >= linSize) j -= linSize;
+				if (2*i < j)
+					t_(2*i,j) += v[i];
+				else
+					t_(j,2*i) += v[i];
+			}
+		} else if (dir == 3) {
+			assert(half == v.size());
+			for (SizeType i = 0; i < half; ++i) {
+				SizeType j = (i == 0) ? linSize - 1 : 2*i-1;
+				if (2*i < j)
+					t_(2*i,j) += v[half-i-1];
+				else
+					t_(j,2*i) += v[half-i-1];
+			}
+		} else if (dir == 4) {
+			assert(1 == v.size());
+			for (SizeType i = 0; i < linSize; ++i) {
+				SizeType j = i + distance;
+				if (j >= linSize) break;
+				t_(i,j) += v[0];
+			}
+		} else {
+			assert(false);
+		}
+
+		for (SizeType i = 0; i < linSize; ++i) {
+			for (SizeType j = i+1; j < linSize; ++j) {
+				t_(j,i) = std::conj(t_(i,j));
+			}
+		}
+	}
+
 	void setGeometryChainEx(MatrixType& t,
 	                        SizeType orborb,
-	                        const typename PsimagLite::Vector<FieldType>::Type& oneSiteHoppings)
+	                        const VectorType& oneSiteHoppings)
 	{
 		SizeType sites = geometryParams_.sites;
 		SizeType orbitalsSquared = geometryParams_.orbitals * geometryParams_.orbitals;
@@ -517,7 +595,7 @@ private:
 		return y + x*leg;
 	}
 
-	void readOneSiteHoppings(typename PsimagLite::Vector<FieldType>::Type& v,
+	void readOneSiteHoppings(VectorType& v,
 	                         const PsimagLite::String& filename,
 	                         SizeType dirs)
 	{
@@ -530,13 +608,13 @@ private:
 				PsimagLite::String str(__FILE__);
 				str += " " + ttos(__LINE__) + "\n";
 				str += "Error in input file "+filename+" label: Connectors\n";
-				throw std::runtime_error(str.c_str());
+				throw PsimagLite::RuntimeError(str.c_str());
 			}
 			appendToVector(v,m);
 		}
 	}
 
-	void appendToVector(typename PsimagLite::Vector<FieldType>::Type& v,
+	void appendToVector(VectorType& v,
 	                    const MatrixType& m) const
 	{
 		for (SizeType i=0; i<m.n_row(); i++) {
@@ -551,10 +629,10 @@ private:
 	{
 		typedef typename MatrixComplexType::value_type ComplexType;
 		if (geometryParams_.geometryType!=FEAS)
-			throw std::runtime_error("getFourierMatrix: unsupported\n");
+			throw PsimagLite::RuntimeError("getFourierMatrix: unsupported\n");
 		SizeType n = B.n_row();
 		SizeType lengthx = n/leg;
-		if (n%leg !=0) throw std::runtime_error("Leg must divide number of sites for FEAS\n");
+		if (n%leg !=0) throw PsimagLite::RuntimeError("Leg must divide number of sites for FEAS\n");
 		for (SizeType i=0; i<n; i++) {
 			SizeType rx = i % lengthx;
 			SizeType ry = i/lengthx;
