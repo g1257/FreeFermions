@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2009-2012, UT-Battelle, LLC
+Copyright (c) 2009-2014, UT-Battelle, LLC
 All rights reserved
 
 [FreeFermions, Version 1.0.0]
@@ -38,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -85,198 +85,225 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 
-	template<typename FieldType,typename IoInputType>
-	struct GeometryParameters {
+template<typename FieldType,typename IoInputType>
+struct GeometryParameters {
 
-		typedef typename PsimagLite::Real<FieldType>::Type RealType;
+	typedef typename PsimagLite::Real<FieldType>::Type RealType;
 
-		enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D,CHAIN_EX,LADDER_BATH,STAR};
+	enum {CHAIN,LADDER,FEAS,KTWONIFFOUR,FEAS1D,CHAIN_EX,LADDER_BATH,STAR};
 
-		enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
+	enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 
-		GeometryParameters(IoInputType& io,FieldType defaultHopping = 1.0)
-		: type(CHAIN),
-		  sites(0),
-		  leg(0),
-		  isPeriodic(2,false),
-		  hopping(1,defaultHopping),
-		  filename(io.filename()),
-		  orbitals(1)
-		{
-			io.readline(sites,"TotalNumberOfSites=");
+	GeometryParameters(IoInputType& io,FieldType defaultHopping = 1.0)
+	    : type(CHAIN),
+	      sites(0),
+	      leg(0),
+	      isPeriodic(2,false),
+	      hopping(1,defaultHopping),
+	      filename(io.filename()),
+	      orbitals(1)
+	{
+		io.readline(sites,"TotalNumberOfSites=");
 
-			// default value
-			type = CHAIN;
+		// default value
+		type = CHAIN;
 
-			PsimagLite::String geometry("");
-			io.readline(geometry,"GeometryKind=");
-			
-			if (geometry == "chainEx") type = CHAIN_EX;
-			if (geometry == "star") type = STAR;
+		PsimagLite::String geometry("");
+		io.readline(geometry,"GeometryKind=");
 
-			PsimagLite::String model("");
-			io.readline(model,"Model=");
+		if (geometry == "chainEx") type = CHAIN_EX;
+		if (geometry == "star") type = STAR;
 
-			PsimagLite::String hoppingOptions;
-			io.readline(hoppingOptions,"GeometryOptions=");
+		PsimagLite::String model("");
+		io.readline(model,"Model=");
 
-			bool constantHoppings = (hoppingOptions == "ConstantValues") ? true : false;
+		PsimagLite::String hoppingOptions;
+		io.readline(hoppingOptions,"GeometryOptions=");
 
-			int x = 0;
+		bool constantHoppings = (hoppingOptions == "ConstantValues") ? true : false;
 
-			if (type != STAR) io.readline(x,"IsPeriodicX=");
-			if (x<0)
-				throw std::runtime_error("GeometryParameters: IsPeriodicX must be non negative\n");
-			isPeriodic[DIRECTION_X] = (x>0);
+		int x = 0;
 
-			if (model=="HubbardOneBand" ||
-			    model=="HubbardOneOrbital" ||
-			    model == "SuperHubbardExtended")  {//    Immm  Tj1Orb
+		if (type != STAR) io.readline(x,"IsPeriodicX=");
+		if (x<0) {
+			PsimagLite::String str("GeometryParameters: IsPeriodicX must be 0 or 1\n");
+			throw std::runtime_error(str);
+		}
 
-				if (geometry == "chain" || geometry == "chainEx") return;
-				if (geometry != "ladder" && geometry != "ladderbath")
-					throw std::runtime_error("GeometryParameters: HubbardOneBand supports geometry chain or ladder only\n");
-				
-				if (geometry == "ladderbath")  {
-					io.read(bathSitesPerSite,"BathSitesPerSite=");
-					if (sites % (bathSitesPerSite+1) != 0) throw std::runtime_error("GeometryParameters:\n");
-					sites = static_cast<SizeType>(sites/(bathSitesPerSite+1));
-					type = LADDER_BATH;
-				} else {
-					type = LADDER;
-				}
-				
-				hopping.resize(sites/2 + sites - 2,defaultHopping);
-				if (!constantHoppings) {
-					typename PsimagLite::Vector<FieldType>::Type v;
-					io.read(v,"Connectors");
-					assert(v.size() == sites - 2);
-					for (SizeType i = 0; i < v.size(); ++i)
-						hopping[i] = v[i];
-					io.read(v,"Connectors");
-					assert(v.size() == sites/2);
-					for (SizeType i = 0; i < v.size(); ++i)
-						hopping[i+sites-2] = v[i];
-				}
-	
-				if (geometry == "ladderbath")  {
-					io.read(tb,"Connectors");
-					if (tb.size() != bathSitesPerSite * sites)
-						throw PsimagLite::RuntimeError("ladderbath Connectors\n");
-				}
-				
-				io.readline(x,"IsPeriodicY=");
-				if (x<0)
-					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
-				isPeriodic[DIRECTION_Y] = (x>0);
+		isPeriodic[DIRECTION_X] = (x>0);
 
-				io.readline(x,"LadderLeg=");
-				if (x<0)
-					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder leg must be non negative\n");
-				leg = x;
-				return;
-			} else if (model=="FeAsBasedSc" || model == "FeAsBasedScExtended") {
+		if (model=="HubbardOneBand" ||
+		        model=="HubbardOneOrbital" ||
+		        model == "SuperHubbardExtended")  {
 
-				io.readline(x,"Orbitals=");
-				orbitals = x;
-				
-				if (geometry == "chain" || geometry == "chainEx") return;
-				
-				x = 0;
-				if (geometry == "ladder" || geometry == "ladderx") io.readline(x,"IsPeriodicY=");
-				if (x<0)
-					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
-				isPeriodic[DIRECTION_Y] = (x>0);
+			if (geometry == "chain" || geometry == "chainEx") return;
+			if (geometry != "ladder" && geometry != "ladderbath") {
+				PsimagLite::String str("GeometryParameters: This model supports");
+				throw std::runtime_error(str + " chain or ladder or ladderbath only\n");
+			}
 
-				try {
-					io.readline(x,"LadderLeg=");
-				} catch (std::exception& e) {
-					x=1;
-				}
-
-				if (x!=1 && x!=2)
-					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder leg must be 1 or 2 only\n");
-				leg = x;
-				if (type != STAR) 
-					type = (leg==1) ? FEAS1D :  FEAS;
-
-				if (x<1 || x>3)
-					throw std::runtime_error("GeometryParameters: HubbardOneBand ladder orbitals must be 1, 2 or 3 only\n");
-
-			} else if (model=="Immm") {
-				type = KTWONIFFOUR;
-				io.readline(x,"IsPeriodicY=");
-				if (x<0)
-					throw std::runtime_error("GeometryParameters: IsPeriodicY must be non negative\n");
-				isPeriodic[DIRECTION_Y] = (x>0);
+			if (geometry == "ladderbath")  {
+				io.read(bathSitesPerSite,"BathSitesPerSite=");
+				if (sites % (bathSitesPerSite+1) != 0)
+					throw std::runtime_error("GeometryParameters:\n");
+				sites = static_cast<SizeType>(sites/(bathSitesPerSite+1));
+				type = LADDER_BATH;
 			} else {
-				PsimagLite::String str("GeometryParameters: unknown model ");
-				str += model + "\n";
-				throw std::runtime_error(str.c_str());
+				type = LADDER;
 			}
-		}
 
-		static int readElectrons(IoInputType& io,SizeType nsites)
-		{
-			int x = -1;
+			hopping.resize(sites/2 + sites - 2,defaultHopping);
+			if (!constantHoppings) {
+				typename PsimagLite::Vector<FieldType>::Type v;
+				io.read(v,"Connectors");
+				assert(v.size() == sites - 2);
+				for (SizeType i = 0; i < v.size(); ++i)
+					hopping[i] = v[i];
+				io.read(v,"Connectors");
+				assert(v.size() == sites/2);
+				for (SizeType i = 0; i < v.size(); ++i)
+					hopping[i+sites-2] = v[i];
+			}
+
+			if (geometry == "ladderbath")  {
+				io.read(tb,"Connectors");
+				if (tb.size() != bathSitesPerSite * sites)
+					throw PsimagLite::RuntimeError("ladderbath Connectors\n");
+			}
+
+			io.readline(x,"IsPeriodicY=");
+			if (x<0) {
+				PsimagLite::String str("GeometryParameters: ");
+				throw std::runtime_error(str + "IsPeriodicY must be 0 or 1\n");
+			}
+
+			isPeriodic[DIRECTION_Y] = (x>0);
+
+			io.readline(x,"LadderLeg=");
+			if (x<0) {
+				PsimagLite::String str("GeometryParameters: HubbardOneBand ladder leg");
+				throw std::runtime_error(str + " must be non negative\n");
+			}
+
+			leg = x;
+			return;
+		} else if (model=="FeAsBasedSc" || model == "FeAsBasedScExtended") {
+
+			io.readline(x,"Orbitals=");
+			orbitals = x;
+
+			if (geometry == "chain" || geometry == "chainEx") return;
+
+			x = 0;
+			if (geometry == "ladder" || geometry == "ladderx")
+				io.readline(x,"IsPeriodicY=");
+			if (x<0) {
+				PsimagLite::String str("GeometryParameters: ");
+				throw std::runtime_error(str + "IsPeriodicY must be 0 or 1\n");
+			}
+
+			isPeriodic[DIRECTION_Y] = (x>0);
+
 			try {
-				io.readline(x,"TargetElectronsUp=");
-			} catch (std::exception& e)
-			{
-				x=-1;
+				io.readline(x,"LadderLeg=");
+			} catch (std::exception& e) {
+				x=1;
 			}
 
-			typename PsimagLite::Vector<RealType>::Type v;
-			try {
-				io.read(v,"TargetQuantumNumbers");
-			} catch (std::exception& e)
-			{
-				v.resize(0);
+			if (x!=1 && x!=2) {
+				PsimagLite::String str("GeometryParameters: HubbardOneBand ladder leg");
+				throw std::runtime_error(str + " must be 1 or 2 only\n");
 			}
 
-			if (x<0 && v.size()==0) {
-				PsimagLite::String str("Either TargetElectronsUp or TargetQuantumNumbers is need\n");
-				throw std::runtime_error(str.c_str());
+			leg = x;
+			if (type != STAR)
+				type = (leg==1) ? FEAS1D :  FEAS;
+
+			if (x<1 || x>3) {
+				PsimagLite::String str("GeometryParameters: HubbardOneBand ladder leg");
+				throw std::runtime_error(str + " must be 1 or 2 or 3 only\n");
 			}
 
-			if (x>=0 && v.size()>0) {
-				PsimagLite::String str("Having both TargetElectronsUp and TargetQuantumNumbers is an error\n");
-				throw std::runtime_error(str.c_str());
+		} else if (model=="Immm") {
+			type = KTWONIFFOUR;
+			io.readline(x,"IsPeriodicY=");
+			if (x<0) {
+				PsimagLite::String str("GeometryParameters: ");
+				throw std::runtime_error(str + "IsPeriodicY must be 0 or 1\n");
 			}
 
-			if (x>=0) return x;
-			if (v.size()<1) {
-				PsimagLite::String str("Incorrect TargetQuantumNumbers line\n");
-				throw std::runtime_error(str.c_str());
-			}
-			return static_cast<SizeType>(round(v[0]*nsites));
+			isPeriodic[DIRECTION_Y] = (x>0);
+		} else {
+			PsimagLite::String str("GeometryParameters: unknown model ");
+			str += model + "\n";
+			throw std::runtime_error(str.c_str());
+		}
+	}
+
+	static int readElectrons(IoInputType& io,SizeType nsites)
+	{
+		int x = -1;
+		try {
+			io.readline(x,"TargetElectronsUp=");
+		} catch (std::exception& e) {
+			x=-1;
 		}
 
-		template<typename VectorLikeType>
-		static void readVector(VectorLikeType& v,const PsimagLite::String& filename,const PsimagLite::String& label)
-		{
-			PsimagLite::IoSimple::In io(filename);
-			io.read(v,label);
+		typename PsimagLite::Vector<RealType>::Type v;
+		try {
+			io.read(v,"TargetQuantumNumbers");
+		} catch (std::exception& e) {
+			v.resize(0);
 		}
 
-		template<typename SomeFieldType>
-		static void readLabel(SomeFieldType& v,const PsimagLite::String& filename,const PsimagLite::String& label)
-		{
-			PsimagLite::IoSimple::In io(filename);
-			io.readline(v,label);
+		if (x<0 && v.size()==0) {
+			PsimagLite::String str("Either TargetElectronsUp or ");
+			throw std::runtime_error(str + "TargetQuantumNumbers is need\n");
 		}
 
-		SizeType type;
-		SizeType sites;
-		SizeType leg;
-		typename PsimagLite::Vector<bool>::Type isPeriodic;
-		typename PsimagLite::Vector<FieldType>::Type hopping;
-		PsimagLite::String filename;
-		SizeType orbitals;
-		SizeType bathSitesPerSite;
-		typename PsimagLite::Vector<FieldType>::Type tb;
-	}; // struct GeometryParameters
-} // namespace Dmrg 
+		if (x>=0 && v.size()>0) {
+			PsimagLite::String str("Having both TargetElectronsUp and ");
+			throw std::runtime_error(str + "TargetQuantumNumbers is an error\n");
+		}
+
+		if (x>=0) return x;
+		if (v.size()<1) {
+			PsimagLite::String str("Incorrect TargetQuantumNumbers line\n");
+			throw std::runtime_error(str.c_str());
+		}
+		return static_cast<SizeType>(round(v[0]*nsites));
+	}
+
+	template<typename VectorLikeType>
+	static void readVector(VectorLikeType& v,
+	                       const PsimagLite::String& filename,
+	                       const PsimagLite::String& label)
+	{
+		PsimagLite::IoSimple::In io(filename);
+		io.read(v,label);
+	}
+
+	template<typename SomeFieldType>
+	static void readLabel(SomeFieldType& v,
+	                      const PsimagLite::String& filename,
+	                      const PsimagLite::String& label)
+	{
+		PsimagLite::IoSimple::In io(filename);
+		io.readline(v,label);
+	}
+
+	SizeType type;
+	SizeType sites;
+	SizeType leg;
+	typename PsimagLite::Vector<bool>::Type isPeriodic;
+	typename PsimagLite::Vector<FieldType>::Type hopping;
+	PsimagLite::String filename;
+	SizeType orbitals;
+	SizeType bathSitesPerSite;
+	typename PsimagLite::Vector<FieldType>::Type tb;
+}; // struct GeometryParameters
+} // namespace Dmrg
 
 /*@}*/
 #endif //GEOMETRY_PARAMS_H
+
