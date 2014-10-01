@@ -29,13 +29,14 @@ sub writeMakefile
 {
 	open(my $fh,">Makefile") or die "Cannot open Makefile for writing: $!\n";
 
-	my $cppflags = "-Werror -Wall -Wstrict-overflow=5 -I../../PsimagLite ";
+	my $cppflags = " -I../../PsimagLite ";
 	$cppflags .= " -I../../PsimagLite/src -I../src";
 	my $cxx="g++ -O3 -DNDEBUG";
 	my $lapack = Make::findLapack();
 
-	Make::make($fh,\@drivers,"FreeFermions","Linux",0,"$lapack    -lm  -lpthread",$cxx,$cppflags,"true"," "," ");
+	Make::make($fh,\@drivers,"FreeFermions","Linux",0,
+	"$lapack    -lm  -lpthread",$cxx,$cppflags,"true"," "," ");
 
 	close($fh);
-	print "Done writing Makefile\n";
+	print "$0: Done writing Makefile\n";
 }
