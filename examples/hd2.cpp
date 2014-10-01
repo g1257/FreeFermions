@@ -94,8 +94,8 @@ class MyLoop {
 public:
 
 	MyLoop(EngineType& engine,
-	       SizeType step,
-	       SizeType offset,
+	       RealType step,
+	       RealType offset,
 	       const HilbertStateType& gs,
 	       PsimagLite::Vector<SizeType>::Type& sites,
 	       bool verbose)
@@ -181,8 +181,8 @@ public:
 private:
 
 	EngineType& engine_;
-	SizeType step_;
-	SizeType offset_;
+	RealType step_;
+	RealType offset_;
     const HilbertStateType& gs_;
     PsimagLite::Vector<SizeType>::Type& sites_;
     bool verbose_;
