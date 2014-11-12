@@ -38,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -102,15 +102,15 @@ namespace FreeFermions {
 		class DummyFactory {
 		public:
 			template<typename X>
-			DummyFactory(const X& x) {}
-			DummyOperator& operator()(const DummyOperator* op) {
+			DummyFactory(const X&) {}
+			DummyOperator& operator()(const DummyOperator*) {
 				throw std::runtime_error("DummyOperatorFactory\n");
 			}
 		};
 		typedef DummyFactory FactoryType;
 		DummyOperator(const DummyOperator* x) {}
 		template<typename T1>
-		FieldType operator()(const T1& l1,SizeType loc) const { return 1; }
+		FieldType operator()(const T1&,SizeType) const { return 1; }
 		SizeType sigma() const { return 0; }
 		void transpose() {}
 	};
@@ -197,7 +197,7 @@ namespace FreeFermions {
 			pour(hs);
 			return close(hs.occupations_);
 		}
-		
+
 	private:
 		void pour(const ThisType& hs)
 		{
@@ -236,7 +236,7 @@ namespace FreeFermions {
 				if (!equalZero(v[i])) return false;
 			return true;
 		}
-		
+
 		bool equalZero(const typename PsimagLite::Vector<SizeType>::Type& v) const
 		{
 			for (SizeType i=0;i<v.size();i++) if (v[i]!=0) return false;
@@ -369,7 +369,7 @@ namespace FreeFermions {
 		OpNormalFactoryType opNormalFactory_;
 		OpDiagonalFactoryType opDiagonalFactory_;
 	}; // HilbertState
-	
+
 	template<typename CorDOperatorType,typename DiagonalOperatorType>
 	typename CorDOperatorType::FieldType scalarProduct(
 	      const HilbertState<CorDOperatorType,DiagonalOperatorType>& s1,
@@ -379,7 +379,7 @@ namespace FreeFermions {
 		return s3.pourAndClose(s1);
 	}
 
-} // namespace Dmrg 
+} // namespace Dmrg
 
 /*@}*/
 #endif //HILBERT_STATE_H

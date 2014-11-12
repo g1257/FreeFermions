@@ -38,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -96,7 +96,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 namespace FreeFermions {
 	template<typename EngineType>
 	class ReducedDensityMatrix {
-		
+
 		typedef typename PsimagLite::Vector<SizeType>::Type VectorUintType;
 		typedef typename EngineType::FieldType FieldType;
 		typedef typename EngineType::RealType RealType;
@@ -141,7 +141,7 @@ namespace FreeFermions {
 			void thread_function_(SizeType threadNum,
 			                      SizeType blockSize,
 			                      SizeType total,
-			                      typename ConcurrencyType::MutexType* myMutex)
+			                      typename ConcurrencyType::MutexType*)
 			{
 				OpNormalFactoryType opNormalFactory(engine_);
 				RealType each = 0.1 * total;
@@ -246,9 +246,9 @@ namespace FreeFermions {
 				if (!PsimagLite::Concurrency::root()) return;
 				calculateRdm(rho_,psi_);
 			}
-			
+
 			SizeType rank() const { return rho_.n_row(); }
-			
+
 			void diagonalize(typename PsimagLite::Vector<RealType>::Type& e)
 			{
 				if (!PsimagLite::Concurrency::root()) return;
@@ -261,7 +261,7 @@ namespace FreeFermions {
 				CanonicalStates aux(n_,ne_);
 				SizeType states = aux.states();
 				psi.resize(states,states);
-				
+
 				std::cout<<"#psi of size "<<states<<"x"<<states<<"\n";
 
 				typedef MyLoop MyLoopType;
@@ -291,7 +291,7 @@ namespace FreeFermions {
 					for (SizeType j=0;j<psiVv[i].size();j++)
 						psi(i,j) = psiVv[i][j]/sqrt(sum);
 			}
-			
+
 			void calculateRdm(MatrixType& rho,const MatrixType& psi)
 			{
 				SizeType states=psi.n_row();
@@ -304,7 +304,7 @@ namespace FreeFermions {
 				if (!isHermitian(rho))
 				  throw std::runtime_error("DensityMatrix not Hermitian\n");
 			}
-			
+
 			EngineType& engine_;
 			SizeType n_; // number of sites for one block only (both blocks are assumed equal)
 			SizeType ne_; // number of electrons in the combined lattice (right+left)

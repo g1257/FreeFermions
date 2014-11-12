@@ -39,7 +39,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -83,16 +83,16 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define CANONICAL_STATES_H
 
 namespace FreeFermions {
-	
+
 	class CanonicalStates {
-		
+
 		typedef PsimagLite::Vector<SizeType>::Type VectorUintType;
 		typedef unsigned int long long BinaryNumberType;
-		
+
 		public:
 			// note: handles all (real space) states
 			// on a block of size n with up to and including ne electrons
-			CanonicalStates(SizeType n,SizeType ne,SizeType dof=1)
+			CanonicalStates(SizeType n,SizeType ne,SizeType = 1)
 			{
 				BinaryNumberType total = (1<<n);
 				for (BinaryNumberType i=0;i<total;i++) {
@@ -100,25 +100,25 @@ namespace FreeFermions {
 					states_.push_back(i);
 				}
 			}
-			
+
 			SizeType states() const { return states_.size(); }
-			
+
 			void getSites(VectorUintType& v,SizeType i) const
 			{
 				BinaryNumberType x = states_[i];
 				getSitesInternal(v,x);
 			}
-			
+
 
 		private:
-			
+
 			SizeType electronsOf(BinaryNumberType x) const
 			{
 				VectorUintType v;
 				getSitesInternal(v,x);
 				return v.size();
 			}
-			
+
 			void getSitesInternal(VectorUintType& v,BinaryNumberType x) const
 			{
 				v.clear();
@@ -129,7 +129,7 @@ namespace FreeFermions {
 					x >>= 1;
 				}
 			}
-			
+
 			PsimagLite::Vector<BinaryNumberType>::Type states_;
 	}; // CanonicalStates
 } // FreeFermions namespace

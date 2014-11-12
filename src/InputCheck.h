@@ -44,7 +44,7 @@ namespace FreeFermions {
 			return false;
 		}
 
-		void check(const PsimagLite::String& label,const PsimagLite::String& val,SizeType line)
+		void check(const PsimagLite::String& label,const PsimagLite::String& val,SizeType)
 		{
 			if (label!="SolverOptions") return;
 			PsimagLite::Vector<PsimagLite::String>::Type registerOpts;

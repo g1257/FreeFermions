@@ -1,7 +1,7 @@
 
 
 // Calculates <phi | phi>
-// where 
+// where
 // |phi> = c_{p up} exp(iHt) c_{i\sigma} nbar_{i \bar{sigma}} c^dagger_{j sigma'} n_{j \bar{sigma'}} |gs>
 
 typedef double RealType;
@@ -48,33 +48,33 @@ FieldType calcSuperDensity(SizeType site,
 	FieldType sum = 0;
 	OpNormalFactoryType opNormalFactory(engine);
 	OpLibFactoryType opLibFactory(engine);
-	
+
 	for (SizeType sigma = 0;sigma<2;sigma++) {
 		HilbertStateType phi = gs;
-		
+
 		LibraryOperatorType& myOp = opLibFactory(
 			LibraryOperatorType::N,site,1-sigma);
-		
+
 		myOp.applyTo(phi);
 		OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,
 											  site,sigma);
-		
+
 		myOp2.applyTo(phi);
-		
+
 		for (SizeType sigma2 = 0;sigma2 < 2;sigma2++) {
 			HilbertStateType phi3 = phi;
 			LibraryOperatorType& myOp3 = opLibFactory(
 				LibraryOperatorType::NBAR,site2,1-sigma2);
 			myOp3.applyTo(phi3);
-			
+
 			OperatorType& myOp4 = opNormalFactory(
 				OperatorType::DESTRUCTION,site2,sigma2);
-			
+
 			myOp4.applyTo(phi3);
-			
+
 			if (sigma ==0 && sigma2 ==0) savedVector = phi3;
 			sum += scalarProduct(phi3,phi3);
-			
+
 			if (sigma ==1 && sigma2 ==1) {
 				savedValue = scalarProduct(phi3,savedVector);
 			}
@@ -110,7 +110,7 @@ public:
 	void thread_function_(SizeType threadNum,
 	                      SizeType blockSize,
 	                      SizeType total,
-	                      ConcurrencyType::MutexType* myMutex)
+	                      ConcurrencyType::MutexType*)
 	{
 		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
 		SizeType npthreads = ConcurrencyType::npthreads;
@@ -219,7 +219,7 @@ int main(int argc,char *argv[])
 		}
 	}
 	if (file=="") throw std::runtime_error("Wrong usage\n");
-	
+
 	FreeFermions::InputCheck inputCheck;
 	InputNgType::Writeable ioWriteable(file,inputCheck);
 	InputNgType::Readable io(ioWriteable);
@@ -244,7 +244,7 @@ int main(int argc,char *argv[])
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
 
 	EngineType engine(geometry.matrix(),dof,false);
-	
+
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	bool verbose = false;
@@ -260,7 +260,7 @@ int main(int argc,char *argv[])
 	std::cout<<"#sites= ";
 	for (SizeType i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
-	
+
 	typedef MyLoop MyLoopType;
 	typedef PsimagLite::Parallelizer<MyLoopType> ParallelizerType;
 	ParallelizerType threadObject(PsimagLite::Concurrency::npthreads,
