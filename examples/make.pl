@@ -10,19 +10,13 @@ my @drivers = ("cicj","deltaIdeltaJ","EasyExciton","HolonDoublon","decay",
 	       "reducedDensityMatrix","cicjBetaGrand",
 	       "dynamics","hd2","ninj","niVsBetaGrand","splusSminus","szsz");
 
-backupMakefile();
+Make::backupMakefile();
 writeMakefile();
 make();
 
 sub make
 {
 	system("make");
-}
-
-sub backupMakefile
-{
-	system("cp Makefile Makefile.bak") if (-r "Makefile");
-	print "Backup of Makefile in Makefile.bak\n";
 }
 
 sub writeMakefile
@@ -35,7 +29,7 @@ sub writeMakefile
 	my $lapack = Make::findLapack();
 
 	Make::make($fh,\@drivers,"FreeFermions","Linux",0,
-	"$lapack    -lm  -lpthread",$cxx,$cppflags,"true"," "," ");
+	"$lapack    -lm  -lpthread -lpsimaglite",$cxx,$cppflags,"true"," "," ");
 
 	close($fh);
 	print "$0: Done writing Makefile\n";
