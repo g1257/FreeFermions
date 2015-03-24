@@ -277,35 +277,17 @@ struct GeometryParameters {
 	static int readElectrons(IoInputType& io,SizeType nsites)
 	{
 		int x = -1;
+
 		try {
 			io.readline(x,"TargetElectronsUp=");
 		} catch (std::exception& e) {
-			x=-1;
+			io.readline(x,"TargetSzPlusConst=");
 		}
 
-		typename PsimagLite::Vector<RealType>::Type v;
-		try {
-			io.read(v,"TargetQuantumNumbers");
-		} catch (std::exception& e) {
-			v.resize(0);
-		}
+		if (x >= 0) return x;
 
-		if (x<0 && v.size()==0) {
-			PsimagLite::String str("Either TargetElectronsUp or ");
-			throw std::runtime_error(str + "TargetQuantumNumbers is need\n");
-		}
-
-		if (x>=0 && v.size()>0) {
-			PsimagLite::String str("Having both TargetElectronsUp and ");
-			throw std::runtime_error(str + "TargetQuantumNumbers is an error\n");
-		}
-
-		if (x>=0) return x;
-		if (v.size()<1) {
-			PsimagLite::String str("Incorrect TargetQuantumNumbers line\n");
-			throw std::runtime_error(str.c_str());
-		}
-		return static_cast<SizeType>(round(v[0]*nsites));
+		PsimagLite::String str("Incorrect nup/sz line\n");
+		throw std::runtime_error(str.c_str());
 	}
 
 	template<typename VectorLikeType>
