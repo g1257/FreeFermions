@@ -2,7 +2,6 @@
 #ifndef INPUT_CHECK_H
 #define INPUT_CHECK_H
 #include <vector>
-#include "String.h"
 #include <stdexcept>
 #include "Options.h"
 
