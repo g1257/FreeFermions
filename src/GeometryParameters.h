@@ -199,7 +199,11 @@ struct GeometryParameters {
 			io.readline(x,"Orbitals=");
 			orbitals = x;
 
-			if (geometry == "chain" || geometry == "chainEx") return;
+			if (geometry == "chain" || geometry == "chainEx") {
+				leg = 1;
+				type = FEAS1D;
+				return;
+			}
 
 			x = 0;
 			if (geometry == "ladder" || geometry == "ladderx")
