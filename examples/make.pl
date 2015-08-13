@@ -8,7 +8,8 @@ use Make;
 
 my @drivers = ("cicj","deltaIdeltaJ","EasyExciton","HolonDoublon","decay",
 	       "reducedDensityMatrix","cicjBetaGrand",
-	       "dynamics","hd2","ninj","niVsBetaGrand","splusSminus","szsz");
+	       "dynamics","hd2","ninj","niVsBetaGrand","splusSminus","szsz",
+               "SzSzTime");
 
 Make::backupMakefile();
 writeMakefile();
