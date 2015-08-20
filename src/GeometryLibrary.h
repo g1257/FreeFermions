@@ -106,7 +106,8 @@ public:
 	      CHAIN_EX = GeometryParamsType::CHAIN_EX,
 	      LADDER_BATH = GeometryParamsType::LADDER_BATH,
 	      STAR = GeometryParamsType::STAR,
-		  KANE_MELE_HUBBARD = GeometryParamsType::KANE_MELE_HUBBARD};
+		  KANE_MELE_HUBBARD = GeometryParamsType::KANE_MELE_HUBBARD,
+	      RAW = GeometryParamsType::RAW};
 
 	enum {DIRECTION_X   = GeometryParamsType::DIRECTION_X,
 	      DIRECTION_Y   = GeometryParamsType::DIRECTION_Y,
@@ -141,6 +142,9 @@ public:
 			break;
 		case KANE_MELE_HUBBARD:
 			setGeometryKaneMeleHubbard();
+			break;
+		case RAW:
+			setGeometryRaw();
 			break;
 		default:
 			assert(false);
@@ -206,6 +210,9 @@ public:
 			break;
 		case KANE_MELE_HUBBARD:
 			return "KaneMeleHubbard";
+			break;
+		case RAW:
+			return "Raw";
 			break;
 		default:
 			assert(false);
@@ -281,6 +288,12 @@ private:
 				for (SizeType j=0; j<sites; j++)
 					t_(i+orb1*sites,j+orb2*sites) += t[orbitalPair](i,j);
 		}
+	}
+
+	void setGeometryRaw()
+	{
+		typename PsimagLite::IoSimple::In io(geometryParams_.filename);
+		io.readMatrix(t_,"Connectors");
 	}
 
 	void setGeometryKniffour()

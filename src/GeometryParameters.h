@@ -97,7 +97,8 @@ struct GeometryParameters {
 	      CHAIN_EX,
 	      LADDER_BATH,
 	      STAR,
-	      KANE_MELE_HUBBARD};
+	      KANE_MELE_HUBBARD,
+	      RAW};
 
 	enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 
@@ -117,6 +118,11 @@ struct GeometryParameters {
 
 		PsimagLite::String geometry("");
 		io.readline(geometry,"GeometryKind=");
+
+		if (geometry == "LongRange" || geometry == "Raw") {
+			type = RAW;
+			return;
+		}
 
 		if (geometry == "chainEx") type = CHAIN_EX;
 		if (geometry == "star") type = STAR;

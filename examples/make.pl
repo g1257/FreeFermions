@@ -30,7 +30,7 @@ sub writeMakefile
 	my $lapack = Make::findLapack();
 
 	Make::make($fh,\@drivers,"FreeFermions","Linux",0,
-	"$lapack    -lm  -lpthread -lpsimaglite",$cxx,$cppflags,"true"," "," ");
+	"-lpsimaglite $lapack    -lm  -lpthread ",$cxx,$cppflags,"true"," "," ");
 
 	close($fh);
 	print "$0: Done writing Makefile\n";
