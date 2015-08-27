@@ -9,7 +9,7 @@ use Make;
 my @drivers = ("cicj","deltaIdeltaJ","EasyExciton","HolonDoublon","decay",
 	       "reducedDensityMatrix","cicjBetaGrand",
 	       "dynamics","hd2","ninj","niVsBetaGrand","splusSminus","szsz",
-               "SzSzTime");
+               "SzSzTime","etd");
 
 Make::backupMakefile();
 writeMakefile();

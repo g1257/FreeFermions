@@ -97,6 +97,7 @@ public:
 	typedef typename MatrixType::value_type FieldType;
 	typedef typename PsimagLite::Real<FieldType>::Type RealType;
 	typedef typename PsimagLite::Vector<FieldType>::Type VectorType;
+	typedef typename PsimagLite::Vector<RealType>::Type VectorRealType;
 
 	enum {CHAIN=GeometryParamsType::CHAIN,
 	      LADDER=GeometryParamsType::LADDER,
@@ -150,8 +151,8 @@ public:
 			assert(false);
 		}
 
-		typename PsimagLite::Vector<RealType>::Type v;
-		readPotential(v,geometryParams_.filename);
+		VectorRealType v;
+		readPotential(v,potentialT_,geometryParams_.filename);
 		addPotential(v);
 	}
 
@@ -174,6 +175,17 @@ public:
 			}
 			dest[k] = sum;
 		}
+	}
+
+	void addPotentialT(RealType arg)
+	{
+		SizeType n = t_.n_row();
+		if (potentialT_.size() != n) {
+			std::cerr<<"PotentialT is not long enough. Ignored\n";
+			return;
+		}
+
+		for (SizeType i=0; i<n; i++) t_(i,i) += potentialT_[i]*cos(arg);
 	}
 
 	const MatrixType& matrix() const
@@ -269,17 +281,22 @@ private:
 			throw PsimagLite::RuntimeError("Wrong number of hoppings\n");
 		}
 		SizeType sites = geometryParams_.sites;
-		for (SizeType i=0; i<edof*edof; i++) { // orbital*orbital cases: aa ab ba bb etc
-			MatrixType oneT(sites,sites);
-			if (geometryParams_.type == STAR)
-				setGeometryFeAsStar(oneT,i,oneSiteHoppings);
-			else
-				setGeometryFeAs(oneT,i,oneSiteHoppings);
-			if (geometryParams_.type != STAR)
-				reorderLadderX(oneT,geometryParams_.leg);
-			assert(isHermitian(oneT,true));
-			t.push_back(oneT);
+		for (SizeType orb1 = 0; orb1 < edof; ++orb1) {
+			for (SizeType orb2 = 0; orb2 < edof; ++orb2) {
+				MatrixType oneT(sites,sites);
+				SizeType i = orb1 + orb2*edof;
+				SizeType ii = orb2 + orb1*edof;
+				if (geometryParams_.type == STAR)
+					setGeometryFeAsStar(oneT,i,oneSiteHoppings);
+				else
+					setGeometryFeAs(oneT,i,ii,oneSiteHoppings);
+				if (geometryParams_.type != STAR)
+					reorderLadderX(oneT,geometryParams_.leg);
+
+				t.push_back(oneT);
+			}
 		}
+
 		resizeAndZeroOut(edof*sites,edof*sites);
 		for (SizeType orbitalPair=0; orbitalPair<edof*edof; orbitalPair++) {
 			SizeType orb1 = (orbitalPair % geometryParams_.orbitals);
@@ -288,6 +305,8 @@ private:
 				for (SizeType j=0; j<sites; j++)
 					t_(i+orb1*sites,j+orb2*sites) += t[orbitalPair](i,j);
 		}
+
+		assert(isHermitian(t_,true));
 	}
 
 	void setGeometryRaw()
@@ -423,59 +442,106 @@ private:
 
 	// only 2 orbitals supported
 	void setGeometryFeAs(MatrixType& t,
-	                     SizeType orborb,
+	                     SizeType orborb1,
+	                     SizeType orborb2,
 	                     const VectorType& oneSiteHoppings)
 	{
 		SizeType sites = geometryParams_.sites;
 		SizeType leg = geometryParams_.leg;
 		SizeType orbitalsSquared = geometryParams_.orbitals * geometryParams_.orbitals;
-		FieldType tx = oneSiteHoppings[orborb+DIRECTION_X*orbitalsSquared];
+		FieldType tx1 = oneSiteHoppings[orborb1+DIRECTION_X*orbitalsSquared];
+		FieldType tx2 = oneSiteHoppings[orborb2+DIRECTION_X*orbitalsSquared];
 		SizeType lengthx  = sites/leg;
-		if (sites%leg!=0) throw PsimagLite::RuntimeError("Leg must divide number of sites.\n");
+		if (sites%leg!=0)
+			throw PsimagLite::RuntimeError("Leg must divide number of sites.\n");
 		for (SizeType j=0; j<leg; j++) {
 			for (SizeType i=0; i<lengthx; i++) {
-				if (i+1<lengthx) t(i+1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+j*lengthx) = tx;
-				if (i>0) t(i-1+j*lengthx,i+j*lengthx) = t(i+j*lengthx,i-1+j*lengthx) = tx;
+				if (i+1<lengthx) {
+					t(i+1+j*lengthx,i+j*lengthx) = tx1;
+					t(i+j*lengthx,i+1+j*lengthx) = tx2;
+				}
+
+				if (i>0) {
+					t(i-1+j*lengthx,i+j*lengthx) = tx1;
+					t(i+j*lengthx,i-1+j*lengthx) = tx2;
+				}
 			}
-			if (geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_X])
-				t(j*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,j*lengthx) = tx;
+
+			if (geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_X]) {
+				t(j*lengthx,lengthx-1+j*lengthx) = tx1;
+				t(lengthx-1+j*lengthx,j*lengthx) = tx2;
+			}
 		}
 
 		if (geometryParams_.type==FEAS1D) return;
 
-		FieldType ty = oneSiteHoppings[orborb+DIRECTION_Y*orbitalsSquared];
+		FieldType ty1 = oneSiteHoppings[orborb1+DIRECTION_Y*orbitalsSquared];
+		FieldType ty2 = oneSiteHoppings[orborb2+DIRECTION_Y*orbitalsSquared];
 		for (SizeType i=0; i<lengthx; i++) {
 			for (SizeType j=0; j<leg; j++) {
-				if (j>0) t(i+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j-1)*lengthx) = ty;
-				if (j+1<leg) t(i+(j+1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+(j+1)*lengthx) = ty;
+				if (j>0) {
+					t(i+(j-1)*lengthx,i+j*lengthx) = ty1;
+					t(i+j*lengthx,i+(j-1)*lengthx) = ty2;
+				}
+
+				if (j+1<leg) {
+					t(i+(j+1)*lengthx,i+j*lengthx) = ty1;
+					t(i+j*lengthx,i+(j+1)*lengthx) = ty2;
+				}
 			}
-			if (geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_Y])
-				t(i,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i) = ty;
+
+			if (geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_Y]) {
+				t(i,i+(leg-1)*lengthx) = ty1;
+				t(i+(leg-1)*lengthx,i) = ty2;
+			}
 		}
-		FieldType txpy = oneSiteHoppings[orborb+DIRECTION_XPY*orbitalsSquared];
-		FieldType txmy = oneSiteHoppings[orborb+DIRECTION_XMY*orbitalsSquared];
+
+		FieldType txpy1 = oneSiteHoppings[orborb1+DIRECTION_XPY*orbitalsSquared];
+		FieldType txpy2 = oneSiteHoppings[orborb2+DIRECTION_XPY*orbitalsSquared];
+		FieldType txmy1 = oneSiteHoppings[orborb1+DIRECTION_XMY*orbitalsSquared];
+		FieldType txmy2 = oneSiteHoppings[orborb2+DIRECTION_XMY*orbitalsSquared];
 		for (SizeType i=0; i<lengthx; i++) {
 			for (SizeType j=0; j<leg; j++) {
-				if (j+1<leg && i+1<lengthx)
-					t(i+1+(j+1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+(j+1)*lengthx) = txpy;
-				if (i+1<lengthx && j>0)
-					t(i+1+(j-1)*lengthx,i+j*lengthx) = t(i+j*lengthx,i+1+(j-1)*lengthx) = txmy;
+				if (j+1<leg && i+1<lengthx) {
+					t(i+1+(j+1)*lengthx,i+j*lengthx) = txpy1;
+					t(i+j*lengthx,i+1+(j+1)*lengthx) = txpy2;
+				}
+
+				if (i+1<lengthx && j>0) {
+					t(i+1+(j-1)*lengthx,i+j*lengthx) = txmy1;
+					t(i+j*lengthx,i+1+(j-1)*lengthx) = txmy2;
+				}
+
 				if (!geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_X] || i>0)
 					continue;
-				if (j+1<leg)
-					t((j+1)*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,(j+1)*lengthx) = txpy;
-				if (j>0)
-					t((j-1)*lengthx,lengthx-1+j*lengthx) = t(lengthx-1+j*lengthx,(j-1)*lengthx) = txmy;
+
+				if (j+1<leg) {
+					t((j+1)*lengthx,lengthx-1+j*lengthx) = txpy1;
+					t(lengthx-1+j*lengthx,(j+1)*lengthx) = txpy2;
+				}
+
+				if (j>0) {
+					t((j-1)*lengthx,lengthx-1+j*lengthx) = txmy1;
+					t(lengthx-1+j*lengthx,(j-1)*lengthx) = txmy2;
+				}
 			}
+
 			if (!geometryParams_.isPeriodic[GeometryParamsType::DIRECTION_X])
 				continue;
+
 			if (i+1<lengthx) {
-				t(i+1,i+(leg-1)*lengthx) = t(i+(leg-1)*lengthx,i+1) = txpy;
-				t(i+1+(leg-1)*lengthx,i) = t(i,i+1+(leg-1)*lengthx) = txmy;
+				t(i+1,i+(leg-1)*lengthx) = txpy1;
+				t(i+(leg-1)*lengthx,i+1) = txpy2;
+				t(i+1+(leg-1)*lengthx,i) = txmy1;
+				t(i,i+1+(leg-1)*lengthx) = txmy2;
 			}
+
 			if (i>0) continue;
-			t(0,lengthx-1+(leg-1)*lengthx) = t(lengthx-1+(leg-1)*lengthx,0) = txpy;
-			t(0+(leg-1)*lengthx,lengthx-1) = t(lengthx-1,0+(leg-1)*lengthx) = txmy;
+
+			t(0,lengthx-1+(leg-1)*lengthx) = txpy1;
+			t(lengthx-1+(leg-1)*lengthx,0) = txpy2;
+			t(0+(leg-1)*lengthx,lengthx-1) = txmy1;
+			t(lengthx-1,0+(leg-1)*lengthx) = txmy2;
 		}
 
 	}
@@ -669,14 +735,14 @@ private:
 				t_(i,j)=0;
 	}
 
-	void readPotential(typename PsimagLite::Vector<RealType>::Type& v,
+	void readPotential(VectorRealType& v,
+	                   VectorRealType& w,
 	                   const PsimagLite::String& filename)
 	{
-		typename PsimagLite::Vector<RealType>::Type w;
 		PsimagLite::IoSimple::In io(filename);
 
 		try {
-			io.read(w,"potentialT");
+			io.read(w,"PotentialT");
 		} catch (std::exception& e) {
 			std::cerr<<"INFO: No PotentialT in file "<<filename<<"\n";
 		}
@@ -723,6 +789,7 @@ private:
 
 	const GeometryParamsType& geometryParams_;
 	DecayEnum decay_;
+	VectorRealType potentialT_;
 	MatrixType t_;
 
 }; // GeometryLibrary

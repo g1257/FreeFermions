@@ -109,7 +109,9 @@ struct GeometryParameters {
 	      isPeriodic(2,false),
 	      hopping(1,defaultHopping),
 	      filename(io.filename()),
-	      orbitals(1)
+	      orbitals(1),
+	      omega(0.0),
+	      phase(0.0)
 	{
 		io.readline(sites,"TotalNumberOfSites=");
 
@@ -118,6 +120,14 @@ struct GeometryParameters {
 
 		PsimagLite::String geometry("");
 		io.readline(geometry,"GeometryKind=");
+
+		try {
+			io.readline(omega,"omega=");
+		} catch (std::exception&) {}
+
+		try {
+			io.readline(phase,"phase=");
+		} catch (std::exception&) {}
 
 		if (geometry == "LongRange" || geometry == "Raw") {
 			type = RAW;
@@ -325,6 +335,8 @@ struct GeometryParameters {
 	PsimagLite::String filename;
 	SizeType orbitals;
 	SizeType bathSitesPerSite;
+	RealType omega;
+	RealType phase;
 	typename PsimagLite::Vector<FieldType>::Type tb;
 }; // struct GeometryParameters
 } // namespace Dmrg

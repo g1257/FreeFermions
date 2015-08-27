@@ -38,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -85,7 +85,7 @@ namespace FreeFermions {
 	// All interactions == 0
 	template<typename RealType_,typename FieldType_>
 	class Engine {
-	
+
 		public:
 
 			typedef RealType_ RealType;
@@ -105,7 +105,7 @@ namespace FreeFermions {
 				}
 			}
 
-			FieldType energy(SizeType ne) const
+			RealType energy(SizeType ne) const
 			{
 				RealType sum = 0;
 				for (SizeType i=0;i<ne;i++) sum += eigenvalues_[i];
@@ -120,17 +120,17 @@ namespace FreeFermions {
 			}
 
 			SizeType dof() const { return dof_; }
-	
+
 			SizeType size() const { return eigenvalues_.size(); }
 
 		private:
-		
+
 			void diagonalize()
 			{
 				if (!isHermitian(eigenvectors_,true)) throw std::runtime_error("Matrix not hermitian\n");
 
 				diag(eigenvectors_,eigenvalues_,'V');
-					
+
 				if (verbose_) {
 					std::cerr<<"eigenvalues\n";
 					std::cerr<<eigenvalues_;
@@ -145,7 +145,7 @@ namespace FreeFermions {
 			PsimagLite::Matrix<FieldType> eigenvectors_;
 			typename PsimagLite::Vector<RealType>::Type eigenvalues_;
 	}; // Engine
-} // namespace FreeFermions 
+} // namespace FreeFermions
 
 /*@}*/
 #endif
