@@ -1,3 +1,5 @@
+# Introduction
+
 FreeFermions is free software (see file LICENSE) 
 
 Please cite FreeFermions if you base any scientific 
@@ -6,9 +8,7 @@ publication on this software. Citation should read:
 G. Alvarez (2011), FreeFermions (version 1.0.0) 
 [computer software], Oak Ridge National Laboratory.
 
-----------------------------------------------------
-
-DISCLAIMER
+# DISCLAIMER
 
 THE SOFTWARE IS SUPPLIED BY THE COPYRIGHT HOLDERS AND
 CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
@@ -33,32 +33,43 @@ ANY OF THEIR EMPLOYEES, REPRESENTS THAT THE USE OF ANY
 INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS
 DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
-----------------------------------------------------
+# Code Integrity
 
 Hash of the latest commit is also posted at
-
 https://web.ornl.gov/~gz1/hashes.html
 
-----------------------------------------------------
+Latest commit should always be signed.
+Keys at https://web.ornl.gov/~gz1/keys.html
 
-Dependencies and how to download:
+# Quick Start
+
+## Dependencies and how to download:
+
+<pre>
 cd someDirectory
 git clone https://github.com/g1257/PsimagLite
 git clone https://github.com/g1257/FreeFermions
+</pre>
 
-----------------------------------------------------
+## Compiling and Running
 
+<pre>
 cd FreeFermions/examples
 perl make.pl
 ./cicj 8 4
+</pre>
 
-----------------------------------------------------
+## To update the code:
 
-To update the code:
+<pre>
 cd someDirectory
 cd PsimagLite
 git pull
 cd ../FreeFermions
 git pull
+</pre>
 
-----------------------------------------------------
+## See Also
+
+https://web.ornl.gov/~gz1/FreeFermions/
+
