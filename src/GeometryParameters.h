@@ -118,7 +118,6 @@ struct GeometryParameters {
 		// default value
 		type = CHAIN;
 
-		PsimagLite::String geometry("");
 		io.readline(geometry,"GeometryKind=");
 
 		try {
@@ -327,6 +326,7 @@ struct GeometryParameters {
 		io.readline(v,label);
 	}
 
+	PsimagLite::String geometry;
 	SizeType type;
 	SizeType sites;
 	SizeType leg;
