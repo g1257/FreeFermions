@@ -169,7 +169,7 @@ sub fourierChain
 sub fourierLadder
 {
 	my ($f,$v) = @_;
-	my $n = scalar(@$v);
+	my $n = int(0.5*scalar(@$v));
 	my $numberOfQs = (defined($mMax)) ? $mMax : int(0.5*$n);
 	for (my $m = 0; $m < $numberOfQs; ++$m) {
 		my $q = getQ($m,$numberOfQs);
@@ -188,11 +188,10 @@ sub fourierLadder
 sub fourierF0
 {
 	my ($v,$q) = @_;
-	my $n = scalar(@$v);
+	my $n = int(0.5*scalar(@$v));
 	my @sum;
 	for (my $i = 0; $i < $n; $i+=2) {
-		my $ptr = $v->[$i];
-		my @temp = @$ptr;
+		my @temp = ($v->[2*$i],$v->[2*$i+1]);
 		my $arg = $q*($i-$centralSite)*0.5;
 		my $carg = cos($arg);
 		$sum[0] += $temp[0]*$carg;
@@ -205,11 +204,10 @@ sub fourierF0
 sub fourierF1
 {
 	my ($v,$q) = @_;
-	my $n = scalar(@$v);
+	my $n = int(0.5*scalar(@$v));
 	my @sum;
 	for (my $i = 1; $i < $n; $i+=2) {
-		my $ptr = $v->[$i];
-		my @temp = @$ptr;
+		my @temp = ($v->[2*$i],$v->[2*$i+1]);
 		my $arg = $q*distanceLadder($i,$centralSite);
 		my $carg = cos($arg);
 		$sum[0] += $temp[0]*$carg;
