@@ -6,12 +6,11 @@ use Math::Trig;
 use OmegaUtils;
 use Getopt::Long qw(:config no_ignore_case);
 
-my $usage = "-f input -o omegaBegin -i omegaStep -t omegaTotal [-d] [-M mMax] [-p] [-r]\n";
+my $usage = "-f input -o omegaBegin -i omegaStep -t omegaTotal [-M mMax] [-p] [-r]\n";
 
 my ($input1,$geometry,$GlobalNumberOfSites);
 my ($isPeriodic,$mMax,$wantsRealPart);
 my ($omega0,$omegaStep,$centralSite,$total);
-my $minusD = 0;
 
 GetOptions('f=s' => \$input1,
            'p' => \$isPeriodic,
@@ -19,10 +18,7 @@ GetOptions('f=s' => \$input1,
            'r' => \$wantsRealPart,
            't:i' => \$total,
            'i:f' => \$omegaStep,
-           'o:f' => \$omega0,
-           'd' => \$minusD) or die "$usage\n";
-
-$minusD = "-d" if ($minusD);
+           'o:f' => \$omega0) or die "$usage\n";
 
 (defined($input1) && defined($total) && defined($omegaStep)) or die "$0: USAGE: $usage\n";
 defined($isPeriodic) or $isPeriodic = 0;
@@ -31,7 +27,7 @@ defined($omega0) or $omega0 = 0;
 my $input = $input1;
 $input =~ s/\.(.*$)//;
 $input .= ".dat";
-my $cmd = "./sqOmega -f $input1 -t $total -i $omegaStep -o $omega0 $minusD > $input 2> /dev/null";
+my $cmd = "./sqOmega -f $input1 -t $total -i $omegaStep -o $omega0> $input 2> /dev/null";
 print STDERR "$0: Trying to exec $cmd\n";
 my $ret = system($cmd);
 
@@ -157,7 +153,6 @@ sub fourierChain
 			my @temp = ($v->[2*$i],$v->[2*$i+1]);
 			my $arg = $q*($i-$centralSite);
 			my $carg = cos($arg);
-			my $sarg = sin($arg);
 			$sum[0] += $temp[0]*$carg;
 			$sum[1] += $temp[1]*$carg;
 		}

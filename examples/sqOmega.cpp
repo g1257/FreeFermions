@@ -101,42 +101,41 @@ FieldType doOneOmegaOneSitePair(const EngineType& engine,
                                 SizeType site0,
                                 SizeType site1,
                                 RealType Eg,
-                                SizeType dynType,
                                 RealType omega)
 {
 	FieldType tmpC = 0.0;
 	RealType epsilon = 0.1;
-	for (SizeType sigma0 = 0; sigma0 < 2; ++sigma0) {
-		for (SizeType sigma1 = 0; sigma1 < 2; ++sigma1) {
-			RealType sign = (sigma0 == sigma1) ? 1.0 : -1.0;
-			RealType signForDen = (dynType== DYN_TYPE_1) ? -1.0 : 1.0;
-			LibraryOperatorType& nOpI = opLibFactory(LibraryOperatorType::N,
-			                                         site0,
-			                                         sigma0);
+	SizeType sigma0 = 0;
+	SizeType sigma1 = 0;
+	for (SizeType dynType = 0; dynType < 2; ++dynType) {
+		RealType sign = (sigma0 == sigma1) ? 1.0 : -1.0;
+		sign *= (dynType == 0) ? 1 : -1;
+		RealType signForDen = (dynType== DYN_TYPE_1) ? -1.0 : 1.0;
+		LibraryOperatorType& nOpI = opLibFactory(LibraryOperatorType::N,
+		                                         site0,
+		                                         sigma0);
 
-			HilbertStateType phiKet = gs;
-			nOpI.applyTo(phiKet);
+		HilbertStateType phiKet = gs;
+		nOpI.applyTo(phiKet);
 
-			LibraryOperatorType& nOpJ = opLibFactory(LibraryOperatorType::N,
-			                                         site1,
-			                                         sigma1);
-			HilbertStateType phiBra = gs;
-			nOpJ.applyTo(phiBra);
+		LibraryOperatorType& nOpJ = opLibFactory(LibraryOperatorType::N,
+		                                         site1,
+		                                         sigma1);
+		HilbertStateType phiBra = gs;
+		nOpJ.applyTo(phiBra);
 
-			//FieldType density = scalarProduct(phiBra,phiKet);
-			//std::cerr<<"density="<<density<<"\n";
+		//FieldType density = scalarProduct(phiBra,phiKet);
+		//std::cerr<<"density="<<density<<"\n";
 
-			OpDiagonalFactoryType opDiagonalFactory(engine);
+		OpDiagonalFactoryType opDiagonalFactory(engine);
 
-			ComplexType z = ComplexType(omega,epsilon);
-			//int sign = (dynType== DYN_TYPE_1) ? -1 : 1;
-			OneOverZminusHType eih(z,signForDen,Eg,engine);
-			DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
-			HilbertStateType phi3 = phiKet;
-			eihOp.applyTo(phi3);
+		ComplexType z = ComplexType(omega,epsilon);
+		OneOverZminusHType eih(z,signForDen,Eg,engine);
+		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
+		HilbertStateType phi3 = phiKet;
+		eihOp.applyTo(phi3);
 
-			tmpC += sign*scalarProduct(phiBra,phi3);
-		}
+		tmpC += sign*scalarProduct(phiBra,phi3);
 	}
 
 	return tmpC;
@@ -147,7 +146,6 @@ void doOneOmega(const EngineType& engine,
                 RealType Eg,
                 SizeType totalSites,
                 SizeType centralSite,
-                SizeType dynType,
                 RealType omega)
 {
 	OpLibFactoryType opLibFactory(engine);
@@ -160,9 +158,8 @@ void doOneOmega(const EngineType& engine,
 		                                      site0,
 		                                      site1,
 		                                      Eg,
-		                                      dynType,
 		                                      omega);
-		std::cout<<std::imag(val)<<" "<<std::real(val)<<" ";
+		std::cout<<std::real(val)<<" "<<std::imag(val)<<" ";
 	}
 
 	std::cout<<"\n";
@@ -175,9 +172,8 @@ int main(int argc,char *argv[])
 	SizeType total=0;
 	RealType offset = 0;
 	RealType step = 0;
-	SizeType dynType = DYN_TYPE_0;
 
-	while ((opt = getopt(argc, argv, "f:t:o:i:d")) != -1) {
+	while ((opt = getopt(argc, argv, "f:t:o:i:")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
@@ -190,9 +186,6 @@ int main(int argc,char *argv[])
 			break;
 		case 'o':
 			offset = atof(optarg);
-			break;
-		case 'd':
-			dynType = DYN_TYPE_1;
 			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
@@ -210,7 +203,7 @@ int main(int argc,char *argv[])
 	GeometryParamsType geometryParams(io);
 	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
 
-	SizeType dof = 2;
+	SizeType dof = 1;
 
 	GeometryLibraryType geometry(geometryParams);
 
@@ -228,7 +221,7 @@ int main(int argc,char *argv[])
 	for (SizeType i=0;i<ne[0];i++) Eg += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*Eg<<"\n";
 
-	SizeType centralSite = static_cast<SizeType>(geometryParams.sites/2);
+	SizeType centralSite = static_cast<SizeType>(geometryParams.sites/2)-1;
 	std::cout<<"#TotalNumberOfSites="<<geometryParams.sites<<"\n";
 	std::cout<<"#OmegaTotal="<<total<<"\n";
 	std::cout<<"#OmegaBegin="<<offset<<"\n";
@@ -244,7 +237,6 @@ int main(int argc,char *argv[])
 		           Eg,
 		           geometryParams.sites,
 		           centralSite,
-		           dynType,
 		           omega);
 	}
 }
