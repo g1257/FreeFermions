@@ -105,7 +105,7 @@ FieldType doOneOmegaOneSitePair(const EngineType& engine,
                                 RealType omega)
 {
 	FieldType tmpC = 0.0;
-	RealType epsilon = 1e-2;
+	RealType epsilon = 0.1;
 	for (SizeType sigma0 = 0; sigma0 < 2; ++sigma0) {
 		for (SizeType sigma1 = 0; sigma1 < 2; ++sigma1) {
 			RealType sign = (sigma0 == sigma1) ? 1.0 : -1.0;
