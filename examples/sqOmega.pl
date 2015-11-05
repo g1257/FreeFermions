@@ -6,24 +6,38 @@ use Math::Trig;
 use OmegaUtils;
 use Getopt::Long qw(:config no_ignore_case);
 
-my $usage = "-f input [-M mForQ] [-p] [-r]\n";
+my $usage = "-f input -o omegaBegin -i omegaStep -t omegaTotal [-d] [-M mMax] [-p] [-r]\n";
 
-my ($input,$geometry,$GlobalNumberOfSites);
-my ($mForQ,$isPeriodic,$mMax,$wantsRealPart);
+my ($input1,$geometry,$GlobalNumberOfSites);
+my ($isPeriodic,$mMax,$wantsRealPart);
 my ($omega0,$omegaStep,$centralSite,$total);
+my $minusD = 0;
 
-GetOptions('f=s' => \$input,
-           'm:i' => \$mForQ,
+GetOptions('f=s' => \$input1,
            'p' => \$isPeriodic,
            'M:i' => \$mMax,
-           'r' => \$wantsRealPart) or die "$usage\n";
+           'r' => \$wantsRealPart,
+           't:i' => \$total,
+           'i:f' => \$omegaStep,
+           'o:f' => \$omega0,
+           'd' => \$minusD) or die "$usage\n";
 
-(defined($input)) or die "$0: USAGE: $usage\n";
+$minusD = "-d" if ($minusD);
 
-my $hptr = {"#OmegaBegin" => \$omega0,
-            "#OmegaTotal" => \$total,
-            "#OmegaStep" => \$omegaStep,
-            "TSPSites 1" => \$centralSite,
+(defined($input1) && defined($total) && defined($omegaStep)) or die "$0: USAGE: $usage\n";
+defined($isPeriodic) or $isPeriodic = 0;
+defined($omega0) or $omega0 = 0;
+
+my $input = $input1;
+$input =~ s/\.(.*$)//;
+$input .= ".dat";
+my $cmd = "./sqOmega -f $input1 -t $total -i $omegaStep -o $omega0 $minusD > $input 2> /dev/null";
+print STDERR "$0: Trying to exec $cmd\n";
+my $ret = system($cmd);
+
+die "$0: Command $cmd failed\n" if ($ret != 0);
+
+my $hptr = {"TSPSites 1" => \$centralSite,
             "GeometryKind" =>\$geometry,
             "TotalNumberOfSites" => \$GlobalNumberOfSites};
 
