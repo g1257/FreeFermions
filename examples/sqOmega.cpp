@@ -278,6 +278,8 @@ int main(int argc,char *argv[])
 	std::cerr<<"Energy="<<dof*Eg<<"\n";
 
 	SizeType centralSite = static_cast<SizeType>(geometryParams.sites/2)-1;
+	if (geometryParams.geometry == "ladder") centralSite--;
+
 	std::cout<<"#TotalNumberOfSites="<<geometryParams.sites<<"\n";
 	std::cout<<"#OmegaTotal="<<total<<"\n";
 	std::cout<<"#OmegaBegin="<<offset<<"\n";
