@@ -37,7 +37,7 @@ typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 typedef PsimagLite::Matrix<ComplexType> MatrixComplexType;
 
-enum {DYN_TYPE_0,DYN_TYPE_1};
+enum ObservableEnum {OBS_SZ, OBS_C};
 
 void usage(const PsimagLite::String& thisFile)
 {
@@ -50,12 +50,14 @@ struct SqOmegaParams {
 	              const HilbertStateType& gs_,
 	              RealType Eg_,
 	              SizeType sites_,
-	              SizeType centralSite_)
+	              SizeType centralSite_,
+	              ObservableEnum what_)
 	    : engine(engine_),
 	      gs(gs_),
 	      Eg(Eg_),
 	      sites(sites_),
-	      centralSite(centralSite_)
+	      centralSite(centralSite_),
+	      observable(what_)
 	{}
 
 	const EngineType& engine;
@@ -63,7 +65,93 @@ struct SqOmegaParams {
 	RealType Eg;
 	SizeType sites;
 	SizeType centralSite;
+	ObservableEnum observable;
 }; // struct SqOmegaParams
+
+class DynamicObservable {
+
+public:
+
+	DynamicObservable(ObservableEnum what,
+	                  const EngineType& engine)
+	    : what_(what),opLibFactory_(engine),opNormalFactory_(engine)
+	{}
+
+	void applyRightOperator(HilbertStateType& phiKet,
+	                        SizeType site0,
+	                        SizeType sigma0,
+	                        SizeType dynType)
+	{
+		if (what_ == OBS_SZ) {
+			LibraryOperatorType& nOpI = opLibFactory_(LibraryOperatorType::N,
+			                                          site0,
+			                                          sigma0);
+			nOpI.applyTo(phiKet);
+			return;
+		}
+
+		assert(what_ == OBS_C);
+
+		if (dynType == 0) {
+			OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::DESTRUCTION,
+			                                       site0,
+			                                       sigma0);
+			nOpI.applyTo(phiKet);
+			return;
+		}
+
+		assert(dynType == 1);
+		OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::CREATION,
+		                                       site0,
+		                                       sigma0);
+		nOpI.applyTo(phiKet);
+	}
+
+	void leftOperator(HilbertStateType& phiKet,
+	                  SizeType site0,
+	                  SizeType sigma0,
+	                  SizeType dynType)
+	{
+		if (what_ == OBS_SZ) {
+			LibraryOperatorType& nOpI = opLibFactory_(LibraryOperatorType::N,
+			                                          site0,
+			                                          sigma0);
+			nOpI.applyTo(phiKet);
+			return;
+		}
+
+		assert(what_ == OBS_C);
+
+		if (dynType == 0) {
+			OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::CREATION,
+			                                       site0,
+			                                       sigma0);
+			nOpI.applyTo(phiKet);
+			return;
+		}
+
+		assert(dynType == 1);
+		OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::DESTRUCTION,
+		                                       site0,
+		                                       sigma0);
+		nOpI.applyTo(phiKet);
+	}
+
+	RealType signForWeight(SizeType sigma0,
+	                       SizeType sigma1,
+	                       SizeType dynType)
+	{
+		RealType sign = (sigma0 == sigma1) ? 1.0 : -1.0;
+		sign *= (dynType == 0) ? 1 : -1;
+		return (what_ == OBS_SZ) ? sign : -1.0;
+	}
+
+private:
+
+	ObservableEnum what_;
+	OpLibFactoryType opLibFactory_;
+	OpNormalFactoryType opNormalFactory_;
+}; // class DynamicObservable
 
 class SqOmegaParallel {
 
@@ -73,7 +161,11 @@ public:
 	                RealType total,
 	                RealType step,
 	                RealType offset)
-	    : params_(params),step_(step), offset_(offset),result_(total,params.sites)
+	    : params_(params),
+	      step_(step),
+	      offset_(offset),
+	      observable_(params.observable,params.engine),
+	      result_(total,params.sites)
 	{}
 
 	void thread_function_(SizeType threadNum,
@@ -107,8 +199,7 @@ public:
 
 private:
 
-	FieldType doOneOmegaOneSitePair(OpLibFactoryType& opLibFactory,
-	                                SizeType site0,
+	FieldType doOneOmegaOneSitePair(SizeType site0,
 	                                SizeType site1,
 	                                RealType omega)
 	{
@@ -117,24 +208,19 @@ private:
 		SizeType sigma0 = 0;
 		SizeType sigma1 = 0;
 		for (SizeType dynType = 0; dynType < 2; ++dynType) {
-			RealType sign = (sigma0 == sigma1) ? 1.0 : -1.0;
-			sign *= (dynType == 0) ? 1 : -1;
-			RealType signForDen = (dynType== DYN_TYPE_1) ? -1.0 : 1.0;
-			LibraryOperatorType& nOpI = opLibFactory(LibraryOperatorType::N,
-			                                         site0,
-			                                         sigma0);
-
+			RealType sign = observable_.signForWeight(sigma0,sigma1,dynType);
+			RealType signForDen = (dynType == 1) ? -1.0 : 1.0;
 			HilbertStateType phiKet = params_.gs;
-			nOpI.applyTo(phiKet);
+			observable_.applyRightOperator(phiKet,
+			                               site0,
+			                               sigma0,
+			                               dynType);
 
-			LibraryOperatorType& nOpJ = opLibFactory(LibraryOperatorType::N,
-			                                         site1,
-			                                         sigma1);
 			HilbertStateType phiBra = params_.gs;
-			nOpJ.applyTo(phiBra);
-
-			//FieldType density = scalarProduct(phiBra,phiKet);
-			//std::cerr<<"density="<<density<<"\n";
+			observable_.applyRightOperator(phiBra,
+			                               site1,
+			                               sigma1,
+			                               dynType);
 
 			OpDiagonalFactoryType opDiagonalFactory(params_.engine);
 
@@ -152,11 +238,9 @@ private:
 
 	void doOneOmega(SizeType it, RealType omega)
 	{
-		OpLibFactoryType opLibFactory(params_.engine);
 		SizeType site0 = params_.centralSite;
 		for (SizeType site1 = 0; site1 < params_.sites; ++site1) {
-			result_(it,site1) = doOneOmegaOneSitePair(opLibFactory,
-			                                          site0,
+			result_(it,site1) = doOneOmegaOneSitePair(site0,
 			                                          site1,
 			                                          omega);
 		}
@@ -165,6 +249,7 @@ private:
 	const SqOmegaParams& params_;
 	RealType step_;
 	RealType offset_;
+	DynamicObservable observable_;
 	MatrixComplexType result_;
 };
 
@@ -175,8 +260,9 @@ int main(int argc,char *argv[])
 	SizeType total=0;
 	RealType offset = 0;
 	RealType step = 0;
+	ObservableEnum what = OBS_SZ;
 
-	while ((opt = getopt(argc, argv, "f:t:o:i:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:t:o:i:w:")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
@@ -189,6 +275,16 @@ int main(int argc,char *argv[])
 			break;
 		case 'o':
 			offset = atof(optarg);
+			break;
+		case 'w':
+			if (PsimagLite::String(optarg) == "c")
+				what = OBS_C;
+			else if (PsimagLite::String(optarg) == "sz")
+				what = OBS_SZ;
+			else
+				throw std::runtime_error("observable" +
+			                             PsimagLite::String(optarg) +
+			                             " not supported\n");
 			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
@@ -235,13 +331,14 @@ int main(int argc,char *argv[])
 	std::cout<<"#GeometryKind="<<geometryParams.geometry<<"\n";
 	std::cout<<"#TSPSites 1 "<<centralSite<<"\n";
 	std::cout<<"#Threads="<<PsimagLite::Concurrency::npthreads<<"\n";
+	std::cout<<"#What="<<what<<"\n";
 	std::cout<<"#############\n";
 
 	typedef PsimagLite::Parallelizer<SqOmegaParallel> ParallelizerType;
 	ParallelizerType threadObject(PsimagLite::Concurrency::npthreads,
 	                              PsimagLite::MPI::COMM_WORLD);
 
-	SqOmegaParams params(engine,gs,Eg,geometryParams.sites,centralSite);
+	SqOmegaParams params(engine,gs,Eg,geometryParams.sites,centralSite,what);
 	SqOmegaParallel helperSqOmega(params,total,step,offset);
 
 	threadObject.loopCreate(total,helperSqOmega);
