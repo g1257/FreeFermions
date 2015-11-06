@@ -14,6 +14,7 @@
 #include "InputNg.h"
 #include "InputCheck.h"
 #include "LibraryOperator.h"
+#include "Parallelizer.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -34,6 +35,7 @@ typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
 typedef LibraryOperatorType::FactoryType OpLibFactoryType;
+typedef PsimagLite::Matrix<ComplexType> MatrixComplexType;
 
 enum {DYN_TYPE_0,DYN_TYPE_1};
 
@@ -95,75 +97,128 @@ void setMyGeometry(GeometryParamsType& geometryParams,
 	}
 }
 
-FieldType doOneOmegaOneSitePair(const EngineType& engine,
-                                const HilbertStateType& gs,
-                                OpLibFactoryType& opLibFactory,
-                                SizeType site0,
-                                SizeType site1,
-                                RealType Eg,
-                                RealType omega)
-{
-	FieldType tmpC = 0.0;
-	RealType epsilon = 0.1;
-	SizeType sigma0 = 0;
-	SizeType sigma1 = 0;
-	for (SizeType dynType = 0; dynType < 2; ++dynType) {
-		RealType sign = (sigma0 == sigma1) ? 1.0 : -1.0;
-		sign *= (dynType == 0) ? 1 : -1;
-		RealType signForDen = (dynType== DYN_TYPE_1) ? -1.0 : 1.0;
-		LibraryOperatorType& nOpI = opLibFactory(LibraryOperatorType::N,
-		                                         site0,
-		                                         sigma0);
+struct SqOmegaParams {
+	SqOmegaParams(const EngineType& engine_,
+	              const HilbertStateType& gs_,
+	              RealType Eg_,
+	              SizeType sites_,
+	              SizeType centralSite_)
+	    : engine(engine_),
+	      gs(gs_),
+	      Eg(Eg_),
+	      sites(sites_),
+	      centralSite(centralSite_)
+	{}
 
-		HilbertStateType phiKet = gs;
-		nOpI.applyTo(phiKet);
+	const EngineType& engine;
+	const HilbertStateType& gs;
+	RealType Eg;
+	SizeType sites;
+	SizeType centralSite;
+}; // struct SqOmegaParams
 
-		LibraryOperatorType& nOpJ = opLibFactory(LibraryOperatorType::N,
-		                                         site1,
-		                                         sigma1);
-		HilbertStateType phiBra = gs;
-		nOpJ.applyTo(phiBra);
+class SqOmegaParallel {
 
-		//FieldType density = scalarProduct(phiBra,phiKet);
-		//std::cerr<<"density="<<density<<"\n";
+public:
 
-		OpDiagonalFactoryType opDiagonalFactory(engine);
+	SqOmegaParallel(const SqOmegaParams& params,
+	                RealType total,
+	                RealType step,
+	                RealType offset)
+	    : params_(params),step_(step), offset_(offset),result_(total,params.sites)
+	{}
 
-		ComplexType z = ComplexType(omega,epsilon);
-		OneOverZminusHType eih(z,signForDen,Eg,engine);
-		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
-		HilbertStateType phi3 = phiKet;
-		eihOp.applyTo(phi3);
-
-		tmpC += sign*scalarProduct(phiBra,phi3);
+	void thread_function_(SizeType threadNum,
+	                      SizeType blockSize,
+	                      SizeType total,
+	                      typename ConcurrencyType::MutexType*)
+	{
+		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
+		SizeType npthreads = ConcurrencyType::npthreads;
+		for (SizeType p=0;p<blockSize;p++) {
+			SizeType it = (threadNum+npthreads*mpiRank)*blockSize + p;
+			if (it>=total) continue;
+			RealType omega = it * step_ + offset_;
+			doOneOmega(it,omega);
+		}
 	}
 
-	return tmpC;
-}
+	void print(std::ostream& os) const
+	{
+		for (SizeType it = 0; it< result_.n_row(); it++) {
+			RealType omega = it * step_ + offset_;
+			os<<omega<<" ";
+			for (SizeType site1 = 0; site1 < result_.n_col(); ++site1) {
+				ComplexType val = result_(it,site1);
+				os<<std::real(val)<<" "<<std::imag(val)<<" ";
+			}
 
-void doOneOmega(const EngineType& engine,
-                const HilbertStateType& gs,
-                RealType Eg,
-                SizeType totalSites,
-                SizeType centralSite,
-                RealType omega)
-{
-	OpLibFactoryType opLibFactory(engine);
-	SizeType site0 = centralSite;
-	std::cout<<omega<<" ";
-	for (SizeType site1 = 0; site1 < totalSites; ++site1) {
-		FieldType val = doOneOmegaOneSitePair(engine,
-		                                      gs,
-		                                      opLibFactory,
-		                                      site0,
-		                                      site1,
-		                                      Eg,
-		                                      omega);
-		std::cout<<std::real(val)<<" "<<std::imag(val)<<" ";
+			os<<"\n";
+		}
 	}
 
-	std::cout<<"\n";
-}
+private:
+
+	FieldType doOneOmegaOneSitePair(OpLibFactoryType& opLibFactory,
+	                                SizeType site0,
+	                                SizeType site1,
+	                                RealType omega)
+	{
+		FieldType tmpC = 0.0;
+		RealType epsilon = 0.1;
+		SizeType sigma0 = 0;
+		SizeType sigma1 = 0;
+		for (SizeType dynType = 0; dynType < 2; ++dynType) {
+			RealType sign = (sigma0 == sigma1) ? 1.0 : -1.0;
+			sign *= (dynType == 0) ? 1 : -1;
+			RealType signForDen = (dynType== DYN_TYPE_1) ? -1.0 : 1.0;
+			LibraryOperatorType& nOpI = opLibFactory(LibraryOperatorType::N,
+			                                         site0,
+			                                         sigma0);
+
+			HilbertStateType phiKet = params_.gs;
+			nOpI.applyTo(phiKet);
+
+			LibraryOperatorType& nOpJ = opLibFactory(LibraryOperatorType::N,
+			                                         site1,
+			                                         sigma1);
+			HilbertStateType phiBra = params_.gs;
+			nOpJ.applyTo(phiBra);
+
+			//FieldType density = scalarProduct(phiBra,phiKet);
+			//std::cerr<<"density="<<density<<"\n";
+
+			OpDiagonalFactoryType opDiagonalFactory(params_.engine);
+
+			ComplexType z = ComplexType(omega,epsilon);
+			OneOverZminusHType eih(z,signForDen,params_.Eg,params_.engine);
+			DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
+			HilbertStateType phi3 = phiKet;
+			eihOp.applyTo(phi3);
+
+			tmpC += sign*scalarProduct(phiBra,phi3);
+		}
+
+		return tmpC;
+	}
+
+	void doOneOmega(SizeType it, RealType omega)
+	{
+		OpLibFactoryType opLibFactory(params_.engine);
+		SizeType site0 = params_.centralSite;
+		for (SizeType site1 = 0; site1 < params_.sites; ++site1) {
+			result_(it,site1) = doOneOmegaOneSitePair(opLibFactory,
+			                                          site0,
+			                                          site1,
+			                                          omega);
+		}
+	}
+
+	const SqOmegaParams& params_;
+	RealType step_;
+	RealType offset_;
+	MatrixComplexType result_;
+};
 
 int main(int argc,char *argv[])
 {
@@ -210,6 +265,7 @@ int main(int argc,char *argv[])
 	std::cerr<<geometry;
 
 	SizeType npthreads = 1;
+	io.readline(npthreads,"Threads=");
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
 	EngineType engine(geometry.matrix(),dof,true);
 
@@ -228,16 +284,18 @@ int main(int argc,char *argv[])
 	std::cout<<"#OmegaStep="<<step<<"\n";
 	std::cout<<"#GeometryKind="<<geometryParams.geometry<<"\n";
 	std::cout<<"#TSPSites 1 "<<centralSite<<"\n";
+	std::cout<<"#Threads="<<PsimagLite::Concurrency::npthreads<<"\n";
 	std::cout<<"#############\n";
 
-	for (SizeType it = 0; it<total; it++) {
-		RealType omega = it * step + offset;
-		doOneOmega(engine,
-		           gs,
-		           Eg,
-		           geometryParams.sites,
-		           centralSite,
-		           omega);
-	}
+	typedef PsimagLite::Parallelizer<SqOmegaParallel> ParallelizerType;
+	ParallelizerType threadObject(PsimagLite::Concurrency::npthreads,
+	                              PsimagLite::MPI::COMM_WORLD);
+
+	SqOmegaParams params(engine,gs,Eg,geometryParams.sites,centralSite);
+	SqOmegaParallel helperSqOmega(params,total,step,offset);
+
+	threadObject.loopCreate(total,helperSqOmega);
+
+	helperSqOmega.print(std::cout);
 }
 
