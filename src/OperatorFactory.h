@@ -85,58 +85,59 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 
-	template<typename OpType>
-	class OperatorFactory {
-		typedef typename OpType::EngineType EngineType;
-		typedef OperatorFactory<OpType> ThisType;
-		typedef typename PsimagLite::Vector<OpType*>::Type GarbageType;
+template<typename OpType>
+class OperatorFactory {
+	typedef typename OpType::EngineType EngineType;
+	typedef OperatorFactory<OpType> ThisType;
+	typedef typename PsimagLite::Vector<OpType*>::Type GarbageType;
 
-	public:
+public:
 
-			OperatorFactory(const EngineType& engine)
-			    : engine_(&engine),
-			      garbage_(PsimagLite::Concurrency::npthreads)
-			{}
+	OperatorFactory(const EngineType& engine)
+	    : engine_(&engine),
+	      garbage_(PsimagLite::Concurrency::npthreads)
+	{}
 
-			~OperatorFactory()
-			{
-				for (SizeType i=0;i<garbage_.size();i++)
-					for (SizeType j=0;j<garbage_[i].size(); ++j)
-						delete garbage_[i][j];
-			}
+	~OperatorFactory()
+	{
+		for (SizeType i=0;i<garbage_.size();i++)
+			for (SizeType j=0;j<garbage_[i].size(); ++j)
+				delete garbage_[i][j];
+	}
 
-			OpType& operator()(SizeType x,
-			                   SizeType site,
-			                   SizeType sigma,
-			                   SizeType threadId = 0)
-			{
-				OpType* op = new OpType(*engine_,x,site,sigma);
-				garbage_[threadId].push_back(op);
-				return *op;
-			}
+	OpType& operator()(SizeType x,
+	                   SizeType site,
+	                   SizeType sigma,
+	                   SizeType threadId = 0)
+	{
+		OpType* op = new OpType(*engine_,x,site,sigma);
+		garbage_[threadId].push_back(op);
+		return *op;
+	}
 
-			template<typename SomeOtherType>
-			OpType& operator()(SomeOtherType& x, SizeType threadId = 0)
-			{
-				OpType* op = new OpType(x);
-				garbage_[threadId].push_back(op);
-				return *op;
-			}
+	template<typename SomeOtherType>
+	OpType& operator()(SomeOtherType& x, SizeType threadId = 0)
+	{
+		OpType* op = new OpType(x);
+		garbage_[threadId].push_back(op);
+		return *op;
+	}
 
-			OpType& operator()(const OpType* op, SizeType threadId = 0)
-			{
-				OpType* op2 = new OpType(op);
-				garbage_[threadId].push_back(op2);
-				return *op2;
-			}
+	OpType& operator()(const OpType* op, SizeType threadId = 0)
+	{
+		OpType* op2 = new OpType(op);
+		garbage_[threadId].push_back(op2);
+		return *op2;
+	}
 
-		private:
+private:
 
-			const EngineType* engine_;
-			typename PsimagLite::Vector<GarbageType>::Type garbage_;
+	const EngineType* engine_;
+	typename PsimagLite::Vector<GarbageType>::Type garbage_;
 
-	}; // OperatorFactory
+}; // OperatorFactory
 } // namespace Dmrg
 
 /*@}*/
 #endif // OPERATOR_FACTORY_H
+

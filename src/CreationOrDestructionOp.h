@@ -1,9 +1,8 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009 , UT-Battelle, LLC
+Copyright (c) 2009-2015, UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -39,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -68,9 +67,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
@@ -86,83 +83,86 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "OperatorFactory.h"
 
 namespace FreeFermions {
-	
-	template<typename EngineType_>
-	class CreationOrDestructionOp {
-		typedef CreationOrDestructionOp<EngineType_> ThisType;
-	public:
-		typedef EngineType_ EngineType;
-		typedef typename EngineType::RealType RealType;
-		typedef typename EngineType::FieldType FieldType;
-		typedef OperatorFactory<ThisType> FactoryType;
 
-		enum {CREATION,DESTRUCTION};
+template<typename EngineType_>
+class CreationOrDestructionOp {
 
-		friend class OperatorFactory<ThisType>;
+	typedef CreationOrDestructionOp<EngineType_> ThisType;
 
-		SizeType type() const { return type_; }
+public:
 
-		SizeType sigma() const { return sigma_; }
+	typedef EngineType_ EngineType;
+	typedef typename EngineType::RealType RealType;
+	typedef typename EngineType::FieldType FieldType;
+	typedef OperatorFactory<ThisType> FactoryType;
 
-		SizeType index() const { return ind_; }
+	enum {CREATION,DESTRUCTION};
 
-		FieldType const operator()(SizeType j) const
-		{
-			if (type_==CREATION) return engine_.eigenvector(ind_,j);
-			return std::conj(engine_.eigenvector(ind_,j));
+	friend class OperatorFactory<ThisType>;
+
+	SizeType type() const { return type_; }
+
+	SizeType sigma() const { return sigma_; }
+
+	SizeType index() const { return ind_; }
+
+	FieldType const operator()(SizeType j) const
+	{
+		if (type_==CREATION) return engine_.eigenvector(ind_,j);
+		return std::conj(engine_.eigenvector(ind_,j));
+	}
+
+	template<typename SomeStateType>
+	void applyTo(SomeStateType& state)
+	{
+		state.pushInto(*this);
+	}
+
+	void transpose()
+	{
+		if (type_==CREATION) {
+			type_ = DESTRUCTION;
+			return;
 		}
+		type_ = CREATION;
+	}
 
-		template<typename SomeStateType>
-		void applyTo(SomeStateType& state)
-		{
-			state.pushInto(*this);
-		}
+private:
 
-		void transpose()
-		{
-			if (type_==CREATION) {
-				type_ = DESTRUCTION;
-				return;
-			}
-			type_ = CREATION;
-		}
+	//! Use the factory to create objects of this type
+	CreationOrDestructionOp(const EngineType& engine,
+	                        SizeType type,
+	                        SizeType ind,
+	                        SizeType sigma)
+	    : engine_(engine),type_(type),ind_(ind),sigma_(sigma)
+	{
+		assert(ind < engine_.size());
+		assert(sigma < engine_.dof());
+	}
 
-	private:
+	CreationOrDestructionOp(const ThisType* op2)
+	    : engine_(op2->engine_),
+	      type_(op2->type_),
+	      ind_(op2->ind_),
+	      sigma_(op2->sigma_) {}
 
-		//! Use the factory to create objects of this type
-		CreationOrDestructionOp(const EngineType& engine,
-				SizeType type,
-				SizeType ind,
-				SizeType sigma)
-		: engine_(engine),type_(type),ind_(ind),sigma_(sigma)
-		{
-			assert(ind < engine_.size());
-			assert(sigma < engine_.dof());
-		}
+	CreationOrDestructionOp(const ThisType& x)
+	{
+		throw std::runtime_error(
+		            "CorDOperator::copyCtor: Don't even think of coming here\n");
+	}
 
+	ThisType& operator=(const ThisType& x)
+	{
+		throw std::runtime_error(
+		            "CorDOperator::assignmentOp: Don't even think of coming here\n");
+	}
 
-		CreationOrDestructionOp(const ThisType* op2)
-		: engine_(op2->engine_),
-		  type_(op2->type_),
-		  ind_(op2->ind_),
-		  sigma_(op2->sigma_) {}
-
-		CreationOrDestructionOp(const ThisType& x)
-		{
-			throw std::runtime_error(
-			  "CorDOperator::copyCtor: Don't even think of coming here\n");
-		}
-
-		ThisType& operator=(const ThisType& x)
-		{
-			throw std::runtime_error(
-			  "CorDOperator::assignmentOp: Don't even think of coming here\n");
-		}
-
-		const EngineType& engine_;
-		SizeType type_,ind_,sigma_;
-	}; // CreationOrDestructionOp
-} // namespace Dmrg 
+	const EngineType& engine_;
+	SizeType type_,ind_,sigma_;
+}; // CreationOrDestructionOp
+} // namespace Dmrg
 
 /*@}*/
 #endif // CREATION_OR_DEST_H_H
+

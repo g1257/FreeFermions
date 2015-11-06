@@ -38,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -83,80 +83,80 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "OperatorFactory.h"
 
 namespace FreeFermions {
-	
-	template<typename OperatorType>
-	class LibraryOperator {
 
-		typedef LibraryOperator<OperatorType> ThisType;
-		typedef OperatorFactory<OperatorType> OpNormalFactoryType;
+template<typename OperatorType>
+class LibraryOperator {
 
-		enum {SPIN_UP,SPIN_DOWN};
+	typedef LibraryOperator<OperatorType> ThisType;
+	typedef OperatorFactory<OperatorType> OpNormalFactoryType;
 
-	public:
-		typedef typename OperatorType::EngineType EngineType;
-		typedef typename OperatorType::RealType RealType;
-		typedef typename OperatorType::FieldType FieldType;
-		typedef OperatorFactory<ThisType> FactoryType;
+	enum {SPIN_UP,SPIN_DOWN};
 
-		enum {CREATION = OperatorType::CREATION,
-			  DESTRUCTION = OperatorType::DESTRUCTION,
-			  N,
-			  NBAR,
-			  DELTA};
+public:
+	typedef typename OperatorType::EngineType EngineType;
+	typedef typename OperatorType::RealType RealType;
+	typedef typename OperatorType::FieldType FieldType;
+	typedef OperatorFactory<ThisType> FactoryType;
 
-		friend class OperatorFactory<ThisType>;
+	enum {CREATION = OperatorType::CREATION,
+	      DESTRUCTION = OperatorType::DESTRUCTION,
+	      N,
+	      NBAR,
+	      DELTA};
 
-		template<typename SomeStateType>
-		void applyTo(SomeStateType& state)
-		{
-			OperatorType& op = opNormalFactory_(DESTRUCTION,ind_,sigma_);
-			OperatorType& op2 = opNormalFactory_(CREATION,ind_,sigma_);
+	friend class OperatorFactory<ThisType>;
 
-			if (type_==N) {
-				state.pushInto(op);
-				state.pushInto(op2);
-			} else if (type_==NBAR){
-				state.pushInto(op2);
-				state.pushInto(op);
-			} else if (type_==DELTA) {
-				OperatorType& opUp = opNormalFactory_(DESTRUCTION,ind_,SPIN_UP);
-				state.pushInto(opUp);
-				OperatorType& opDown = opNormalFactory_(DESTRUCTION,ind_,SPIN_DOWN);
-				state.pushInto(opDown);
-			} else {
-				throw std::runtime_error("LibraryOperator::applyTo()\n");
-			}
+	template<typename SomeStateType>
+	void applyTo(SomeStateType& state)
+	{
+		OperatorType& op = opNormalFactory_(DESTRUCTION,ind_,sigma_);
+		OperatorType& op2 = opNormalFactory_(CREATION,ind_,sigma_);
 
+		if (type_==N) {
+			state.pushInto(op);
+			state.pushInto(op2);
+		} else if (type_==NBAR){
+			state.pushInto(op2);
+			state.pushInto(op);
+		} else if (type_==DELTA) {
+			OperatorType& opUp = opNormalFactory_(DESTRUCTION,ind_,SPIN_UP);
+			state.pushInto(opUp);
+			OperatorType& opDown = opNormalFactory_(DESTRUCTION,ind_,SPIN_DOWN);
+			state.pushInto(opDown);
+		} else {
+			throw std::runtime_error("LibraryOperator::applyTo()\n");
 		}
 
-	private:
+	}
 
-		//! Use OperatorFactory to create objects of this class
-		LibraryOperator(const EngineType& engine,
-				SizeType type,
-				SizeType ind,
-				SizeType sigma)
-		: opNormalFactory_(engine),type_(type),ind_(ind),sigma_(sigma)
-		{}
+private:
 
-		LibraryOperator(const ThisType& x)
-		{
-			throw std::runtime_error(
-			  "LibraryOperator::copyCtor: Don't even think of coming here\n");
-		}
+	//! Use OperatorFactory to create objects of this class
+	LibraryOperator(const EngineType& engine,
+	                SizeType type,
+	                SizeType ind,
+	                SizeType sigma)
+	    : opNormalFactory_(engine),type_(type),ind_(ind),sigma_(sigma)
+	{}
 
-		ThisType& operator=(const ThisType& x)
-		{
-			throw std::runtime_error(
-			  "LibraryOperator::assignmentOp: Don't even think of coming here\n");
-		}
+	LibraryOperator(const ThisType& x)
+	{
+		throw std::runtime_error(
+		            "LibraryOperator::copyCtor: Don't even think of coming here\n");
+	}
 
-		OpNormalFactoryType opNormalFactory_;
-		SizeType type_,ind_,sigma_;
-	}; // LibraryOperator
-	
+	ThisType& operator=(const ThisType& x)
+	{
+		throw std::runtime_error(
+		            "LibraryOperator::assignmentOp: Don't even think of coming here\n");
+	}
 
-} // namespace Dmrg 
+	OpNormalFactoryType opNormalFactory_;
+	SizeType type_,ind_,sigma_;
+}; // LibraryOperator
+
+} // namespace Dmrg
 
 /*@}*/
 #endif // LIBRARY_OPERATOR_H
+
