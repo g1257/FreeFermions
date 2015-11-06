@@ -45,58 +45,6 @@ void usage(const PsimagLite::String& thisFile)
 	std::cout<<" -n sites -e electronsUp -g geometry,[leg,filename]\n";
 }
 
-void setMyGeometry(GeometryParamsType& geometryParams,
-                   const PsimagLite::Vector<PsimagLite::String>::Type& vstr)
-{
-	// default value
-	geometryParams.type = GeometryLibraryType::CHAIN;
-
-	if (vstr.size()<2) {
-		// assume chain
-		return;
-	}
-
-	PsimagLite::String gName = vstr[0];
-	if (gName == "chain") {
-		PsimagLite::String str("setMyGeometry: ");
-		throw std::runtime_error(str + "-g chain takes no further arguments\n");
-	}
-
-	geometryParams.leg = atoi(vstr[1].c_str());
-
-	if (gName == "ladder") {
-		if (vstr.size()!=3) {
-			usage("setMyGeometry");
-			PsimagLite::String str("setMyGeometry: usage is: ");
-			throw std::runtime_error(str + "-g ladder,leg,isPeriodic\n");
-		}
-		geometryParams.type = GeometryLibraryType::LADDER;
-		geometryParams.hopping.resize(2);
-		geometryParams.hopping[0] =  geometryParams.hopping[1]  = 1.0;
-		geometryParams.isPeriodic[GeometryParamsType::DIRECTION_Y] =
-		        (atoi(vstr[2].c_str())>0);
-		return;
-	}
-
-	if (vstr.size()!=3) {
-		usage("setMyGeometry");
-		PsimagLite::String str("setMyGeometry: usage is: ");
-		throw std::runtime_error(str + "-g {feas | ktwoniffour} leg filename\n");
-	}
-
-	geometryParams.filename = vstr[2];
-
-	if (gName == "feas") {
-		geometryParams.type = GeometryLibraryType::FEAS;
-		return;
-	}
-
-	if (gName == "kniffour") {
-		geometryParams.type = GeometryLibraryType::KTWONIFFOUR;
-		return;
-	}
-}
-
 struct SqOmegaParams {
 	SqOmegaParams(const EngineType& engine_,
 	              const HilbertStateType& gs_,

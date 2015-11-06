@@ -174,7 +174,29 @@ struct GeometryParameters {
 				type = LADDER;
 			}
 
+			io.readline(x,"LadderLeg=");
+			if (x<0) {
+				PsimagLite::String str("GeometryParameters: HubbardOneBand ladder leg");
+				throw std::runtime_error(str + " must be non negative\n");
+			}
+
+			leg = x;
+
 			hopping.resize(sites/2 + sites - 2,defaultHopping);
+			if (geometry == "ladder" && constantHoppings) {
+				typename PsimagLite::Vector<FieldType>::Type v;
+				io.read(v,"Connectors");
+				if (v.size() != 1)
+					throw std::runtime_error("Connectors must be vector of size 1\n");
+				for (SizeType i = 0; i < sites-2; ++i)
+					hopping[i] = v[0];
+				io.read(v,"Connectors");
+				if (v.size() != 1)
+					throw std::runtime_error("Connectors must be vector of size 1\n");
+				for (SizeType i = sites-2; i < hopping.size(); ++i)
+					hopping[i] = v[0];
+			}
+
 			if (!constantHoppings) {
 				typename PsimagLite::Vector<FieldType>::Type v;
 				io.read(v,"Connectors");
@@ -201,13 +223,7 @@ struct GeometryParameters {
 
 			isPeriodic[DIRECTION_Y] = (x>0);
 
-			io.readline(x,"LadderLeg=");
-			if (x<0) {
-				PsimagLite::String str("GeometryParameters: HubbardOneBand ladder leg");
-				throw std::runtime_error(str + " must be non negative\n");
-			}
 
-			leg = x;
 			return;
 		} else if (model=="FeAsBasedSc" || model == "FeAsBasedScExtended") {
 
