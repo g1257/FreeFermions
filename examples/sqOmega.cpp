@@ -80,12 +80,14 @@ public:
 	void applyRightOperator(HilbertStateType& phiKet,
 	                        SizeType site0,
 	                        SizeType sigma0,
-	                        SizeType dynType)
+	                        SizeType dynType,
+	                        SizeType threadNum)
 	{
 		if (what_ == OBS_SZ) {
 			LibraryOperatorType& nOpI = opLibFactory_(LibraryOperatorType::N,
 			                                          site0,
-			                                          sigma0);
+			                                          sigma0,
+			                                          threadNum);
 			nOpI.applyTo(phiKet);
 			return;
 		}
@@ -95,7 +97,8 @@ public:
 		if (dynType == 0) {
 			OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::DESTRUCTION,
 			                                       site0,
-			                                       sigma0);
+			                                       sigma0,
+			                                       threadNum);
 			nOpI.applyTo(phiKet);
 			return;
 		}
@@ -103,19 +106,22 @@ public:
 		assert(dynType == 1);
 		OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::CREATION,
 		                                       site0,
-		                                       sigma0);
+		                                       sigma0,
+		                                       threadNum);
 		nOpI.applyTo(phiKet);
 	}
 
 	void leftOperator(HilbertStateType& phiKet,
 	                  SizeType site0,
 	                  SizeType sigma0,
-	                  SizeType dynType)
+	                  SizeType dynType,
+	                  SizeType threadNum)
 	{
 		if (what_ == OBS_SZ) {
 			LibraryOperatorType& nOpI = opLibFactory_(LibraryOperatorType::N,
 			                                          site0,
-			                                          sigma0);
+			                                          sigma0,
+			                                          threadNum);
 			nOpI.applyTo(phiKet);
 			return;
 		}
@@ -125,7 +131,8 @@ public:
 		if (dynType == 0) {
 			OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::CREATION,
 			                                       site0,
-			                                       sigma0);
+			                                       sigma0,
+			                                       threadNum);
 			nOpI.applyTo(phiKet);
 			return;
 		}
@@ -133,7 +140,8 @@ public:
 		assert(dynType == 1);
 		OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::DESTRUCTION,
 		                                       site0,
-		                                       sigma0);
+		                                       sigma0,
+		                                       threadNum);
 		nOpI.applyTo(phiKet);
 	}
 
@@ -179,7 +187,7 @@ public:
 			SizeType it = (threadNum+npthreads*mpiRank)*blockSize + p;
 			if (it>=total) continue;
 			RealType omega = it * step_ + offset_;
-			doOneOmega(it,omega);
+			doOneOmega(it,omega, threadNum);
 		}
 	}
 
@@ -201,7 +209,8 @@ private:
 
 	FieldType doOneOmegaOneSitePair(SizeType site0,
 	                                SizeType site1,
-	                                RealType omega)
+	                                RealType omega,
+	                                SizeType threadNum)
 	{
 		FieldType tmpC = 0.0;
 		RealType epsilon = 0.1;
@@ -214,13 +223,15 @@ private:
 			observable_.applyRightOperator(phiKet,
 			                               site0,
 			                               sigma0,
-			                               dynType);
+			                               dynType,
+			                               threadNum);
 
 			HilbertStateType phiBra = params_.gs;
 			observable_.applyRightOperator(phiBra,
 			                               site1,
 			                               sigma1,
-			                               dynType);
+			                               dynType,
+			                               threadNum);
 
 			OpDiagonalFactoryType opDiagonalFactory(params_.engine);
 
@@ -236,13 +247,14 @@ private:
 		return tmpC;
 	}
 
-	void doOneOmega(SizeType it, RealType omega)
+	void doOneOmega(SizeType it, RealType omega, SizeType threadNum)
 	{
 		SizeType site0 = params_.centralSite;
 		for (SizeType site1 = 0; site1 < params_.sites; ++site1) {
 			result_(it,site1) = doOneOmegaOneSitePair(site0,
 			                                          site1,
-			                                          omega);
+			                                          omega,
+			                                          threadNum);
 		}
 	}
 
