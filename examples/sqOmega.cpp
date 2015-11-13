@@ -111,11 +111,11 @@ public:
 		nOpI.applyTo(phiKet);
 	}
 
-	void leftOperator(HilbertStateType& phiKet,
-	                  SizeType site0,
-	                  SizeType sigma0,
-	                  SizeType dynType,
-	                  SizeType threadNum)
+	void applyLeftOperator(HilbertStateType& phiKet,
+	                       SizeType site0,
+	                       SizeType sigma0,
+	                       SizeType dynType,
+	                       SizeType threadNum)
 	{
 		if (what_ == OBS_SZ) {
 			LibraryOperatorType& nOpI = opLibFactory_(LibraryOperatorType::N,
@@ -227,11 +227,11 @@ private:
 			                               threadNum);
 
 			HilbertStateType phiBra = params_.gs;
-			observable_.applyRightOperator(phiBra,
-			                               site1,
-			                               sigma1,
-			                               dynType,
-			                               threadNum);
+			observable_.applyLeftOperator(phiBra,
+			                              site1,
+			                              sigma1,
+			                              dynType,
+			                              threadNum);
 
 			OpDiagonalFactoryType opDiagonalFactory(params_.engine);
 
