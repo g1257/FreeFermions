@@ -83,7 +83,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Complex.h" // in PsimagLite
 #include "FermionFactor.h"
 #include "TypeToString.h"
-#include <vector>
+#include "Vector.h"
 
 namespace FreeFermions {
 	struct OperatorPointer {
