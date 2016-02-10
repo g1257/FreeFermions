@@ -9,11 +9,11 @@ use Make;
 my @drivers = ("cicj","deltaIdeltaJ","EasyExciton","HolonDoublon","decay",
 	       "reducedDensityMatrix","cicjBetaGrand",
 	       "dynamics","hd2","ninj","niVsBetaGrand","splusSminus","szsz",
-               "SzSzTime","etd","sqOmega");
+               "SzSzTime","etd","sqOmega","WavePacket");
 
 Make::backupMakefile();
 writeMakefile();
-make();
+#make();
 
 sub make
 {
