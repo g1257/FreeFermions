@@ -38,10 +38,10 @@ void computeOneBucket(HilbertStateType& phi,
                       OpNormalFactoryType& opNormalFactory,
                       DiagonalOperatorType& eihOp,
                       OperatorType& opCp,
-                      SizeType site)
+                      SizeType siteMixed)
 {
 	SizeType sigma = 0;
-	OperatorType& opCsite = opNormalFactory(OperatorType::DESTRUCTION,site,sigma);
+	OperatorType& opCsite = opNormalFactory(OperatorType::DESTRUCTION,siteMixed,sigma);
 	opCsite.applyTo(phi);
 	eihOp.applyTo(phi);
 	opCp.applyTo(phi);
@@ -54,31 +54,40 @@ void doOneTime(RealType time,
                OpDiagonalFactoryType& opDiagonalFactory,
                OperatorType& opCp,
                const VectorSizeType& sites,
-               const VectorType& weights)
+               const VectorType& weights,
+               SizeType totalSites,
+               SizeType orbitals)
 {
 	EtoTheIhTimeType eih(time,engine,0);
 	DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
-	VectorHilbertStateType buckets(sites.size(),0);
+	SizeType total = sites.size()*orbitals;
+	VectorHilbertStateType buckets(total,0);
 	for (SizeType i = 0; i < sites.size(); ++i) {
 		SizeType site = sites[i];
-		buckets[i] = new HilbertStateType(gs);
-		computeOneBucket(*buckets[i],opNormalFactory,eihOp,opCp,site);
+		for (SizeType orb = 0; orb < orbitals; ++orb) {
+			SizeType mixI = orb + i*orbitals;
+			buckets[mixI] = new HilbertStateType(gs);
+			SizeType siteMixed = site + orb*totalSites;
+			computeOneBucket(*buckets[mixI],opNormalFactory,eihOp,opCp,siteMixed);
+		}
 	}
 
-	MatrixType m(sites.size(),sites.size());
-	for (SizeType i = 0; i < sites.size(); ++i) {
-		for (SizeType j = i; j < sites.size(); ++j) {
+	MatrixType m(total,total);
+	for (SizeType i = 0; i < total; ++i) {
+		for (SizeType j = i; j < total; ++j) {
 			m(i,j) = scalarProduct(*buckets[i],*buckets[j]);
 		}
 	}
 
-	for (SizeType i = 0; i < sites.size(); ++i) delete buckets[i];
+	for (SizeType i = 0; i < total; ++i) delete buckets[i];
 
 	ComplexType sum = 0.0;
-	for (SizeType i = 0; i < sites.size(); ++i) {
-		for (SizeType j = 0; j < sites.size(); ++j) {
+	for (SizeType i = 0; i < total; ++i) {
+		SizeType iSite = static_cast<SizeType>(i/orbitals);
+		for (SizeType j = 0; j < total; ++j) {
+			SizeType jSite = static_cast<SizeType>(j/orbitals);
 			ComplexType value = (j > i) ? std::conj(m(j,i)) : m(i,j);
-			sum += std::conj(weights[i])*weights[j]*value;
+			sum += std::conj(weights[iSite])*weights[jSite]*value;
 		}
 	}
 
@@ -126,6 +135,11 @@ int main(int argc,char *argv[])
 
 	GeometryParamsType geometryParams(io);
 	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	SizeType orbitals = 1;
+	try {
+		io.readline(orbitals,"Orbitals=");
+	} catch (std::exception&) {}
+
 	PsimagLite::Vector<SizeType>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
 	VectorType weights;
@@ -156,6 +170,7 @@ int main(int argc,char *argv[])
 	for (SizeType it = 0; it<total; it++) {
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		RealType time = it * step + offset;
-		doOneTime(time,gs,engine,opNormalFactory,opDiagonalFactory,opCp,sites,weights);
+		doOneTime(time,gs,engine,opNormalFactory,opDiagonalFactory,
+		          opCp,sites,weights,geometryParams.sites,orbitals);
 	}
 }
