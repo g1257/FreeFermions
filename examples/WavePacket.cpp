@@ -1,5 +1,3 @@
-
-
 // SAmple of how to use FreeFermions core engine to calculate
 // <\sum_i W_i c^\dagger_i >
 #include <cstdlib>
@@ -47,16 +45,16 @@ void computeOneBucket(HilbertStateType& phi,
 	opCp.applyTo(phi);
 }
 
-void doOneTime(RealType time,
-               const HilbertStateType& gs,
-               const EngineType& engine,
-               OpNormalFactoryType& opNormalFactory,
-               OpDiagonalFactoryType& opDiagonalFactory,
-               OperatorType& opCp,
-               const VectorSizeType& sites,
-               const VectorType& weights,
-               SizeType totalSites,
-               SizeType orbitals)
+ComplexType doOneTime(RealType time,
+                      const HilbertStateType& gs,
+                      const EngineType& engine,
+                      OpNormalFactoryType& opNormalFactory,
+                      OpDiagonalFactoryType& opDiagonalFactory,
+                      OperatorType& opCp,
+                      const VectorSizeType& sites,
+                      const VectorType& weights,
+                      SizeType totalSites,
+                      SizeType orbitals)
 {
 	EtoTheIhTimeType eih(time,engine,0);
 	DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
@@ -91,7 +89,32 @@ void doOneTime(RealType time,
 		}
 	}
 
-	std::cout<<time<<" "<<sum<<"\n";
+	return sum;
+}
+
+void doOneSite(MatrixType& values,
+               SizeType site3,
+               const HilbertStateType& gs,
+               const EngineType& engine,
+               const VectorSizeType& sites,
+               const VectorType& weights,
+               SizeType orbitals,
+               RealType offset,
+               RealType step)
+{
+	SizeType sigma =0;
+	OpNormalFactoryType opNormalFactory(engine);
+	OperatorType& opCp = opNormalFactory(OperatorType::DESTRUCTION,site3,sigma);
+	SizeType totalSites = values.n_row();
+	SizeType total = values.n_col();
+
+	for (SizeType it = 0; it < total; ++it) {
+		OpDiagonalFactoryType opDiagonalFactory(engine);
+		RealType time = it * step + offset;
+		ComplexType value = doOneTime(time,gs,engine,opNormalFactory,opDiagonalFactory,
+		          opCp,sites,weights,totalSites,orbitals);
+		values(site3,it) = value;
+	}
 }
 
 int main(int argc,char *argv[])
@@ -102,6 +125,7 @@ int main(int argc,char *argv[])
 	RealType offset = 0;
 	RealType step = 0;
 	SizeType site3 = 0;
+	bool allSites = true;
 
 	while ((opt = getopt(argc, argv, "f:t:o:i:p:")) != -1) {
 		switch (opt) {
@@ -119,13 +143,14 @@ int main(int argc,char *argv[])
 			break;
 		case 'p':
 			site3 = atoi(optarg);
+			allSites = false;
 			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
 		}
 	}
 
-	if (file=="") {
+	if (file=="" || total == 0) {
 		throw std::runtime_error("Wrong usage\n");
 	}
 
@@ -162,15 +187,26 @@ int main(int argc,char *argv[])
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
+	MatrixType values(geometryParams.sites,total);
+	SizeType sitesUpTo = values.n_row();
 
-	SizeType sigma =0;
-	OpNormalFactoryType opNormalFactory(engine);
-	OperatorType& opCp = opNormalFactory(OperatorType::DESTRUCTION,site3,sigma);
+	if (!allSites) {
+		doOneSite(values,site3,gs,engine,sites,weights,orbitals,offset,step);
+		sitesUpTo = 1;
+	} else {
+		for (SizeType i = 0; i < geometryParams.sites; ++i)
+			doOneSite(values,i,gs,engine,sites,weights,orbitals,offset,step);
+	}
 
-	for (SizeType it = 0; it<total; it++) {
-		OpDiagonalFactoryType opDiagonalFactory(engine);
+	for (SizeType it = 0; it < total; ++it) {
 		RealType time = it * step + offset;
-		doOneTime(time,gs,engine,opNormalFactory,opDiagonalFactory,
-		          opCp,sites,weights,geometryParams.sites,orbitals);
+		std::cout<<time<<" ";
+		for (SizeType i = 0; i < sitesUpTo; ++i) {
+			SizeType thisSite = (allSites) ? i : site3;
+			std::cout<<values(thisSite,it)<<" ";
+		}
+
+		std::cout<<"\n";
 	}
 }
+
