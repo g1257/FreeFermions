@@ -32,7 +32,6 @@ typedef PsimagLite::Vector<HilbertStateType*>::Type VectorHilbertStateType;
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 
-
 void computeOneBucket(HilbertStateType& phi,
                       OpNormalFactoryType& opNormalFactory,
                       SizeType siteMixed)
@@ -41,7 +40,6 @@ void computeOneBucket(HilbertStateType& phi,
 	OperatorType& opCsite = opNormalFactory(OperatorType::DESTRUCTION,siteMixed,sigma);
 	opCsite.applyTo(phi);
 }
-
 
 void computeOneBucket(HilbertStateType& phi,
                       OpNormalFactoryType& opNormalFactory,
@@ -75,7 +73,7 @@ ComplexType bucketFinal(const VectorHilbertStateType& buckets,
 		SizeType iSite = static_cast<SizeType>(i/orbitals);
 		for (SizeType j = 0; j < total; ++j) {
 			SizeType jSite = static_cast<SizeType>(j/orbitals);
-			ComplexType value = (j > i) ? std::conj(m(j,i)) : m(i,j);
+			ComplexType value = (i > j) ? std::conj(m(j,i)) : m(i,j);
 			sum += std::conj(weights[iSite])*weights[jSite]*value;
 		}
 	}
