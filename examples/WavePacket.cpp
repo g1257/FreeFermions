@@ -73,7 +73,7 @@ ComplexType bucketFinal(const VectorHilbertStateType& buckets,
 		SizeType iSite = static_cast<SizeType>(i/orbitals);
 		for (SizeType j = 0; j < total; ++j) {
 			SizeType jSite = static_cast<SizeType>(j/orbitals);
-			ComplexType value = (i > j) ? std::conj(m(j,i)) : m(i,j);
+                        ComplexType value = (j > i) ? std::conj(m(i,j)) : m(j,i);
 			sum += std::conj(weights[iSite])*weights[jSite]*value;
 		}
 	}
@@ -122,7 +122,7 @@ void doOneSite(MatrixType& values,
 	SizeType sigma =0;
 	OpNormalFactoryType opNormalFactory(engine);
 	OperatorType& opCp = opNormalFactory(OperatorType::DESTRUCTION,site3,sigma);
-	SizeType totalSites = values.n_row();
+	SizeType totalSites = static_cast<SizeType>(values.n_row()/orbitals); 
 	SizeType total = values.n_col();
 
 	for (SizeType it = 0; it < total; ++it) {
@@ -227,7 +227,7 @@ int main(int argc,char *argv[])
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
-	MatrixType values(geometryParams.sites,total);
+	MatrixType values(orbitals*geometryParams.sites,total);
 	SizeType sitesUpTo = values.n_row();
 
 	ComplexType sd = superDensity(gs,engine,sites,weights,geometryParams.sites,orbitals);
@@ -237,7 +237,7 @@ int main(int argc,char *argv[])
 		doOneSite(values,site3,gs,engine,sites,weights,orbitals,offset,step);
 		sitesUpTo = 1;
 	} else {
-		for (SizeType i = 0; i < geometryParams.sites; ++i)
+		for (SizeType i = 0; i < orbitals*geometryParams.sites; ++i)
 			doOneSite(values,i,gs,engine,sites,weights,orbitals,offset,step);
 	}
 
