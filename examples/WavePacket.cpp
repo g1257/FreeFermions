@@ -18,6 +18,8 @@ typedef double RealType;
 typedef std::complex<double> ComplexType;
 typedef PsimagLite::Concurrency ConcurrencyType;
 typedef PsimagLite::Matrix<ComplexType> MatrixType;
+typedef PsimagLite::Matrix<MatrixType*> MatrixOfMatrixPointersType;
+typedef PsimagLite::Vector<MatrixType*>::Type VectorMatrixType;
 typedef PsimagLite::Vector<SizeType>::Type VectorSizeType;
 typedef PsimagLite::Vector<ComplexType>::Type VectorType;
 typedef PsimagLite::InputNg<FreeFermions::InputCheck> InputNgType;
@@ -54,9 +56,10 @@ void computeOneBucket(HilbertStateType& phi,
 	opCp.applyTo(phi);
 }
 
-ComplexType bucketFinal(const VectorHilbertStateType& buckets,
-                        const VectorType& weights,
-                        SizeType orbitals)
+void bucketFinal(MatrixType& result,
+                 const VectorHilbertStateType& buckets,
+                 const VectorType& weights,
+                 SizeType orbitals)
 {
 	SizeType total = buckets.size();
 	MatrixType m(total,total);
@@ -68,29 +71,29 @@ ComplexType bucketFinal(const VectorHilbertStateType& buckets,
 
 	for (SizeType i = 0; i < total; ++i) delete buckets[i];
 
-	ComplexType sum = 0.0;
 	for (SizeType i = 0; i < total; ++i) {
 		SizeType iSite = static_cast<SizeType>(i/orbitals);
+		SizeType iOrb = i % orbitals;
 		for (SizeType j = 0; j < total; ++j) {
+			SizeType jOrb = j % orbitals;
 			SizeType jSite = static_cast<SizeType>(j/orbitals);
-                        ComplexType value = (j > i) ? std::conj(m(i,j)) : m(j,i);
-			sum += std::conj(weights[iSite])*weights[jSite]*value;
+			ComplexType value = (j > i) ? std::conj(m(i,j)) : m(j,i);
+			result(iOrb,jOrb) += std::conj(weights[iSite])*weights[jSite]*value;
 		}
 	}
-
-	return sum;
 }
 
-ComplexType doOneTime(RealType time,
-                      const HilbertStateType& gs,
-                      const EngineType& engine,
-                      OpNormalFactoryType& opNormalFactory,
-                      OpDiagonalFactoryType& opDiagonalFactory,
-                      OperatorType& opCp,
-                      const VectorSizeType& sites,
-                      const VectorType& weights,
-                      SizeType totalSites,
-                      SizeType orbitals)
+void doOneTime(MatrixType& result,
+               RealType time,
+               const HilbertStateType& gs,
+               const EngineType& engine,
+               OpNormalFactoryType& opNormalFactory,
+               OpDiagonalFactoryType& opDiagonalFactory,
+               OperatorType& opCp,
+               const VectorSizeType& sites,
+               const VectorType& weights,
+               SizeType totalSites,
+               SizeType orbitals)
 {
 	EtoTheIhTimeType eih(time,engine,0);
 	DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
@@ -106,10 +109,11 @@ ComplexType doOneTime(RealType time,
 		}
 	}
 
-	return bucketFinal(buckets,weights,orbitals);
+	return bucketFinal(result,buckets,weights,orbitals);
 }
 
-void doOneSite(MatrixType& values,
+void doOneSite(MatrixOfMatrixPointersType& values,
+               VectorMatrixType& garbage,
                SizeType site3,
                const HilbertStateType& gs,
                const EngineType& engine,
@@ -122,24 +126,27 @@ void doOneSite(MatrixType& values,
 	SizeType sigma =0;
 	OpNormalFactoryType opNormalFactory(engine);
 	OperatorType& opCp = opNormalFactory(OperatorType::DESTRUCTION,site3,sigma);
-	SizeType totalSites = static_cast<SizeType>(values.n_row()/orbitals); 
+	SizeType totalSites = static_cast<SizeType>(values.n_row()/orbitals);
 	SizeType total = values.n_col();
 
 	for (SizeType it = 0; it < total; ++it) {
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		RealType time = it * step + offset;
-		ComplexType value = doOneTime(time,gs,engine,opNormalFactory,opDiagonalFactory,
-		                              opCp,sites,weights,totalSites,orbitals);
-		values(site3,it) = value;
+		MatrixType *result = new MatrixType(orbitals,orbitals);
+		garbage.push_back(result);
+		doOneTime(*result,time,gs,engine,opNormalFactory,opDiagonalFactory,
+		          opCp,sites,weights,totalSites,orbitals);
+		values(site3,it) = result;
 	}
 }
 
-ComplexType superDensity(const HilbertStateType& gs,
-                         const EngineType& engine,
-                         const VectorSizeType& sites,
-                         const VectorType& weights,
-                         SizeType totalSites,
-                         SizeType orbitals)
+void superDensity(MatrixType& sd,
+                  const HilbertStateType& gs,
+                  const EngineType& engine,
+                  const VectorSizeType& sites,
+                  const VectorType& weights,
+                  SizeType totalSites,
+                  SizeType orbitals)
 {
 	SizeType total = sites.size()*orbitals;
 	OpNormalFactoryType opNormalFactory(engine);
@@ -154,7 +161,26 @@ ComplexType superDensity(const HilbertStateType& gs,
 		}
 	}
 
-	return bucketFinal(buckets,weights,orbitals);
+	return bucketFinal(sd,buckets,weights,orbitals);
+}
+
+void printValue(const MatrixOfMatrixPointersType& values,
+                SizeType thisSite,
+                SizeType it,
+                int orb,
+                SizeType orbitals)
+{
+	ComplexType sum = 0.0;
+	if (orb < 0) {
+		for (SizeType i = 0; i < orbitals; ++i)
+			for (SizeType j = 0; j < orbitals; ++j)
+				sum += values(thisSite,it)->operator()(i,j);
+	} else {
+		sum = values(thisSite,it)->operator()(orb,orb);
+	}
+
+	std::cout<<sum<<" ";
+
 }
 
 int main(int argc,char *argv[])
@@ -165,9 +191,10 @@ int main(int argc,char *argv[])
 	RealType offset = 0;
 	RealType step = 0;
 	SizeType site3 = 0;
+	int option = 0;
 	bool allSites = true;
 
-	while ((opt = getopt(argc, argv, "f:t:o:i:p:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:t:o:i:p:O:")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
@@ -180,6 +207,9 @@ int main(int argc,char *argv[])
 			break;
 		case 'o':
 			offset = atof(optarg);
+			break;
+		case 'O':
+			option = atoi(optarg);
 			break;
 		case 'p':
 			site3 = atoi(optarg);
@@ -227,18 +257,29 @@ int main(int argc,char *argv[])
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
-	MatrixType values(orbitals*geometryParams.sites,total);
+
+	VectorMatrixType garbage;
+	MatrixOfMatrixPointersType values(orbitals*geometryParams.sites,total);
 	SizeType sitesUpTo = values.n_row();
 
-	ComplexType sd = superDensity(gs,engine,sites,weights,geometryParams.sites,orbitals);
-	std::cout<<"#Superdensity= "<<sd<<"\n";
+	MatrixType sd(orbitals,orbitals);
+	superDensity(sd,gs,engine,sites,weights,geometryParams.sites,orbitals);
+
+	std::cout<<"#Superdensity=\n";
+	std::cout<<sd;
+
+	ComplexType sum = 0.0;
+	for (SizeType i = 0; i < sd.n_row(); ++i)
+		for (SizeType j = 0; j < sd.n_col(); ++j)
+			sum += sd(i,j);
+	std::cout<<"#SuperdensityAllOrbitals="<<sum<<"\n";
 
 	if (!allSites) {
-		doOneSite(values,site3,gs,engine,sites,weights,orbitals,offset,step);
+		doOneSite(values,garbage,site3,gs,engine,sites,weights,orbitals,offset,step);
 		sitesUpTo = 1;
 	} else {
 		for (SizeType i = 0; i < orbitals*geometryParams.sites; ++i)
-			doOneSite(values,i,gs,engine,sites,weights,orbitals,offset,step);
+			doOneSite(values,garbage,i,gs,engine,sites,weights,orbitals,offset,step);
 	}
 
 	for (SizeType it = 0; it < total; ++it) {
@@ -246,10 +287,15 @@ int main(int argc,char *argv[])
 		std::cout<<time<<" ";
 		for (SizeType i = 0; i < sitesUpTo; ++i) {
 			SizeType thisSite = (allSites) ? i : site3;
-			std::cout<<values(thisSite,it)<<" ";
+			printValue(values,thisSite,it,option,orbitals);
 		}
 
 		std::cout<<"\n";
+	}
+
+	for (SizeType i = 0; i < garbage.size(); ++i) {
+		delete garbage[i];
+		garbage[i] = 0;
 	}
 }
 
