@@ -43,6 +43,13 @@ namespace FreeFermions {
 			return false;
 		}
 
+		bool checkSimpleLabel(const PsimagLite::String& label,
+		                      SizeType line) const
+		{
+			// FIXME: needs implementation
+			return true;
+		}
+
 		void check(const PsimagLite::String& label,const PsimagLite::String& val,SizeType)
 		{
 			if (label!="SolverOptions") return;
