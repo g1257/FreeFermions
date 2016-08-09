@@ -170,7 +170,7 @@ public:
 			ComplexType sum = 0.0;
 			for (SizeType i=0; i<n; i++) {
 				for (SizeType j=0; j<n; j++) {
-					sum += std::conj(B(i,k)) * src(i,j) * B(j,k);
+					sum += PsimagLite::conj(B(i,k))*src(i,j)*B(j,k);
 				}
 			}
 			dest[k] = sum;
@@ -389,7 +389,7 @@ private:
 				                geometryParams_.hopping[ijminOver2 + sites-2] :
 				                geometryParams_.hopping[ijmin];
 				t_(i,j) = tmp;
-				t_(j,i) = std::conj(t_(i,j));
+				t_(j,i) = PsimagLite::conj(t_(i,j));
 			}
 		}
 	}
@@ -623,7 +623,7 @@ private:
 
 		for (SizeType i = 0; i < linSize; ++i) {
 			for (SizeType j = i+1; j < linSize; ++j) {
-				t_(j,i) = std::conj(t_(i,j));
+				t_(j,i) = PsimagLite::conj(t_(i,j));
 			}
 		}
 	}

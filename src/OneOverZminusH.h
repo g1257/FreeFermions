@@ -117,7 +117,7 @@ namespace FreeFermions {
 				return 1.0/(z_-sign_*(sum+offset_));
 			}
 
-			void transpose() { z_ = std::conj(z_); }
+			void transpose() { z_ = PsimagLite::conj(z_); }
 
 		private:
 			

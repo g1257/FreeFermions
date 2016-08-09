@@ -109,7 +109,7 @@ public:
 	FieldType const operator()(SizeType j) const
 	{
 		if (type_==CREATION) return engine_.eigenvector(ind_,j);
-		return std::conj(engine_.eigenvector(ind_,j));
+		return PsimagLite::conj(engine_.eigenvector(ind_,j));
 	}
 
 	template<typename SomeStateType>

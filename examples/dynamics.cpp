@@ -182,7 +182,7 @@ int main(int argc,char *argv[])
 		eihOp.applyTo(phi3);
 		FieldType tmpC = scalarProduct(phiBra,phi3);
 
-		std::cout<<omega<<" "<<std::imag(tmpC)<<" "<<std::real(tmpC)<<"\n";
+		std::cout<<omega<<" "<<PsimagLite::imag(tmpC)<<" "<<PsimagLite::real(tmpC)<<"\n";
 	}
 }
 

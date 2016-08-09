@@ -171,13 +171,13 @@ int main(int argc,char* argv[])
 			FieldType numerator = phiNpPhi(opNormalFactory,gs,site,sites,SPIN_UP,eihOp,weights);
 			FieldType value = numerator/denominator;
 			//std::cout<<site<<" "<<value<<" "<<numerator<<" "<<denominator<<"\n";
-			RealType valueReal = std::real(value)+0.5;
-			assert(fabs(std::imag(value))<1e-6);
+			RealType valueReal = PsimagLite::real(value)+0.5;
+			assert(fabs(PsimagLite::imag(value))<1e-6);
 			std::cout<<valueReal<<" ";
 			total += value;
 		}
 
-		RealType totalReal = std::real(total);
+		RealType totalReal = PsimagLite::real(total);
 		std::cout<<totalReal<<" ";
 		EtoTheIhTimeType hh(2000.0,engine,0);
 		DiagonalOperatorType& h = opDiagonalFactory(hh);

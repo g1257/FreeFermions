@@ -94,7 +94,7 @@ int main(int argc,char *argv[])
 	myOp.applyTo(phi2);
 
 	FieldType density = scalarProduct(gs,phi2);
-	RealType energy = std::real(engine.energy(electronsUp));
+	RealType energy = PsimagLite::real(engine.energy(electronsUp));
 	std::cerr<<"density="<<density<<" energy="<<energy<<"\n";
 
 	std::cout<<"#site="<<sites[0]<<"\n";

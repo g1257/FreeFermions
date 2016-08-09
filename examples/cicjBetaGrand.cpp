@@ -93,7 +93,7 @@ int main(int argc,char *argv[])
 		for (SizeType j=0;j<n;j++) {
 			RealType value = 0;
 			for (SizeType k=0;k<n;k++) {
-				value += std::conj(engine.eigenvector(i,k))*engine.eigenvector(j,k)*
+				value += PsimagLite::conj(engine.eigenvector(i,k))*engine.eigenvector(j,k)*
 						fermi(beta*(engine.eigenvalue(k)-mu));
 				if (i == j && i == 0) {
 					density += fermi(beta*(engine.eigenvalue(k)-mu));

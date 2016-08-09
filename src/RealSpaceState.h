@@ -144,7 +144,7 @@ namespace FreeFermions {
 				while (j<terms_.size() && terms_[j]<other.terms_[i]) j++;
 				SizeType k = j;
 				while(k<terms_.size() && terms_[k]==other.terms_[i]) {
-					sum += std::conj(values_[k]) * other.values_[i];
+					sum += PsimagLite::conj(values_[k]) * other.values_[i];
 					k++;
 				}
 			}

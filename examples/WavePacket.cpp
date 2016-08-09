@@ -77,8 +77,8 @@ void bucketFinal(MatrixType& result,
 		for (SizeType j = 0; j < total; ++j) {
 			SizeType jOrb = j % orbitals;
 			SizeType jSite = static_cast<SizeType>(j/orbitals);
-			ComplexType value = (j > i) ? std::conj(m(i,j)) : m(j,i);
-			result(iOrb,jOrb) += std::conj(weights[iSite])*weights[jSite]*value;
+			ComplexType value = (j > i) ? PsimagLite::conj(m(i,j)) : m(j,i);
+			result(iOrb,jOrb) += PsimagLite::conj(weights[iSite])*weights[jSite]*value;
 		}
 	}
 }

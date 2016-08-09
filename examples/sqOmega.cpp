@@ -198,7 +198,7 @@ public:
 			os<<omega<<" ";
 			for (SizeType site1 = 0; site1 < result_.n_col(); ++site1) {
 				ComplexType val = result_(it,site1);
-				os<<std::real(val)<<" "<<std::imag(val)<<" ";
+				os<<PsimagLite::real(val)<<" "<<PsimagLite::imag(val)<<" ";
 			}
 
 			os<<"\n";
