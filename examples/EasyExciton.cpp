@@ -75,8 +75,8 @@ int main(int argc,char *argv[])
 	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
 	PsimagLite::Vector<SizeType>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
-	sites.resize(3);
-	sites[2] = site3;
+	sites.resize(2);
+	sites[1] = site3;
 
 	SizeType dof = 1; // spinless
 
@@ -94,15 +94,15 @@ int main(int argc,char *argv[])
 
 	SizeType sigma =0;
 	OpNormalFactoryType opNormalFactory(engine);
-	OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,sites[0],sigma);
+	OperatorType& myOp = opNormalFactory(OperatorType::CREATION,sites[0],sigma);
 	HilbertStateType phi2 = gs;
 	myOp.applyTo(phi2);
 	
-//	FieldType density = scalarProduct(phi2,phi2);
-//	std::cerr<<"density="<<density<<"\n";
+	FieldType density = scalarProduct(phi2,phi2);
+	std::cerr<<"density="<<density<<"\n";
 	
-	std::cout<<"#site="<<sites[0]<<"\n";
-	std::cout<<"#site2="<<sites[1]<<"\n";
+	std::cout<<"#site(apply)="<<sites[0]<<"\n";
+	std::cout<<"#site2(measure)="<<sites[1]<<"\n";
 	for (SizeType it = 0; it<total; it++) {
 		OpDiagonalFactoryType opDiagonalFactory(engine);
 		RealType time = it * step + offset;
@@ -113,6 +113,6 @@ int main(int argc,char *argv[])
 		eihOp.applyTo(phi);
 		OperatorType& myOp2 = opNormalFactory(OperatorType::DESTRUCTION,sites[1],sigma);
 		myOp2.applyTo(phi);
-		std::cout<<time<<" "<<scalarProduct(phi,phi)<<"\n";
+		std::cout<<time<<" "<<scalarProduct(phi,phi)/density<<"\n";
 	}
 }
