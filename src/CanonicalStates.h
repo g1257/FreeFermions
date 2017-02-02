@@ -87,7 +87,7 @@ namespace FreeFermions {
 	class CanonicalStates {
 
 		typedef PsimagLite::Vector<SizeType>::Type VectorUintType;
-		typedef unsigned int long long BinaryNumberType;
+		typedef unsigned int long BinaryNumberType;
 
 		public:
 			// note: handles all (real space) states

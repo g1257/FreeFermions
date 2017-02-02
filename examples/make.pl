@@ -26,7 +26,7 @@ sub writeMakefile
 
 	my $cppflags = " -I../../PsimagLite ";
 	$cppflags .= " -I../../PsimagLite/src -I../src";
-	my $cxx="g++ -O3 -DNDEBUG";
+	my $cxx="g++ -ansi -pedantic -O3 -DNDEBUG";
 	my $lapack = Make::findLapack();
 
 	Make::make($fh,\@drivers,"FreeFermions","Linux",0,
