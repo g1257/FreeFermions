@@ -131,6 +131,7 @@ class ParallelDecay {
 	typedef typename LibraryOperatorType::FactoryType OpLibFactoryType;
 	typedef PsimagLite::Concurrency ConcurrencyType;
 	typedef PsimagLite::Vector<SizeType>::Type VectorSizeType;
+	typedef typename PsimagLite::Vector<RealType_>::Type VectorRealType;
 
 public:
 
@@ -140,70 +141,72 @@ public:
 
 	ParallelDecay(const EngineType& engine,
 	              const DecayParamsType& params,
-	              const HilbertStateType& gs)
-	    : engine_(engine),params_(params),gs_(gs)
+	              const HilbertStateType& gs,
+	              SizeType total)
+	    : engine_(engine),params_(params),gs_(gs),data_(total,0.0)
 	{
 		if (params.sites.size()==0) {
 			throw std::runtime_error("ParallelDecay\n");
 		}
 	}
 
-	void thread_function_(SizeType threadNum,
-	                      SizeType blockSize,
-	                      SizeType total,
-	                      typename ConcurrencyType::MutexType*)
+	SizeType tasks() const { return data_.size(); }
+
+	void doTask(SizeType taskNumber, SizeType)
 	{
-		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
-		SizeType npthreads = ConcurrencyType::npthreads;
-
 		SizeType siteToMeasure = params_.sites[params_.sites.size()-1];
+		OpNormalFactoryType opNormalFactory(engine_);
+		OpDiagonalFactoryType opDiagonalFactory(engine_);
 
-		for (SizeType p=0;p<blockSize;p++) {
-			SizeType it = (threadNum+npthreads*mpiRank)*blockSize + p;
-			if (it>=total) continue;
+		RealType time = taskNumber * params_.step + params_.offset;
+		EtoTheIhTimeType eih(time,engine_,0);
+		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
 
-			OpNormalFactoryType opNormalFactory(engine_);
-			OpDiagonalFactoryType opDiagonalFactory(engine_);
+		FieldType sum = 0;
 
-			RealType time = it * params_.step + params_.offset;
-			EtoTheIhTimeType eih(time,engine_,0);
-			DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
+		for (SizeType sigma1 = 0; sigma1 < 2; ++sigma1) {
+			for (SizeType sigma2 = 0; sigma2 < 2; ++sigma2) {
+				for (SizeType orb1 = 0; orb1 < params_.orbitals; ++orb1) {
+					if (orb1 == 1) continue;
+					for (SizeType orb2 = 0; orb2 < params_.orbitals; ++orb2) {
+						if (orb2 == 1) continue;
 
-			FieldType sum = 0;
+						HilbertStateType phi1 = gs_;
+						partialDecay(phi1,
+						             orb1,
+						             sigma1,
+						             opNormalFactory);
+						eihOp.applyTo(phi1);
 
-			for (SizeType sigma1 = 0; sigma1 < 2; ++sigma1) {
-				for (SizeType sigma2 = 0; sigma2 < 2; ++sigma2) {
-					for (SizeType orb1 = 0; orb1 < params_.orbitals; ++orb1) {
-						if (orb1 == 1) continue;
-						for (SizeType orb2 = 0; orb2 < params_.orbitals; ++orb2) {
-							if (orb2 == 1) continue;
+						OperatorType& myOp6 = opNormalFactory(OperatorType::DESTRUCTION,
+						                                      siteToMeasure,
+						                                      params_.sigma3);
+						myOp6.applyTo(phi1);
 
-							HilbertStateType phi1 = gs_;
-							partialDecay(phi1,
-							             orb1,
-							             sigma1,
-							             opNormalFactory);
-							eihOp.applyTo(phi1);
+						HilbertStateType phi2 = gs_;
+						partialDecay(phi2,
+						             orb2,
+						             sigma2,
+						             opNormalFactory);
+						eihOp.applyTo(phi2);
 
-							OperatorType& myOp6 = opNormalFactory(OperatorType::DESTRUCTION,
-							                                      siteToMeasure,
-							                                      params_.sigma3);
-							myOp6.applyTo(phi1);
-
-							HilbertStateType phi2 = gs_;
-							partialDecay(phi2,
-							             orb2,
-							             sigma2,
-							             opNormalFactory);
-							eihOp.applyTo(phi2);
-
-							myOp6.applyTo(phi2);
-							sum += scalarProduct(phi1,phi2);
-						}
+						myOp6.applyTo(phi2);
+						sum += scalarProduct(phi1,phi2);
 					}
 				}
 			}
-			std::cout<<time<<" "<<real(sum)<<"\n";
+		}
+
+		data_[taskNumber] += real(sum);
+
+	}
+
+	void printTasks(std::ostream& os) const
+	{
+		SizeType total = data_.size();
+		for (SizeType it = 0; it < total; ++it) {
+			RealType time = it*params_.step + params_.offset;
+			os<<time<<" "<<data_[it]<<"\n";
 		}
 	}
 
@@ -252,6 +255,7 @@ private:
 	const EngineType& engine_;
 	const DecayParamsType& params_;
 	const HilbertStateType& gs_;
+	VectorRealType data_;
 }; // class ParallelDecay
 } // namespace FreeFermions
 

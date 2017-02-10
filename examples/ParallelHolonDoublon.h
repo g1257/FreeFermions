@@ -139,7 +139,7 @@ public:
 	                     SizeType total)
 	    : engine_(engine),
 	      params_(params),
-	      data_(total),
+	      data_(total,0.0),
 	      gs_(engine,params.ne,params.debug)
 	{
 		if (params.sites.size()!=3) {

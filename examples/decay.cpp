@@ -3,7 +3,8 @@
 // |phi> = decay |gs>
 
 #include <cstdlib>
-#include "unistd.h"
+#include <unistd.h>
+#define USE_PTHREADS_OR_NOT_NG
 #include "Engine.h"
 #include "GeometryLibrary.h"
 #include "TypeToString.h"
@@ -117,11 +118,11 @@ int main(int argc,char *argv[])
 	                                          offset,
 	                                          step,
 	                                          verbose);
-	ParallelDecayType helperDecay(engine2,params,gs);
+	ParallelDecayType helperDecay(engine2,params,gs,total);
 
 	FieldType superdensity = helperDecay.calcSuperDensity();
 	std::cout<<"#superdensity="<<superdensity<<"\n";
 
-	threadedDecay.loopCreate(total,helperDecay);
+	threadedDecay.loopCreate(helperDecay);
 }
 
