@@ -124,5 +124,6 @@ int main(int argc,char *argv[])
 	std::cout<<"#superdensity="<<superdensity<<"\n";
 
 	threadedDecay.loopCreate(helperDecay);
+	helperDecay.printTasks(std::cout);
 }
 
