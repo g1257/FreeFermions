@@ -92,19 +92,19 @@ namespace FreeFermions {
 template<typename RealType>
 struct HolonDoublonParams {
 	HolonDoublonParams(const typename PsimagLite::Vector<SizeType>::Type& ne_,
-					   const typename PsimagLite::Vector<SizeType>::Type& sites_,
-					   SizeType sigma3_,
-					   const RealType& offset_,
-					   const RealType& step_,
-					   bool debug_,
-					   bool verbose_)
-		: ne(ne_),
-		  sites(sites_),
-		  sigma3(sigma3_),
-		  offset(offset_),
-		  step(step_),
-		  debug(debug_),
-		  verbose(verbose_)
+	                   const typename PsimagLite::Vector<SizeType>::Type& sites_,
+	                   SizeType sigma3_,
+	                   const RealType& offset_,
+	                   const RealType& step_,
+	                   bool debug_,
+	                   bool verbose_)
+	    : ne(ne_),
+	      sites(sites_),
+	      sigma3(sigma3_),
+	      offset(offset_),
+	      step(step_),
+	      debug(debug_),
+	      verbose(verbose_)
 	{}
 	typename PsimagLite::Vector<SizeType>::Type ne;
 	typename PsimagLite::Vector<SizeType>::Type sites;
@@ -127,90 +127,102 @@ class ParallelHolonDoublon {
 	typedef typename OperatorType::FactoryType OpNormalFactoryType;
 	typedef typename LibraryOperatorType::FactoryType OpLibFactoryType;
 	typedef PsimagLite::Concurrency ConcurrencyType;
+	typedef typename PsimagLite::Vector<RealType_>::Type VectorRealType;
 
 public:
 
 	typedef RealType_ RealType;
 	typedef HolonDoublonParams<RealType> HolonDoublonParamsType;
 
-	ParallelHolonDoublon(const EngineType& engine,const HolonDoublonParamsType& params)
-		: engine_(engine),params_(params),gs_(engine,params.ne,params.debug)
+	ParallelHolonDoublon(const EngineType& engine,
+	                     const HolonDoublonParamsType& params,
+	                     SizeType total)
+	    : engine_(engine),
+	      params_(params),
+	      data_(total),
+	      gs_(engine,params.ne,params.debug)
 	{
 		if (params.sites.size()!=3) {
 			throw std::runtime_error("ParallelHolonDoublon: expecting 3 sites\n");
 		}
 	}
 
-	void thread_function_(SizeType threadNum,
-	                      SizeType blockSize,
-	                      SizeType total,
-	                      typename ConcurrencyType::MutexType*)
+	SizeType tasks() const { return data_.size(); }
+
+	void doTask(SizeType taskNumber, SizeType)
 	{
-		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
-		SizeType npthreads = ConcurrencyType::npthreads;
-		for (SizeType p=0;p<blockSize;p++) {
-			SizeType it = (threadNum+npthreads*mpiRank)*blockSize + p;
-			if (it>=total) continue;
 
-			OpNormalFactoryType opNormalFactory(engine_);
-			OpLibFactoryType opLibFactory(engine_);
-			OpDiagonalFactoryType opDiagonalFactory(engine_);
+		OpNormalFactoryType opNormalFactory(engine_);
+		OpLibFactoryType opLibFactory(engine_);
+		OpDiagonalFactoryType opDiagonalFactory(engine_);
 
-			RealType time = it * params_.step + params_.offset;
-			EtoTheIhTimeType eih(time,engine_,0);
-			DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
+		RealType time = taskNumber * params_.step + params_.offset;
+		EtoTheIhTimeType eih(time,engine_,0);
+		DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
 
-			HilbertStateType savedVector = gs_;
-			FieldType savedValue = 0;
-			FieldType sum = 0;
+		HilbertStateType savedVector = gs_;
+		FieldType savedValue = 0;
+		FieldType sum = 0;
 
-			for (SizeType sigma = 0;sigma<2;sigma++) {
-				HilbertStateType phi = gs_;
-				LibraryOperatorType& myOp = opLibFactory(
-											  LibraryOperatorType::N,params_.sites[0],1-sigma);
-				myOp.applyTo(phi);
+		for (SizeType sigma = 0;sigma<2;sigma++) {
+			HilbertStateType phi = gs_;
+			LibraryOperatorType& myOp = opLibFactory(
+			            LibraryOperatorType::N,params_.sites[0],1-sigma);
+			myOp.applyTo(phi);
 
-				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,
-												 params_.sites[0],sigma);
-				myOp2.applyTo(phi);
+			OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,
+			                                      params_.sites[0],sigma);
+			myOp2.applyTo(phi);
 
-				for (SizeType sigma2 = 0;sigma2 < 2;sigma2++) {
-					HilbertStateType phi3 = phi;
+			for (SizeType sigma2 = 0;sigma2 < 2;sigma2++) {
+				HilbertStateType phi3 = phi;
 
 
-					LibraryOperatorType& myOp3 = opLibFactory(
-									 LibraryOperatorType::NBAR,params_.sites[1],1-sigma2);
-					myOp3.applyTo(phi3);
+				LibraryOperatorType& myOp3 = opLibFactory(
+				            LibraryOperatorType::NBAR,params_.sites[1],1-sigma2);
+				myOp3.applyTo(phi3);
 
-					OperatorType& myOp4 = opNormalFactory(
-									 OperatorType::DESTRUCTION,params_.sites[1],sigma2);
-					myOp4.applyTo(phi3);
+				OperatorType& myOp4 = opNormalFactory(
+				            OperatorType::DESTRUCTION,params_.sites[1],sigma2);
+				myOp4.applyTo(phi3);
 
-					if (params_.verbose) std::cerr<<"Applying exp(iHt)\n";
-					eihOp.applyTo(phi3);
+				if (params_.verbose) std::cerr<<"Applying exp(iHt)\n";
+				eihOp.applyTo(phi3);
 
-					if (params_.verbose) std::cerr<<"Applying c_p\n";
-					OperatorType& myOp6 = opNormalFactory(
-									  OperatorType::DESTRUCTION,params_.sites[2],params_.sigma3);
-					myOp6.applyTo(phi3);
+				if (params_.verbose) std::cerr<<"Applying c_p\n";
+				OperatorType& myOp6 = opNormalFactory(
+				            OperatorType::DESTRUCTION,params_.sites[2],params_.sigma3);
+				myOp6.applyTo(phi3);
 
-					if (params_.verbose) std::cerr<<"Adding "<<sigma<<" "<<sigma2<<" "<<it<<"\n";
-
-					if (sigma ==0 && sigma2 ==0) savedVector = phi3;
-					if (sigma ==1 && sigma2 ==1) {
-						savedValue = scalarProduct(phi3,savedVector);
-					}
-					sum += scalarProduct(phi3,phi3);
-					if (params_.verbose) std::cerr<<"Done with scalar product\n";
+				if (params_.verbose) {
+					std::cerr<<"Adding "<<sigma<<" "<<sigma2;
+					std::cerr<<" "<<taskNumber<<"\n";
 				}
+
+				if (sigma ==0 && sigma2 ==0) savedVector = phi3;
+				if (sigma ==1 && sigma2 ==1) {
+					savedValue = scalarProduct(phi3,savedVector);
+				}
+				sum += scalarProduct(phi3,phi3);
+				if (params_.verbose) std::cerr<<"Done with scalar product\n";
 			}
-			sum += 2*real(savedValue);
-			std::cout<<time<<" "<<real(sum)<<"\n";
+		}
+
+		sum += 2*real(savedValue);
+		data_[taskNumber] += real(sum);
+	}
+
+	void printTasks(std::ostream& os) const
+	{
+		SizeType total = data_.size();
+		for (SizeType it = 0; it < total; ++it) {
+			RealType time = it * params_.step + params_.offset;
+			os<<time<<" "<<data_[it]<<"\n";
 		}
 	}
 
 	FieldType calcSuperDensity(SizeType site,
-								 SizeType site2)
+	                           SizeType site2)
 	{
 		HilbertStateType savedVector = gs_;
 		FieldType savedValue = 0;
@@ -222,22 +234,22 @@ public:
 			HilbertStateType phi = gs_;
 
 			LibraryOperatorType& myOp = opLibFactory(
-									 LibraryOperatorType::N,site,1-sigma);
+			            LibraryOperatorType::N,site,1-sigma);
 
 			myOp.applyTo(phi);
 			OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,
-									 site,sigma);
+			                                      site,sigma);
 
 			myOp2.applyTo(phi);
 
 			for (SizeType sigma2 = 0;sigma2 < 2;sigma2++) {
 				HilbertStateType phi3 = phi;
 				LibraryOperatorType& myOp3 = opLibFactory(
-										 LibraryOperatorType::NBAR,site2,1-sigma2);
+				            LibraryOperatorType::NBAR,site2,1-sigma2);
 				myOp3.applyTo(phi3);
 
 				OperatorType& myOp4 = opNormalFactory(
-										 OperatorType::DESTRUCTION,site2,sigma2);
+				            OperatorType::DESTRUCTION,site2,sigma2);
 
 				myOp4.applyTo(phi3);
 
@@ -250,7 +262,6 @@ public:
 			}
 		}
 		sum += 2*real(savedValue);
-		//std::cerr<<"#sum2="<<scalarProduct(tmpV,tmpV)<<"\n";
 		return sum;
 	}
 
@@ -258,6 +269,7 @@ private:
 
 	const EngineType& engine_;
 	const HolonDoublonParamsType& params_;
+	VectorRealType data_;
 	HilbertStateType gs_;
 }; // class ParallelHolonDoublon
 } // namespace FreeFermions

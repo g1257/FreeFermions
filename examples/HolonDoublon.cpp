@@ -5,7 +5,8 @@
 // |phi> = c_{p up} exp(iHt) c_{i\sigma} nbar_{i \bar{sigma}} c^dagger_{j sigma'} n_{j \bar{sigma'}} |gs>
 
 #include <cstdlib>
-#include "unistd.h"
+#include <unistd.h>
+#define USE_PTHREADS_OR_NOT_NG
 #include "Engine.h"
 #include "GeometryLibrary.h"
 #include "TypeToString.h"
@@ -114,10 +115,11 @@ int main(int argc,char *argv[])
 															step,
 															debug,
 															verbose);
-	ParallelHolonDoublonType helperHolonDoublon(engine,params);
+	ParallelHolonDoublonType helperHolonDoublon(engine,params,total);
 
 	FieldType superdensity = helperHolonDoublon.calcSuperDensity(sites[0],sites[1]);
 	std::cout<<"#superdensity="<<superdensity<<"\n";
 
-	threadedHolonDoublon.loopCreate(total,helperHolonDoublon);
+	threadedHolonDoublon.loopCreate(helperHolonDoublon);
+	helperHolonDoublon.printTasks(std::cout);
 }
