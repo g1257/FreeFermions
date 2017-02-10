@@ -1,6 +1,7 @@
 // SAmple of how to use FreeFermions core engine to calculate
 // <A_i 1/(z-H) A_j>
 #include <cstdlib>
+#define USE_PTHREADS_OR_NOT_NG
 #include "Engine.h"
 #include "GeometryLibrary.h"
 #include "TypeToString.h"
@@ -176,20 +177,13 @@ public:
 	      result_(total,params.sites)
 	{}
 
-	void thread_function_(SizeType threadNum,
-	                      SizeType blockSize,
-	                      SizeType total,
-	                      typename ConcurrencyType::MutexType*)
+	void doTask(SizeType taskNumber,SizeType threadNum)
 	{
-		SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
-		SizeType npthreads = ConcurrencyType::npthreads;
-		for (SizeType p=0;p<blockSize;p++) {
-			SizeType it = (threadNum+npthreads*mpiRank)*blockSize + p;
-			if (it>=total) continue;
-			RealType omega = it * step_ + offset_;
-			doOneOmega(it,omega, threadNum);
-		}
+		RealType omega = taskNumber*step_ + offset_;
+		doOneOmega(taskNumber,omega, threadNum);
 	}
+
+	SizeType tasks() const { return result_.n_row(); }
 
 	void print(std::ostream& os) const
 	{
@@ -353,7 +347,7 @@ int main(int argc,char *argv[])
 	SqOmegaParams params(engine,gs,Eg,geometryParams.sites,centralSite,what);
 	SqOmegaParallel helperSqOmega(params,total,step,offset);
 
-	threadObject.loopCreate(total,helperSqOmega);
+	threadObject.loopCreate(helperSqOmega);
 
 	helperSqOmega.print(std::cout);
 }
