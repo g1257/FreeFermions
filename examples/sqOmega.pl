@@ -9,7 +9,7 @@ use Getopt::Long qw(:config no_ignore_case);
 my $usage = "-f input -o omegaBegin -i omegaStep -t omegaTotal ";
 $usage .= " [-w observable] [-M mMax] [-p] [-r]\n";
 
-my ($input1,$geometry,$GlobalNumberOfSites);
+my ($input1,$geometry,$subgeometry,$orbitals,$GlobalNumberOfSites);
 my ($isPeriodic,$mMax,$wantsRealPart);
 my ($omega0,$omegaStep,$centralSite,$total);
 my $observable = "sz";
@@ -21,27 +21,30 @@ GetOptions('f=s' => \$input1,
            't:i' => \$total,
            'i:f' => \$omegaStep,
            'o:f' => \$omega0,
-		   'w:s' => \$observable) or die "$usage\n";
+	    'w:s' => \$observable) or die "$usage\n";
 
 (defined($input1) && defined($total) && defined($omegaStep)) or die "$0: USAGE: $usage\n";
 defined($isPeriodic) or $isPeriodic = 0;
 defined($omega0) or $omega0 = 0;
 
+
+my $hptr = {"TSPSites 1" => \$centralSite,
+            "GeometryKind" =>\$geometry,
+            "GeometrySubKind" =>\$subgeometry,
+            "Orbitals" =>\$orbitals,
+            "TotalNumberOfSites" => \$GlobalNumberOfSites};
+
+OmegaUtils::getLabels($hptr,$input1);
+
 my $input = $input1;
 $input =~ s/\.(.*$)//;
 $input .= ".dat";
-my $cmd = "./sqOmega -f $input1 -t $total -i $omegaStep -o $omega0 -w $observable";
+my $cmd = "./sqOmega -f $input1 -t $total -i $omegaStep -o $omega0 -c $centralSite -w $observable";
 $cmd .= " > $input 2> /dev/null";
 print STDERR "$0: Trying to exec $cmd\n";
 my $ret = system($cmd);
 
 die "$0: Command $cmd failed\n" if ($ret != 0);
-
-my $hptr = {"TSPSites 1" => \$centralSite,
-            "GeometryKind" =>\$geometry,
-            "TotalNumberOfSites" => \$GlobalNumberOfSites};
-
-OmegaUtils::getLabels($hptr,$input);
 
 my @spaceValues;
 readSpace(\@spaceValues,$input);
@@ -103,6 +106,16 @@ sub printGnuplot
 	} elsif ($geometry eq "ladder") {
 		$factor = 0.5;
 		@fileIndices=(0,1);
+        } elsif ($geometry eq "LongRange") {
+
+                defined($subgeometry) or die "$0 LongeRange geometry: need to specify geometry (chain or ladder) for the Fourier Transform\n";
+		
+		if ($subgeometry eq "chain") {
+                	$factor = 1.0;
+        	} elsif ($subgeometry eq "ladder") {
+                	$factor = 0.5;
+                	@fileIndices=(0,1);
+        	}
 	} else {
 		die "$0: Unknown geometry $geometry\n";
 	}
@@ -142,6 +155,31 @@ sub fourier
 		return fourierLadder($f,$v);
 	}
 
+        if ($geometry eq "LongRange") {
+
+	        if ($subgeometry eq "chain") {
+
+	                defined($orbitals) or die "$0 LongeRange geometry--> chain: need to specify number of orbitals\n";
+
+			if ($orbitals == 1) {
+        	        	return fourierChain($f,$v);
+			} elsif ($orbitals == 2) {
+                                return fourierChain2orb($f,$v);				
+			}
+        	}
+
+        	if ($subgeometry eq "ladder") {
+
+                        defined($orbitals) or die "$0 LongeRange geometry--> ladder: need to specify number of orbitals\n";
+
+                        if ($orbitals == 1) {
+                                return fourierLadder($f,$v);
+                        } elsif ($orbitals == 2) {
+                                return fourierLadder2orb($f,$v);
+                        }
+        	}
+        }
+
 	die "$0: ft: undefined geometry $geometry\n";
 }
 
@@ -150,12 +188,13 @@ sub fourierChain
 	my ($f,$v) = @_;
 	my $n = int(0.5*scalar(@$v));
 	my $numberOfQs = (defined($mMax)) ? $mMax : $n;
+        my $cSite = $n/2-1;
 	for (my $m = 0; $m < $numberOfQs; ++$m) {
 		my @sum = (0,0);
 		my $q = getQ($m,$numberOfQs);
 		for (my $i = 0; $i < $n; $i++) {
 			my @temp = ($v->[2*$i],$v->[2*$i+1]);
-			my $arg = $q*($i-$centralSite);
+			my $arg = $q*($i-$cSite);
 			my $carg = cos($arg);
 			$sum[0] += $temp[0]*$carg;
 			$sum[1] += $temp[1]*$carg;
@@ -165,11 +204,43 @@ sub fourierChain
 	}
 }
 
+sub fourierChain2orb
+{
+        my ($f,$v) = @_;
+        my $n = int(0.25*scalar(@$v));
+        my $numberOfQs = (defined($mMax)) ? $mMax : $n;
+	my $cSite = $n/2-1;
+        for (my $m = 0; $m < $numberOfQs; ++$m) {
+                my @sum = (0,0);
+                my $q = getQ($m,$numberOfQs);
+
+# orb A
+               	for (my $i = 0; $i < $n; $i++) {
+                        	my @temp = ($v->[4*$i],$v->[4*$i+1]);
+                        	my $arg = $q*($i-$cSite);
+                        	my $carg = cos($arg); 
+                        	$sum[0] += $temp[0]*$carg;
+                        	$sum[1] += $temp[1]*$carg;
+               	}
+# orb B
+               	for (my $i = 0; $i < $n; $i++) {
+                        	my @temp = ($v->[4*$i+2],$v->[4*$i+3]);
+                        	my $arg = $q*($i-$cSite);
+                        	my $carg = cos($arg);
+                        	$sum[0] += $temp[0]*$carg;
+                        	$sum[1] += $temp[1]*$carg;
+               	}
+
+                $f->[$m] = \@sum;
+        }
+}
+
+
 sub fourierLadder
 {
 	my ($f,$v) = @_;
-	my $n = int(0.5*scalar(@$v));
-	my $numberOfQs = (defined($mMax)) ? $mMax : int(0.5*$n);
+	my $n = int(0.25*scalar(@$v));
+	my $numberOfQs = (defined($mMax)) ? $mMax : $n;
 	for (my $m = 0; $m < $numberOfQs; ++$m) {
 		my $q = getQ($m,$numberOfQs);
 		my @f0 = fourierF0($v,$q);
@@ -182,6 +253,25 @@ sub fourierLadder
 			$f->[$m+$numberOfQs*$x] = \@sum;
 		}
 	}
+}
+
+sub fourierLadder2orb
+{
+        my ($f,$v) = @_;
+        my $n = int(0.125*scalar(@$v));
+        my $numberOfQs = (defined($mMax)) ? $mMax : $n;
+        for (my $m = 0; $m < $numberOfQs; ++$m) {
+                my $q = getQ($m,$numberOfQs);
+                my @f0 = fourierF0test($v,$q);
+                my @f1 = fourierF1test($v,$q);
+                for (my $x = 0; $x < 2; ++$x) {
+                        my $sign = 1-2*$x;
+                        my $realPart = $f0[0] + $sign*$f1[0];
+                        my $imagPart = $f0[1] + $sign*$f1[1];
+                        my @sum = ($realPart,$imagPart);
+                        $f->[$m+$numberOfQs*$x] = \@sum;
+                }
+        }
 }
 
 sub fourierF0
@@ -200,6 +290,34 @@ sub fourierF0
 	return @sum;
 }
 
+sub fourierF0test
+{
+        my ($v,$q) = @_;
+        my $n = int(0.25*scalar(@$v));
+	my $cSite = $n/2-2;
+        my @sum;
+# orb A
+        for (my $i = 0; $i < $n; $i+=2) {
+                my @temp = ($v->[4*$i],$v->[4*$i+1]);
+                my $arg = $q*($i-$cSite)*0.5;
+                my $carg = cos($arg);
+                $sum[0] += $temp[0]*$carg;
+                $sum[1] += $temp[1]*$carg;
+        }
+
+# orb B
+        for (my $i = 0; $i < $n; $i+=2) {
+                my @temp = ($v->[4*$i+2],$v->[4*$i+3]);
+                my $arg = $q*($i-$cSite)*0.5;
+                my $carg = cos($arg);
+                $sum[0] += $temp[0]*$carg;
+                $sum[1] += $temp[1]*$carg;
+        }
+
+        return @sum;
+}
+
+
 sub fourierF1
 {
 	my ($v,$q) = @_;
@@ -215,6 +333,33 @@ sub fourierF1
 
 	return @sum;
 }
+
+sub fourierF1test
+{
+        my ($v,$q) = @_;
+        my $n = int(0.25*scalar(@$v));
+        my @sum;
+        my $cSite = $n/2-2;
+# orb A
+        for (my $i = 1; $i < $n; $i+=2) {
+                my @temp = ($v->[4*$i],$v->[4*$i+1]);
+                my $arg = $q*distanceLadder($i,$cSite);
+                my $carg = cos($arg);
+                $sum[0] += $temp[0]*$carg;
+                $sum[1] += $temp[1]*$carg;
+        }
+# orb B
+        for (my $i = 1; $i < $n; $i+=2) {
+                my @temp = ($v->[4*$i+2],$v->[4*$i+3]);
+                my $arg = $q*distanceLadder($i,$cSite);
+                my $carg = cos($arg);
+                $sum[0] += $temp[0]*$carg;
+                $sum[1] += $temp[1]*$carg;
+        }
+
+        return @sum;
+}
+
 
 sub distanceLadder
 {

@@ -266,9 +266,10 @@ int main(int argc,char *argv[])
 	SizeType total=0;
 	RealType offset = 0;
 	RealType step = 0;
+        SizeType centralSite =0;
 	ObservableEnum what = OBS_SZ;
 
-	while ((opt = getopt(argc, argv, "f:t:o:i:w:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:t:o:i:c:w:")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
@@ -282,6 +283,10 @@ int main(int argc,char *argv[])
 		case 'o':
 			offset = atof(optarg);
 			break;
+		case 'c':
+                        centralSite = atoi(optarg);
+                        break;
+
 		case 'w':
 			if (PsimagLite::String(optarg) == "c")
 				what = OBS_C;
@@ -327,8 +332,8 @@ int main(int argc,char *argv[])
 	for (SizeType i=0;i<ne[0];i++) Eg += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*Eg<<"\n";
 
-	SizeType centralSite = static_cast<SizeType>(geometryParams.sites/2)-1;
-	if (geometryParams.geometry == "ladder") centralSite--;
+	//SizeType centralSite = static_cast<SizeType>(geometryParams.sites/2)-1;
+	//if (geometryParams.geometry == "ladder" || geometryParams.geometry == "LongRange") centralSite--;
 
 	std::cout<<"#TotalNumberOfSites="<<geometryParams.sites<<"\n";
 	std::cout<<"#OmegaTotal="<<total<<"\n";
