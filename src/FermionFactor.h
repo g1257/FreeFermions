@@ -148,17 +148,20 @@ template<typename OperatorType,typename OpPointerType>
 					value_=0;
 					return;
 				}
+
 				if (!nNormal && occupationForThisLamda==1) {
 					value_=0;
 					return;
 				}
+
 				// now let's deail with the sign
+				SizeType xSaved = x;
 				x++;
 				int f = (x&1) ? -1 : 1;
 				value_ *= f;
 
 				// finally, we remove the pair
-				freeOps.removePair(thisLambda);
+				freeOps.removePair(xSaved);
 			}
 		}
 

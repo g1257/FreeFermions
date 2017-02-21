@@ -191,21 +191,22 @@ namespace FreeFermions {
 			return value_;
 		}
 
-		void removePair(SizeType thisLambda)
+		void removePair(SizeType loc)
 		{
 			typename PsimagLite::Vector<FreeOperator>::Type::iterator itp = data_.begin();
 			data_.erase(itp);
-			// find again because the erase changed data:
-			int y = findOpGivenLambda(thisLambda,0);
-			if (y<0) throw std::runtime_error("removePair\n");
-			itp = data_.begin()+y;
+			if (loc == 0) throw PsimagLite::RuntimeError("removePair failed\n");
+			--loc;
+			itp = data_.begin()+loc;
+			assert(itp < data_.end());
 			data_.erase(itp);
 		}
 
 		int findOpGivenLambda(SizeType thisLambda,
 		                         SizeType start) const
 		{
-			for (SizeType i=start;i<data_.size();i++) {
+			SizeType n = data_.size();
+			for (SizeType  i= start;i < n; ++i) {
 					if (notCreationOrDestruction(data_[i].type)) continue;
 					if (data_[i].lambda==thisLambda) return i;
 			}

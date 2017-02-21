@@ -245,6 +245,7 @@ private:
 	{
 		SizeType site0 = params_.centralSite;
 		for (SizeType site1 = 0; site1 < params_.sites; ++site1) {
+			std::cerr<<"site1="<<site1<<"\n";
 			result_(it,site1) = doOneOmegaOneSitePair(site0,
 			                                          site1,
 			                                          omega,
