@@ -84,6 +84,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Permutations.h"
 #include "IndexGenerator.h"
 #include <cassert>
+#include <algorithm>
 
 namespace FreeFermions {
 
@@ -119,23 +120,22 @@ public:
 	              const VectorSizeType& occupations2)
 	    : value_(1),loc_(0)
 	{
-		SizeType counter3 = addAtTheFront(occupations,DRY_RUN);
-		SizeType counter2=0;
+		SizeType counter3 = dryRun(occupations);
+		SizeType counter2 = 0;
 		SizeType counter = 0;
 		addAtTheMiddle(counter,counter2,opPointers,lambda,lambda2,sigma,DRY_RUN);
 		counter += counter3;
 
-		counter2 += addAtTheBack(occupations2,DRY_RUN);
-
+		counter2 += dryRun(occupations2);
 
 		data_.resize(loc_);
 		loc_=0;
 
-		addAtTheFront(occupations,NORMAL_RUN);
+		addAtTheFront(occupations);
 		SizeType counter4=0;
 		SizeType counter5=0;
 		addAtTheMiddle(counter4,counter5,opPointers,lambda,lambda2,sigma,NORMAL_RUN);
-		addAtTheBack(occupations2,NORMAL_RUN);
+		addAtTheBack(occupations2);
 
 		// if daggers > non-daggers, result is zero
 		if (counter!=counter2) {
@@ -177,11 +177,7 @@ public:
 
 	void reverse()
 	{
-		// flip'em
-		typename PsimagLite::Vector<FreeOperator>::Type dataCopy = data_;
-		SizeType n = data_.size();
-		for (SizeType i=0;i<n;i++)
-			data_[i] = dataCopy[n-i-1];
+		std::reverse(data_.begin(), data_.end());
 	}
 
 	RealType operator()()
@@ -207,40 +203,39 @@ public:
 
 private:
 
-	SizeType addAtTheBack(const VectorSizeType&  occupations2,SizeType typeOfRun)
+	SizeType dryRun(const VectorSizeType& occupations2)
 	{
 		SizeType counter = 0;
+		for (SizeType i = 0; i < occupations2.size(); ++i) {
+			SizeType x = (occupations2[i] == 0) ? 0 : 1;
+			counter += x;
+			loc_ += x;
+		}
+
+		return counter;
+	}
+
+	void addAtTheBack(const VectorSizeType& occupations2)
+	{
 		for (int i=occupations2.size()-1;i>=0;i--) {
 			if (occupations2[i]==0) continue;
-			counter++;
-			if (typeOfRun==DRY_RUN) {
-				loc_++;
-				continue;
-			}
+
 			FreeOperator fo;
 			fo.lambda = i;
 			fo.type = DESTRUCTION;
 			data_[loc_++]=fo;
 		}
-		return counter;
 	}
 
-	SizeType addAtTheFront(const VectorSizeType&  occupations,SizeType typeOfRun)
+	void addAtTheFront(const VectorSizeType&  occupations)
 	{
-		SizeType counter = 0;
 		for (SizeType i=0;i<occupations.size();++i) {
 			if (occupations[i]==0) continue;
-			counter++;
-			if (typeOfRun==DRY_RUN) {
-				loc_++;
-				continue;
-			}
 			FreeOperator fo;
 			fo.lambda = i;
 			fo.type = CREATION;
 			data_[loc_++]=fo;
 		}
-		return counter;
 	}
 
 	void addAtTheMiddle(SizeType& counter,

@@ -290,8 +290,12 @@ private:
 		FieldType sum = 0;
 		do  {
 			FieldType prod = prodSaved;
-			FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2,
-			                                  sigma,occupations_[sigma],occupations2);
+			FreeOperatorsType lambdaOperators(opPointers_,
+			                                  lambda,
+			                                  lambda2,
+			                                  sigma,
+			                                  occupations_[sigma],
+			                                  occupations2);
 			// diag. part need to be done here, because...
 			FieldType dd = 1.0;
 			for (SizeType i=0;i<operatorsDiagonal_.size();i++) {
