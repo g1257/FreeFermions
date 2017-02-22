@@ -268,7 +268,6 @@ namespace FreeFermions {
 		                  SizeType sigma,
 		                  const typename PsimagLite::Vector<SizeType>::Type& occupations2) const
 		{
-
 			PermutationsType lambda2(lambda);
 			FieldType sum = 0;
 			do  {

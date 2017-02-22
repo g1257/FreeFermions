@@ -131,11 +131,10 @@ private:
 
 		// pair up daggers with non-daggers
 		value_ = 1;
-		std::cout<<"HERE="<<n<<"\n";
 		for (SizeType i = 0; i < n; ++i) {
 			if (removed[i]) continue;
-			if (freeOps.notCreationOrDestruction(freeOps[i].type))
-				continue;
+//			if (freeOps.notCreationOrDestruction(freeOps[i].type))
+//				continue;
 			if (freeOps[i].type == CREATION) {
 				value_ = 0;
 				return;
@@ -144,8 +143,8 @@ private:
 			SizeType thisLambda = freeOps[i].lambda;
 			for (SizeType j = i + 1; j < n; ++j) {
 				if (removed[j]) continue;
-				if (freeOps.notCreationOrDestruction(freeOps[j].type))
-					continue;
+//				if (freeOps.notCreationOrDestruction(freeOps[j].type))
+//					continue;
 				if (freeOps[j].lambda != thisLambda) continue;
 				
 				// if types are equal then result is zero, and we're done:
