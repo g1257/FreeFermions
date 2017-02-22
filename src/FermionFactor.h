@@ -92,6 +92,7 @@ public:
 
 	typedef typename OperatorType::RealType RealType;
 	typedef PsimagLite::Vector<bool>::Type VectorBoolType;
+	typedef PsimagLite::Vector<SizeType>::Type VectorSizeType;
 	typedef FreeOperators<OperatorType,OpPointerType> FreeOperatorsType;
 
 	enum {CREATION = OperatorType::CREATION,
@@ -122,9 +123,12 @@ private:
 	{
 		SizeType n = freeOps.size();
 		static VectorBoolType removed(n, false);
+		static VectorSizeType lambdas(n, 0);
 		if (n != removed.size()) {
 			removed.clear();
 			removed.resize(n, false);
+			lambdas.clear();
+			lambdas.resize(n, 0);
 		} else {
 			std::fill(removed.begin(), removed.end(), false);
 		}
@@ -132,35 +136,54 @@ private:
 		// pair up daggers with non-daggers
 		value_ = 1;
 		for (SizeType i = 0; i < n; ++i) {
-			if (removed[i]) continue;
-//			if (freeOps.notCreationOrDestruction(freeOps[i].type))
-//				continue;
+			lambdas[i] = freeOps[i].lambda;
 			if (freeOps[i].type == CREATION) {
 				value_ = 0;
 				return;
 			}
+		}
 
-			SizeType thisLambda = freeOps[i].lambda;
-			for (SizeType j = i + 1; j < n; ++j) {
-				if (removed[j]) continue;
-//				if (freeOps.notCreationOrDestruction(freeOps[j].type))
-//					continue;
-				if (freeOps[j].lambda != thisLambda) continue;
-				
-				// if types are equal then result is zero, and we're done:
-				if (freeOps[j].type == freeOps[i].type) {
-					value_ = 0;
-					return;
+		PsimagLite::Sort<VectorSizeType> sort;
+		VectorSizeType iperm(n,0);
+		sort.sort(lambdas, iperm);
+		VectorSizeType partitions(1,0);
+		assert(n > 0);
+		SizeType prevLambda = lambdas[0];
+		for(SizeType i = 1; i < n; ++i) {
+			if (lambdas[i] == prevLambda)
+				continue;
+			prevLambda = lambdas[i];
+			partitions.push_back(i);
+		}
+
+		partitions.push_back(n);
+
+		for (SizeType p = 0; p < partitions.size() - 1; ++p) {
+			SizeType start = partitions[p];
+			SizeType end = partitions[p+1];
+			for (SizeType ii = start; ii < end; ++ii) {
+				if (removed[ii]) continue;
+				SizeType i = iperm[ii];
+				for (SizeType jj = ii + 1; jj < end; ++jj) {
+					if (removed[jj]) continue;
+
+					SizeType j = iperm[jj];
+
+					// if types are equal then result is zero, and we're done:
+					if (freeOps[j].type == freeOps[i].type) {
+						value_ = 0;
+						return;
+					}
+
+					// now let's deal with the sign
+					SizeType x = j;
+					x++;
+					int f = (x&1) ? -1 : 1;
+					value_ *= f;
+
+					// finally, we remove the pair
+					removed[jj] = true;
 				}
-
-				// now let's deal with the sign
-				SizeType x = j;
-				x++;
-				int f = (x&1) ? -1 : 1;
-				value_ *= f;
-
-				// finally, we remove the pair
-				removed[j] = true;
 			}
 		}
 	}
