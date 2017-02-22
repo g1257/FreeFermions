@@ -122,16 +122,8 @@ private:
 	void pairUp(FreeOperatorsType& freeOps)
 	{
 		SizeType n = freeOps.size();
-		static VectorBoolType removed(n, false);
-		static VectorSizeType lambdas(n, 0);
-		if (n != removed.size()) {
-			removed.clear();
-			removed.resize(n, false);
-			lambdas.clear();
-			lambdas.resize(n, 0);
-		} else {
-			std::fill(removed.begin(), removed.end(), false);
-		}
+		VectorBoolType removed(n, false);
+		VectorSizeType lambdas(n, 0);
 
 		// pair up daggers with non-daggers
 		value_ = 1;

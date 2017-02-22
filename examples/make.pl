@@ -24,9 +24,11 @@ sub writeMakefile
 {
 	open(my $fh,">Makefile") or die "Cannot open Makefile for writing: $!\n";
 
-	my $cppflags = " -I../../PsimagLite ";
+	my $cppflags = "-Werror -Wall -std=c++98 -pedantic -Wendif-labels ";
+	$cppflags .= " -DNDEBUG -O3 ";
+	$cppflags .= " -I../../PsimagLite ";
 	$cppflags .= " -I../../PsimagLite/src -I../src";
-	my $cxx="g++ -ansi -pedantic -O3 -DNDEBUG";
+	my $cxx="g++ ";
 	my $lapack = Make::findLapack();
 
 	Make::make($fh,\@drivers,"FreeFermions","Linux",0,
