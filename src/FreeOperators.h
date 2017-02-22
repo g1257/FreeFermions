@@ -1,9 +1,8 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2011 , UT-Battelle, LLC
+Copyright (c) 2011-2017, UT-Battelle, LLC
 All rights reserved
 
-[FreeFermions, Version 1.0.0]
+[FreeFermions, Version 1.]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -68,9 +67,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
@@ -103,6 +100,7 @@ namespace FreeFermions {
 
 	public:
 
+		typedef PsimagLite::Vector<SizeType>::Type VectorSizeType;
 		typedef typename OperatorType::RealType RealType;
 		typedef typename OperatorType::FieldType FieldType;
 		typedef IndexGenerator IndexGeneratorType;
@@ -117,8 +115,8 @@ namespace FreeFermions {
 		              const IndexGeneratorType& lambda,
 		              const PermutationsType& lambda2,
 		              SizeType sigma,
-		              const typename PsimagLite::Vector<SizeType>::Type& occupations,
-		              const typename PsimagLite::Vector<SizeType>::Type& occupations2)
+		              const VectorSizeType& occupations,
+		              const VectorSizeType& occupations2)
 			: value_(1),loc_(0)
 		{
 			SizeType counter3 = addAtTheFront(occupations,DRY_RUN);
@@ -202,27 +200,14 @@ namespace FreeFermions {
 			data_.erase(itp);
 		}
 
-//		int findOpGivenLambda(SizeType thisLambda,
-//		                         SizeType start) const
-//		{
-//			SizeType n = data_.size();
-//			for (SizeType  i= start;i < n; ++i) {
-//					if (notCreationOrDestruction(data_[i].type)) continue;
-//					if (data_[i].lambda==thisLambda) return i;
-//			}
-//			return -1;
-//			//throw std::runtime_error("FreeOperators::findOpGivenLambda()\n");
-//		}
-
 		 bool notCreationOrDestruction(SizeType type1) const
 		 {
-			 if (type1!=CREATION && type1!=DESTRUCTION) return true;
-			 return false;
+			 return (type1 != CREATION && type1 != DESTRUCTION);
 		 }
 
 	private:
 
-		SizeType addAtTheBack(const typename PsimagLite::Vector<SizeType>::Type&  occupations2,SizeType typeOfRun)
+		SizeType addAtTheBack(const VectorSizeType&  occupations2,SizeType typeOfRun)
 		{
 			SizeType counter = 0;
 			for (int i=occupations2.size()-1;i>=0;i--) {
@@ -240,7 +225,7 @@ namespace FreeFermions {
 			return counter;
 		}
 
-		 SizeType addAtTheFront(const typename PsimagLite::Vector<SizeType>::Type&  occupations,SizeType typeOfRun)
+		 SizeType addAtTheFront(const VectorSizeType&  occupations,SizeType typeOfRun)
 		 {
 			 SizeType counter = 0;
 			 for (SizeType i=0;i<occupations.size();++i) {

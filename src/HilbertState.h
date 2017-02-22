@@ -119,6 +119,9 @@ namespace FreeFermions {
 	          typename DiagonalOperatorType_=
 	                    DummyOperator<typename CorDOperatorType_::FieldType> >
 	class HilbertState {
+
+		typedef PsimagLite::Vector<SizeType>::Type VectorSizeType;
+		typedef PsimagLite::Vector<int>::Type VectorIntType;
 		typedef typename CorDOperatorType_::EngineType EngineType;
 		typedef typename CorDOperatorType_::RealType RealType;
 		typedef typename CorDOperatorType_::FieldType FieldType;
@@ -142,7 +145,7 @@ namespace FreeFermions {
 
 		// it's the g.s. for now, FIXME change it later to allow more flex.
 		HilbertState(const EngineType& engine,
-		              const typename PsimagLite::Vector<SizeType>::Type& ne,
+		              const VectorSizeType& ne,
 		              bool debug = false)
 		: engine_(&engine),
 		  debug_(debug),
@@ -159,7 +162,7 @@ namespace FreeFermions {
 		}
 
 		HilbertState(const EngineType& engine,
-		             const typename PsimagLite::Vector<typename PsimagLite::Vector<SizeType>::Type >::Type& occupations,
+		             const typename PsimagLite::Vector<VectorSizeType>::Type& occupations,
 		             bool debug = false)
 		: engine_(&engine),
 		  debug_(debug),
@@ -199,6 +202,7 @@ namespace FreeFermions {
 		}
 
 	private:
+
 		void pour(const ThisType& hs)
 		{
 			if (hs.engine_->size()!=engine_->size()) {
@@ -207,17 +211,11 @@ namespace FreeFermions {
 				                " size2=" + ttos(hs.engine_->size()) + "\n";
 				throw std::runtime_error(s.c_str());
 			}
-// 			if (hs.occupations_!=occupations_ && !equalZero(occupations_)) {
-// 				PsimagLite::String s(__FILE__);
-// 				s += PsimagLite::String(" ") + ttos(__LINE__) + " ";
-// 				s += PsimagLite::String(__FUNCTION__) + "\n";
-// 				throw std::runtime_error(s.c_str());
-// 			}
 
 			pourInternal(hs);
 		}
 
-		FieldType close(const typename PsimagLite::Vector<typename PsimagLite::Vector<SizeType>::Type >::Type& occupations2) const
+		FieldType close(const typename PsimagLite::Vector<VectorSizeType >::Type& occupations2) const
 		{
 			//std::cerr<<"DEBUG: closing with weight="<<opPointers_.size()<<"\n";
 			FieldType prod = 1.0;
@@ -230,26 +228,36 @@ namespace FreeFermions {
 			return prod; // FIXME: NEEDS FERMION SIGN
 		}
 
-		bool equalZero(const typename PsimagLite::Vector<typename PsimagLite::Vector<SizeType>::Type >::Type& v) const
+		bool equalZero(const typename PsimagLite::Vector<VectorSizeType>::Type& v) const
 		{
 			for (SizeType i=0;i<v.size();i++)
 				if (!equalZero(v[i])) return false;
 			return true;
 		}
 
-		bool equalZero(const typename PsimagLite::Vector<SizeType>::Type& v) const
+		bool equalZero(const VectorSizeType& v) const
 		{
 			for (SizeType i=0;i<v.size();i++) if (v[i]!=0) return false;
 			return true;
 		}
 
-		FieldType close(SizeType sigma,const typename PsimagLite::Vector<SizeType>::Type& occupations2) const
+		FieldType close(SizeType sigma,
+		                const VectorSizeType& occupations2) const
 		{
+			VectorIntType locsCreation(operatorsCreation_.size(), 0);
+			populateLocs(locsCreation, operatorsCreation_, sigma);
+			VectorIntType locsDestruction(operatorsDestruction_.size(), 0);
+			populateLocs(locsDestruction, operatorsDestruction_, sigma);
+
 			SizeType m = findCreationGivenSpin(sigma);
 			IndexGeneratorType lambda(m,engine_->size());
 			FieldType sum  = 0;
 			do {
-				sum += compute(lambda,sigma,occupations2);
+				sum += compute(lambda,
+				               sigma,
+				               occupations2,
+				               locsCreation,
+				               locsDestruction);
 			} while (lambda.increase());
 			return sum;
 		}
@@ -266,12 +274,22 @@ namespace FreeFermions {
 
 		FieldType compute(const IndexGeneratorType& lambda,
 		                  SizeType sigma,
-		                  const typename PsimagLite::Vector<SizeType>::Type& occupations2) const
+		                  const VectorSizeType& occupations2,
+		                  const VectorIntType& locsCreation,
+		                  const VectorIntType& locsDestruction) const
 		{
+			FieldType prodSaved = 1;
+			for (SizeType i=0;i<lambda.size();i++) {
+				int loc = locsCreation[i];
+				if (loc<0) continue;
+				assert(static_cast<SizeType>(loc) < operatorsCreation_.size());
+				prodSaved *= operatorsCreation_[loc]->operator()(lambda[i]);
+			}
+
 			PermutationsType lambda2(lambda);
 			FieldType sum = 0;
 			do  {
-				FieldType prod = 1;
+				FieldType prod = prodSaved;
 				FreeOperatorsType lambdaOperators(opPointers_,lambda,lambda2,
 				                   sigma,occupations_[sigma],occupations2);
 				// diag. part need to be done here, because...
@@ -286,14 +304,9 @@ namespace FreeFermions {
 				RealType ff = fermionFactor();
 
 				if (fabs(ff)<1e-6) continue;
-				for (SizeType i=0;i<lambda.size();i++) {
-					int loc = findLocOf(operatorsCreation_,i,sigma);
-					if (loc<0) continue;
-					assert(static_cast<SizeType>(loc) < operatorsCreation_.size());
-					prod *= operatorsCreation_[loc]->operator()(lambda[i]);
-				}
+
 				for (SizeType i=0;i<lambda2.size();i++) {
-					int loc = findLocOf(operatorsDestruction_,i,sigma);
+					int loc = locsDestruction[i];
 					if (loc<0) continue;
 					prod *= operatorsDestruction_[loc]->operator()(lambda2[i]);
 				}
@@ -309,17 +322,26 @@ namespace FreeFermions {
 			return sum;
 		}
 
-		int findLocOf(
+		void populateLocs(VectorIntType& locs,
 		                  const typename PsimagLite::Vector<const CorDOperatorType*>::Type& v,
-		                  SizeType ind,
 		                  SizeType sigma) const
+		{
+			for (SizeType i=0;i<v.size();i++)
+				locs[i] = findLocOf(v, i, sigma);
+		}
+
+		int findLocOf(const typename PsimagLite::Vector<const CorDOperatorType*>::Type& v,
+		              SizeType ind,
+		              SizeType sigma) const
 		{
 			SizeType counter = 0;
 			for (SizeType i=0;i<v.size();i++) {
 				if (v[i]->sigma() != sigma) continue;
-				if (counter==ind) return i;
-				counter++;
+				if (counter == ind) return i;
+				if (counter > ind) return -1;
+				++counter;
 			}
+
 			return -1;
 		}
 
@@ -360,9 +382,8 @@ namespace FreeFermions {
 		const EngineType* engine_;
 		bool debug_;
 		typename PsimagLite::Vector<PsimagLite::Vector<SizeType>::Type>::Type occupations_;
-// 		typename PsimagLite::Vector<SizeType>::Type ne_;
-// 		typename PsimagLite::Vector<SizeType>::Type ne2_;
-		typename PsimagLite::Vector<const CorDOperatorType*>::Type operatorsCreation_,operatorsDestruction_;
+		typename PsimagLite::Vector<const CorDOperatorType*>::Type operatorsCreation_;
+		typename PsimagLite::Vector<const CorDOperatorType*>::Type operatorsDestruction_;
 		typename PsimagLite::Vector<const DiagonalOperatorType*>::Type operatorsDiagonal_;
 		typename PsimagLite::Vector<OperatorPointer>::Type opPointers_;
 		OpNormalFactoryType opNormalFactory_;
