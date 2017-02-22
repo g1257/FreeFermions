@@ -93,16 +93,17 @@ class LibraryOperator {
 	enum {SPIN_UP,SPIN_DOWN};
 
 public:
+
 	typedef typename OperatorType::EngineType EngineType;
 	typedef typename OperatorType::RealType RealType;
 	typedef typename OperatorType::FieldType FieldType;
 	typedef OperatorFactory<ThisType> FactoryType;
 
 	enum {CREATION = OperatorType::CREATION,
-	      DESTRUCTION = OperatorType::DESTRUCTION,
-	      N,
-	      NBAR,
-	      DELTA};
+		  DESTRUCTION = OperatorType::DESTRUCTION,
+		  N,
+		  NBAR,
+		  DELTA};
 
 	friend class OperatorFactory<ThisType>;
 

@@ -1,9 +1,8 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009 , UT-Battelle, LLC
+Copyright (c) 2009-2017, UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -39,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -68,9 +67,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
@@ -86,48 +83,48 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 
 namespace FreeFermions {
-	
-	class IndexGenerator {
-	public:
-		typedef SizeType value_type;
-		IndexGenerator(SizeType n,SizeType ne) : data_(n,0),ne_(ne) {}
 
-		bool increase()
-		{
-			if (data_.size()==0) return false;
-			SizeType c = 0;
-			while(true) {
-				data_[c]++;
-				if (data_[c]==ne_) {
-					if (c==data_.size()-1) return false;
-					data_[c] = 0;
-					c++;
-				} else {
-					break;
-				}
-			}
-			return true;
-		}
+class IndexGenerator {
+public:
+	typedef SizeType value_type;
+	IndexGenerator(SizeType n,SizeType ne) : data_(n,0),ne_(ne) {}
 
-		SizeType operator[](SizeType i) const
-		{
-			return data_[i];
-		}
-
-		SizeType size() const { return data_.size(); }
-
-// 		SizeType max() const { return ne_; }
-
-	private:
-		PsimagLite::Vector<SizeType>::Type data_;
-		SizeType ne_;
-	}; // IndexGenerator
-	
-	std::ostream& operator<<(std::ostream& os,const IndexGenerator& ig)
+	bool increase()
 	{
-		for (SizeType i=0;i<ig.size();i++) os<<ig[i]<<" ";
-		return os;
+		if (data_.size()==0) return false;
+		SizeType c = 0;
+		while(true) {
+			data_[c]++;
+			if (data_[c]==ne_) {
+				if (c==data_.size()-1) return false;
+				data_[c] = 0;
+				c++;
+			} else {
+				break;
+			}
+		}
+		return true;
 	}
+
+	SizeType operator[](SizeType i) const
+	{
+		return data_[i];
+	}
+
+	SizeType size() const { return data_.size(); }
+
+	// 		SizeType max() const { return ne_; }
+
+private:
+	PsimagLite::Vector<SizeType>::Type data_;
+	SizeType ne_;
+}; // IndexGenerator
+
+std::ostream& operator<<(std::ostream& os,const IndexGenerator& ig)
+{
+	for (SizeType i=0;i<ig.size();i++) os<<ig[i]<<" ";
+	return os;
+}
 
 } // namespace Dmrg 
 

@@ -1,9 +1,8 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright  2009 , UT-Battelle, LLC
+Copyright  2009-2017, UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -39,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -68,65 +67,63 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
 /*! \file EToTheBetaH.h
  *
- * 
+ *
  *
  */
 #ifndef E_TO_THE_BETA_H_H
 #define E_TO_THE_BETA_H_H
 
 namespace FreeFermions {
-	// All interactions == 0
-	template<typename EngineType_>
-	class EToTheBetaH {
-	public:
-			typedef EngineType_ EngineType;
-			typedef typename EngineType::RealType RealType;
-			typedef typename EngineType::FieldType FieldType;
+// All interactions == 0
+template<typename EngineType_>
+class EToTheBetaH {
+public:
+	typedef EngineType_ EngineType;
+	typedef typename EngineType::RealType RealType;
+	typedef typename EngineType::FieldType FieldType;
 
-			EToTheBetaH(RealType beta,
-			              const EngineType& engine,
-			              RealType energyOffset)
-			: beta_(beta),
-			  engine_(engine),
-			  energyOffset_(energyOffset)
-			{}
+	EToTheBetaH(RealType beta,
+	            const EngineType& engine,
+	            RealType energyOffset)
+	    : beta_(beta),
+	      engine_(engine),
+	      energyOffset_(energyOffset)
+	{}
 
-			template<typename FreeOperatorsType>
-			FieldType operator()(const FreeOperatorsType& freeOps,
-			                     SizeType loc) const
-			{
-				RealType sum = 0;
-				for (SizeType i=0;i<loc;i++) {
-// 					if (freeOps[i].type != FreeOperatorsType::CREATION &&
-// 						freeOps[i].type != FreeOperatorsType::DESTRUCTION)
-// 						   continue;
-// 					int sign =  (freeOps[i].type ==
-// 							       FreeOperatorsType::CREATION) ? -1 : 1;
-					if (freeOps[i].type != FreeOperatorsType::CREATION) continue;
-					sum += engine_.eigenvalue(freeOps[i].lambda); //*sign;
-				}
+	template<typename FreeOperatorsType>
+	FieldType operator()(const FreeOperatorsType& freeOps,
+	                     SizeType loc) const
+	{
+		RealType sum = 0;
+		for (SizeType i=0;i<loc;i++) {
+			// 					if (freeOps[i].type != FreeOperatorsType::CREATION &&
+			// 						freeOps[i].type != FreeOperatorsType::DESTRUCTION)
+			// 						   continue;
+			// 					int sign =  (freeOps[i].type ==
+			// 							       FreeOperatorsType::CREATION) ? -1 : 1;
+			if (freeOps[i].type != FreeOperatorsType::CREATION) continue;
+			sum += engine_.eigenvalue(freeOps[i].lambda); //*sign;
+		}
 
-				RealType exponent = -beta_*sum;
-				return exp(exponent);
-			}
+		RealType exponent = -beta_*sum;
+		return exp(exponent);
+	}
 
-			
-			void transpose() { }
 
-		private:
-			
-			RealType beta_;
-			const EngineType& engine_;
-			RealType energyOffset_;
-	}; // EToTheBetaH
+	void transpose() { }
+
+private:
+
+	RealType beta_;
+	const EngineType& engine_;
+	RealType energyOffset_;
+}; // EToTheBetaH
 } // namespace Dmrg 
 
 /*@}*/

@@ -38,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -74,56 +74,55 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 /*! \file EToTheIhTime.h
  *
- * 
+ *
  *
  */
 #ifndef E_TO_THE_I_H_TIME_H
 #define E_TO_THE_I_H_TIME_H
 
-
 namespace FreeFermions {
-	// All interactions == 0
-	template<typename EngineType_>
-	class EToTheIhTime {
-	public:
-			typedef EngineType_ EngineType;
-			typedef typename EngineType::RealType RealType;
-			typedef typename EngineType::FieldType FieldType;
+// All interactions == 0
+template<typename EngineType_>
+class EToTheIhTime {
+public:
+	typedef EngineType_ EngineType;
+	typedef typename EngineType::RealType RealType;
+	typedef typename EngineType::FieldType FieldType;
 
-			EToTheIhTime(RealType time,
-			              const EngineType& engine,
-			              RealType energyOffset) :
-				time_(time),
-				engine_(engine),energyOffset_(energyOffset)
-			{
-			}
+	EToTheIhTime(RealType time,
+	             const EngineType& engine,
+	             RealType energyOffset) :
+	    time_(time),
+	    engine_(engine),energyOffset_(energyOffset)
+	{
+	}
 
-			template<typename FreeOperatorsType>
-			FieldType operator()(const FreeOperatorsType& freeOps,
-			                      SizeType loc) const
-			{
-				RealType sum = 0;
-				for (SizeType i=0;i<loc;i++) {
-					if (freeOps[i].type != FreeOperatorsType::CREATION &&
-						freeOps[i].type != FreeOperatorsType::DESTRUCTION)
-						   continue;
-					int sign =  (freeOps[i].type ==
-							       FreeOperatorsType::CREATION) ? -1 : 1;
-					sum += engine_.eigenvalue(freeOps[i].lambda)*sign;
-				}
-				if (fabs(time_)>1000.0) return sum; 
-				RealType exponent = -time_*sum;
-				return FieldType(cos(exponent),sin(exponent));
-			}
+	template<typename FreeOperatorsType>
+	FieldType operator()(const FreeOperatorsType& freeOps,
+	                     SizeType loc) const
+	{
+		RealType sum = 0;
+		for (SizeType i=0;i<loc;i++) {
+			if (freeOps[i].type != FreeOperatorsType::CREATION &&
+			        freeOps[i].type != FreeOperatorsType::DESTRUCTION)
+				continue;
+			int sign =  (freeOps[i].type ==
+			             FreeOperatorsType::CREATION) ? -1 : 1;
+			sum += engine_.eigenvalue(freeOps[i].lambda)*sign;
+		}
+		if (fabs(time_)>1000.0) return sum;
+		RealType exponent = -time_*sum;
+		return FieldType(cos(exponent),sin(exponent));
+	}
 
-			void transpose() { time_ = -time_; }
+	void transpose() { time_ = -time_; }
 
-		private:
-			
-			RealType time_;
-			const EngineType& engine_;
-			RealType energyOffset_;
-	}; // EToTheIhTime
+private:
+
+	RealType time_;
+	const EngineType& engine_;
+	RealType energyOffset_;
+}; // EToTheIhTime
 } // namespace Dmrg 
 
 /*@}*/

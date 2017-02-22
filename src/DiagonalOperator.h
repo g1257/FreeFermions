@@ -1,9 +1,8 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009 , UT-Battelle, LLC
+Copyright (c) 2009-2017, UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -39,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -68,15 +67,13 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
 /*! \file DiagonalOperator.h
  *
- * 
+ *
  *
  */
 #ifndef DIAGONAL_OPERATOR_H
@@ -84,57 +81,57 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "OperatorFactory.h"
 
 namespace FreeFermions {
-	// All interactions == 0
-	template<typename BackendType>
-	class DiagonalOperator {
-			typedef typename BackendType::RealType RealType;
-			typedef typename BackendType::FieldType FieldType;
-			typedef DiagonalOperator<BackendType> ThisType;
+// All interactions == 0
+template<typename BackendType>
+class DiagonalOperator {
+	typedef typename BackendType::RealType RealType;
+	typedef typename BackendType::FieldType FieldType;
+	typedef DiagonalOperator<BackendType> ThisType;
 
-		public:
-			typedef typename BackendType::EngineType EngineType;
-			typedef OperatorFactory<ThisType> FactoryType;
+public:
+	typedef typename BackendType::EngineType EngineType;
+	typedef OperatorFactory<ThisType> FactoryType;
 
-			friend class OperatorFactory<ThisType>;
+	friend class OperatorFactory<ThisType>;
 
-			template<typename FreeOperatorsType>
-			FieldType operator()(const FreeOperatorsType& freeOps,
-			                      SizeType loc) const
-			{
-				return backend_(freeOps,loc);
-			}
+	template<typename FreeOperatorsType>
+	FieldType operator()(const FreeOperatorsType& freeOps,
+	                     SizeType loc) const
+	{
+		return backend_(freeOps,loc);
+	}
 
-			void transpose() { backend_.transpose(); }
+	void transpose() { backend_.transpose(); }
 
-			template<typename SomeStateType>
-			void applyTo(SomeStateType& state) const
-			{
-				state.pushInto(*this);
-			}
+	template<typename SomeStateType>
+	void applyTo(SomeStateType& state) const
+	{
+		state.pushInto(*this);
+	}
 
-		private:
-			//! Use factory to create objects of this type
-			DiagonalOperator(BackendType backend) :
-				backend_(backend)
-			{
-			}
+private:
+	//! Use factory to create objects of this type
+	DiagonalOperator(BackendType backend) :
+	    backend_(backend)
+	{
+	}
 
-			DiagonalOperator(const ThisType* x) : backend_(x->backend_) {}
+	DiagonalOperator(const ThisType* x) : backend_(x->backend_) {}
 
-			DiagonalOperator(const ThisType& x)
-			{
-				throw std::runtime_error(
-				  "DiagonalOperator::copyCtor: Don't even think of coming here\n");
-			}
+	DiagonalOperator(const ThisType& x)
+	{
+		throw std::runtime_error(
+		            "DiagonalOperator::copyCtor: Don't even think of coming here\n");
+	}
 
-			ThisType& operator=(const ThisType& x)
-			{
-				throw std::runtime_error(
-				  "DiagonalOperator::assignmentOp: Don't even think of coming here\n");
-			}
+	ThisType& operator=(const ThisType& x)
+	{
+		throw std::runtime_error(
+		            "DiagonalOperator::assignmentOp: Don't even think of coming here\n");
+	}
 
-			BackendType backend_;
-	}; // DiagonalOperator
+	BackendType backend_;
+}; // DiagonalOperator
 } // namespace Dmrg 
 
 /*@}*/

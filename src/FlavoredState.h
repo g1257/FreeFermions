@@ -1,9 +1,8 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009 , UT-Battelle, LLC
+Copyright (c) 2009-2017, UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -68,9 +67,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
@@ -292,10 +289,10 @@ private:
 		TstorageType::set(data_,flavor,threadNum_);
 		SizeType nflips = TstorageType::statesBetween(lambda,threadNum_);
 		if (label == CREATION) {
-			if (TstorageType::bitAt(lambda,threadNum_)) return 0; // can't create, there's already one
+			if (TstorageType::bitAt(lambda,threadNum_)) return 0;
 			result = true;
 		} else if (label == DESTRUCTION) {
-			if (!TstorageType::bitAt(lambda,threadNum_)) return 0; // can't destroy, there's nothing
+			if (!TstorageType::bitAt(lambda,threadNum_)) return 0;
 			result =false;
 		} else {
 			throw std::runtime_error("FlavoredState::applyInternal()\n");

@@ -38,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -74,58 +74,57 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 /*! \file OneOverZminusH.h
  *
- * 
+ *
  *
  */
 #ifndef ONE_OVER_Z_MINUS_H_H
 #define ONE_OVER_Z_MINUS_H_H
 
-
 namespace FreeFermions {
-	// All interactions == 0
-	template<typename EngineType_>
-	class OneOverZminusH {
-	public:
-			typedef EngineType_ EngineType;
-			typedef typename EngineType::RealType RealType;
-			typedef typename EngineType::FieldType FieldType;
+// All interactions == 0
+template<typename EngineType_>
+class OneOverZminusH {
+public:
+	typedef EngineType_ EngineType;
+	typedef typename EngineType::RealType RealType;
+	typedef typename EngineType::FieldType FieldType;
 
-			OneOverZminusH(FieldType z,
-			               int sign,
-				       const RealType& offset,
-			               const EngineType& engine)
-			: z_(z),
-			  sign_(sign),
-			  offset_(offset),
-			  engine_(engine)
-			{}
+	OneOverZminusH(FieldType z,
+	               int sign,
+	               const RealType& offset,
+	               const EngineType& engine)
+	    : z_(z),
+	      sign_(sign),
+	      offset_(offset),
+	      engine_(engine)
+	{}
 
-			template<typename FreeOperatorsType>
-			FieldType operator()(const FreeOperatorsType& freeOps,
-			                      SizeType loc) const
-			{
-				RealType sum = 0;
-				for (SizeType i=0;i<loc;i++) {
-					if (freeOps[i].type != FreeOperatorsType::CREATION &&
-						freeOps[i].type != FreeOperatorsType::DESTRUCTION)
-						   continue;
-					int sign =  (freeOps[i].type ==
-							       FreeOperatorsType::CREATION) ? -1 : 1;
-					sum += engine_.eigenvalue(freeOps[i].lambda)*sign;
-				}
-				//if (fabs(time_)>1000.0) return sum;
-				return 1.0/(z_-sign_*(sum+offset_));
-			}
+	template<typename FreeOperatorsType>
+	FieldType operator()(const FreeOperatorsType& freeOps,
+	                     SizeType loc) const
+	{
+		RealType sum = 0;
+		for (SizeType i=0;i<loc;i++) {
+			if (freeOps[i].type != FreeOperatorsType::CREATION &&
+			        freeOps[i].type != FreeOperatorsType::DESTRUCTION)
+				continue;
+			int sign =  (freeOps[i].type ==
+			             FreeOperatorsType::CREATION) ? -1 : 1;
+			sum += engine_.eigenvalue(freeOps[i].lambda)*sign;
+		}
+		//if (fabs(time_)>1000.0) return sum;
+		return 1.0/(z_-sign_*(sum+offset_));
+	}
 
-			void transpose() { z_ = PsimagLite::conj(z_); }
+	void transpose() { z_ = PsimagLite::conj(z_); }
 
-		private:
-			
-			FieldType z_;
-			int sign_;
-			RealType offset_;
-			const EngineType& engine_;
-	}; // OneOverZminusH
+private:
+
+	FieldType z_;
+	int sign_;
+	RealType offset_;
+	const EngineType& engine_;
+}; // OneOverZminusH
 } // namespace Dmrg 
 
 /*@}*/

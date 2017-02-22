@@ -94,223 +94,223 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "InputCheck.h"
 
 namespace FreeFermions {
-	template<typename EngineType>
-	class ReducedDensityMatrix {
+template<typename EngineType>
+class ReducedDensityMatrix {
 
-		typedef typename PsimagLite::Vector<SizeType>::Type VectorUintType;
-		typedef typename EngineType::FieldType FieldType;
-		typedef typename EngineType::RealType RealType;
-		typedef typename PsimagLite::Vector<FieldType>::Type VectorType;
-		typedef typename PsimagLite::Vector<VectorType>::Type VectorVectorType;
-		typedef PsimagLite::Matrix<FieldType> MatrixType;
-		typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
-		typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
-		typedef PsimagLite::InputNg<FreeFermions::InputCheck> InputNgType;
-		typedef FreeFermions::GeometryParameters<RealType,InputNgType::Readable> GeometryParamsType;
-		typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
-		typedef typename OperatorType::FactoryType OpNormalFactoryType;
-		typedef PsimagLite::Concurrency ConcurrencyType;
+	typedef typename PsimagLite::Vector<SizeType>::Type VectorUintType;
+	typedef typename EngineType::FieldType FieldType;
+	typedef typename EngineType::RealType RealType;
+	typedef typename PsimagLite::Vector<FieldType>::Type VectorType;
+	typedef typename PsimagLite::Vector<VectorType>::Type VectorVectorType;
+	typedef PsimagLite::Matrix<FieldType> MatrixType;
+	typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
+	typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
+	typedef PsimagLite::InputNg<FreeFermions::InputCheck> InputNgType;
+	typedef FreeFermions::GeometryParameters<RealType,InputNgType::Readable> GeometryParamsType;
+	typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
+	typedef typename OperatorType::FactoryType OpNormalFactoryType;
+	typedef PsimagLite::Concurrency ConcurrencyType;
 
-		enum {CREATION = OperatorType::CREATION,
-				       DESTRUCTION = OperatorType::DESTRUCTION};
+	enum {CREATION = OperatorType::CREATION,
+		  DESTRUCTION = OperatorType::DESTRUCTION};
 
-		class MyLoop {
+	class MyLoop {
 
-		public:
+	public:
 
-			MyLoop(EngineType& engine,
-			       SizeType n,
-			       SizeType ne,
-			       CanonicalStates& aux,
-			       SizeType states,
-			       SizeType nthreads)
-			    : engine_(engine),
-			      n_(n),
-			      ne_(ne),
-			      aux_(aux),
-			      neV_(engine_.dof(),ne_),
-			      zeroV_(engine_.dof(),0),
-			      psiV_(nthreads),
-			      psiVv_(states),
-			      sumV_(ConcurrencyType::storageSize(nthreads),0)
-			{
-				for (SizeType i = 0; i < psiV_.size(); ++i)
-					psiV_[i].resize(states);
-			}
+		MyLoop(EngineType& engine,
+		       SizeType n,
+		       SizeType ne,
+		       CanonicalStates& aux,
+		       SizeType states,
+		       SizeType nthreads)
+		    : engine_(engine),
+		      n_(n),
+		      ne_(ne),
+		      aux_(aux),
+		      neV_(engine_.dof(),ne_),
+		      zeroV_(engine_.dof(),0),
+		      psiV_(nthreads),
+		      psiVv_(states),
+		      sumV_(ConcurrencyType::storageSize(nthreads),0)
+		{
+			for (SizeType i = 0; i < psiV_.size(); ++i)
+				psiV_[i].resize(states);
+		}
 
-			void thread_function_(SizeType threadNum,
-			                      SizeType blockSize,
-			                      SizeType total,
-			                      typename ConcurrencyType::MutexType*)
-			{
-				OpNormalFactoryType opNormalFactory(engine_);
-				RealType each = 0.1 * total;
-				if (each < 1) each = 1;
-				SizeType eachInteger = static_cast<SizeType>(each);
-				HilbertStateType gs(engine_,neV_,threadNum,false);
+		void thread_function_(SizeType threadNum,
+		                      SizeType blockSize,
+		                      SizeType total,
+		                      typename ConcurrencyType::MutexType*)
+		{
+			OpNormalFactoryType opNormalFactory(engine_);
+			RealType each = 0.1 * total;
+			if (each < 1) each = 1;
+			SizeType eachInteger = static_cast<SizeType>(each);
+			HilbertStateType gs(engine_,neV_,threadNum,false);
 
-				SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
-				SizeType npthreads = ConcurrencyType::npthreads;
-				for (SizeType p=0;p<blockSize;p++) {
-					SizeType i = (threadNum+npthreads*mpiRank)*blockSize + p;
-					if (i>=total) break;
+			SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
+			SizeType npthreads = ConcurrencyType::npthreads;
+			for (SizeType p=0;p<blockSize;p++) {
+				SizeType i = (threadNum+npthreads*mpiRank)*blockSize + p;
+				if (i>=total) break;
 
-					if (eachInteger > 0 && i%eachInteger == 0) {
-						std::cerr<<"Done "<<(i*10/each)<<"%\n";
-						std::cerr.flush();
+				if (eachInteger > 0 && i%eachInteger == 0) {
+					std::cerr<<"Done "<<(i*10/each)<<"%\n";
+					std::cerr.flush();
+				}
+
+				SizeType ind = ConcurrencyType::storageIndex(threadNum);
+
+				VectorUintType v;
+				aux_.getSites(v,i);
+				HilbertStateType phi(engine_,zeroV_,threadNum,false);
+				psiOneBlock(phi,v,CREATION,opNormalFactory);
+				//std::cout<<phi;
+				for (SizeType j=0;j<total;j++) {
+					VectorUintType w;
+					aux_.getSites(w,j);
+					if (v.size()+w.size()!=ne_) {
+						psiV_[threadNum][j] = 0;
+						continue;
 					}
 
-					SizeType ind = ConcurrencyType::storageIndex(threadNum);
-
-					VectorUintType v;
-					aux_.getSites(v,i);
-					HilbertStateType phi(engine_,zeroV_,threadNum,false);
-					psiOneBlock(phi,v,CREATION,opNormalFactory);
-					//std::cout<<phi;
-					for (SizeType j=0;j<total;j++) {
-						VectorUintType w;
-						aux_.getSites(w,j);
-						if (v.size()+w.size()!=ne_) {
-							psiV_[threadNum][j] = 0;
-							continue;
-						}
-
-						HilbertStateType phi2 = gs;
-						psiOneBlock(phi2,w,DESTRUCTION,opNormalFactory,n_);
-						psiV_[threadNum][j] = scalarProduct(phi2,phi);
-						//std::cout<<psi(i,j)<<" ";
-					}
-					psiVv_[i]=psiV_[threadNum];
-					sumV_[ind] += psiV_[threadNum]*psiV_[threadNum];
+					HilbertStateType phi2 = gs;
+					psiOneBlock(phi2,w,DESTRUCTION,opNormalFactory,n_);
+					psiV_[threadNum][j] = scalarProduct(phi2,phi);
+					//std::cout<<psi(i,j)<<" ";
 				}
+				psiVv_[i]=psiV_[threadNum];
+				sumV_[ind] += psiV_[threadNum]*psiV_[threadNum];
 			}
+		}
 
-			FieldType sum() const
-			{
-				assert(sumV_.size()>0);
-				return sumV_[0];
+		FieldType sum() const
+		{
+			assert(sumV_.size()>0);
+			return sumV_[0];
+		}
+
+		const typename PsimagLite::Vector<VectorType>::Type& psiVv() const
+		{
+			return psiVv_;
+		}
+
+		void sync()
+		{
+			PsimagLite::MPI::allReduce(sumV_);
+			FieldType tmp = PsimagLite::sum(sumV_);
+
+			PsimagLite::MPI::pointByPointGather(psiVv_);
+			PsimagLite::MPI::bcast(psiVv_);
+
+			sumV_[0] = tmp;
+		}
+
+	private:
+
+		void psiOneBlock(HilbertStateType& phi,
+		                 const VectorUintType& v,
+		                 SizeType label,
+		                 OpNormalFactoryType& opNormalFactory,
+		                 SizeType offset = 0)
+		{
+			SizeType sigma = 0;
+			for (SizeType i=0;i<v.size();i++) {
+				SizeType site = v[i] + offset;
+				OperatorType& myOp = opNormalFactory(label,site,sigma);
+				myOp.applyTo(phi);
 			}
+		}
 
-			const typename PsimagLite::Vector<VectorType>::Type& psiVv() const
-			{
-				return psiVv_;
-			}
+		EngineType engine_;
+		SizeType n_;
+		SizeType ne_;
+		CanonicalStates aux_;
+		VectorUintType neV_;
+		VectorUintType zeroV_;
+		VectorVectorType psiV_;
+		typename PsimagLite::Vector<VectorType>::Type psiVv_;
+		typename PsimagLite::Vector<FieldType>::Type sumV_;
+	}; // class MyLoop
 
-			void sync()
-			{
-				PsimagLite::MPI::allReduce(sumV_);
-				FieldType tmp = PsimagLite::sum(sumV_);
+public:
 
-				PsimagLite::MPI::pointByPointGather(psiVv_);
-				PsimagLite::MPI::bcast(psiVv_);
+	// note: right and left blocks are assumed equal and of size n
+	ReducedDensityMatrix(EngineType& engine,SizeType n,SizeType ne)
+	    : engine_(engine),n_(n),ne_(ne)
+	{
+		assert(engine_.dof()==1);
+		calculatePsi(psi_);
+		//std::cout<<psi_;
+		if (!PsimagLite::Concurrency::root()) return;
+		calculateRdm(rho_,psi_);
+	}
 
-				sumV_[0] = tmp;
-			}
+	SizeType rank() const { return rho_.n_row(); }
 
-		private:
+	void diagonalize(typename PsimagLite::Vector<RealType>::Type& e)
+	{
+		if (!PsimagLite::Concurrency::root()) return;
+		diag(rho_,e,'N');
+	}
 
-			void psiOneBlock(HilbertStateType& phi,
-			                   const VectorUintType& v,
-			                   SizeType label,
-			                   OpNormalFactoryType& opNormalFactory,
-			                   SizeType offset = 0)
-			{
-				SizeType sigma = 0;
-				for (SizeType i=0;i<v.size();i++) {
-					SizeType site = v[i] + offset;
-					OperatorType& myOp = opNormalFactory(label,site,sigma);
-					myOp.applyTo(phi);
-				}
-			}
+private:
+	void calculatePsi(MatrixType& psi)
+	{
+		CanonicalStates aux(n_,ne_);
+		SizeType states = aux.states();
+		psi.resize(states,states);
 
-			EngineType engine_;
-			SizeType n_;
-			SizeType ne_;
-			CanonicalStates aux_;
-			VectorUintType neV_;
-			VectorUintType zeroV_;
-			VectorVectorType psiV_;
-			typename PsimagLite::Vector<VectorType>::Type psiVv_;
-			typename PsimagLite::Vector<FieldType>::Type sumV_;
-		}; // class MyLoop
+		std::cout<<"#psi of size "<<states<<"x"<<states<<"\n";
 
-		public:
+		typedef MyLoop MyLoopType;
+		typedef PsimagLite::Parallelizer<MyLoopType> ParallelizerType;
+		ParallelizerType threadObject(PsimagLite::Concurrency::npthreads,
+		                              PsimagLite::MPI::COMM_WORLD);
 
-			// note: right and left blocks are assumed equal and of size n
-			ReducedDensityMatrix(EngineType& engine,SizeType n,SizeType ne)
-			: engine_(engine),n_(n),ne_(ne)
-			{
-				assert(engine_.dof()==1);
-				calculatePsi(psi_);
-				//std::cout<<psi_;
-				if (!PsimagLite::Concurrency::root()) return;
-				calculateRdm(rho_,psi_);
-			}
+		MyLoopType myLoop(engine_,n_,ne_,aux,states,threadObject.threads());
 
-			SizeType rank() const { return rho_.n_row(); }
+		std::cout<<"Using "<<threadObject.name();
+		std::cout<<" with "<<threadObject.threads()<<" threads.\n";
+		std::cout<<"npthreads= "<<PsimagLite::Concurrency::npthreads<<"\n";
+		threadObject.loopCreate(states,myLoop);
 
-			void diagonalize(typename PsimagLite::Vector<RealType>::Type& e)
-			{
-				if (!PsimagLite::Concurrency::root()) return;
-				diag(rho_,e,'N');
-			}
+		myLoop.sync();
 
-		private:
-			void calculatePsi(MatrixType& psi)
-			{
-				CanonicalStates aux(n_,ne_);
-				SizeType states = aux.states();
-				psi.resize(states,states);
+		FieldType sum = myLoop.sum();
+		const typename PsimagLite::Vector<VectorType>::Type& psiVv = myLoop.psiVv();
 
-				std::cout<<"#psi of size "<<states<<"x"<<states<<"\n";
+		//				concurrency_.gather(psiVv);
+		//				concurrency_.gather(sum);
+		std::cerr<<"sum="<<sum<<"\n";
+		if (fabs(sum) < 1e-6)
+			throw PsimagLite::RuntimeError("Sum is too small\n");
 
-				typedef MyLoop MyLoopType;
-				typedef PsimagLite::Parallelizer<MyLoopType> ParallelizerType;
-				ParallelizerType threadObject(PsimagLite::Concurrency::npthreads,
-				                              PsimagLite::MPI::COMM_WORLD);
+		for (SizeType i=0;i<psiVv.size();i++)
+			for (SizeType j=0;j<psiVv[i].size();j++)
+				psi(i,j) = psiVv[i][j]/sqrt(sum);
+	}
 
-				MyLoopType myLoop(engine_,n_,ne_,aux,states,threadObject.threads());
+	void calculateRdm(MatrixType& rho,const MatrixType& psi)
+	{
+		SizeType states=psi.n_row();
+		rho.resize(states,states);
+		//std::cout<<"#rho of size "<<states<<"x"<<states<<"\n";
+		RealType alpha = 1.0;
+		RealType beta = 0.0;
+		psimag::BLAS::GEMM('N','C',states,states,states,alpha,&(psi(0,0)),states,
+		                   &(psi(0,0)),states,beta,&(rho(0,0)),states);
+		if (!isHermitian(rho))
+			throw std::runtime_error("DensityMatrix not Hermitian\n");
+	}
 
-				std::cout<<"Using "<<threadObject.name();
-				std::cout<<" with "<<threadObject.threads()<<" threads.\n";
-				std::cout<<"npthreads= "<<PsimagLite::Concurrency::npthreads<<"\n";
-				threadObject.loopCreate(states,myLoop);
-
-				myLoop.sync();
-
-				FieldType sum = myLoop.sum();
-				const typename PsimagLite::Vector<VectorType>::Type& psiVv = myLoop.psiVv();
-
-//				concurrency_.gather(psiVv);
-//				concurrency_.gather(sum);
-				std::cerr<<"sum="<<sum<<"\n";
-				if (fabs(sum) < 1e-6)
-					throw PsimagLite::RuntimeError("Sum is too small\n");
-
-				for (SizeType i=0;i<psiVv.size();i++)
-					for (SizeType j=0;j<psiVv[i].size();j++)
-						psi(i,j) = psiVv[i][j]/sqrt(sum);
-			}
-
-			void calculateRdm(MatrixType& rho,const MatrixType& psi)
-			{
-				SizeType states=psi.n_row();
-				rho.resize(states,states);
-				//std::cout<<"#rho of size "<<states<<"x"<<states<<"\n";
-				RealType alpha = 1.0;
-				RealType beta = 0.0;
-				psimag::BLAS::GEMM('N','C',states,states,states,alpha,&(psi(0,0)),states,
-				     &(psi(0,0)),states,beta,&(rho(0,0)),states);
-				if (!isHermitian(rho))
-				  throw std::runtime_error("DensityMatrix not Hermitian\n");
-			}
-
-			EngineType& engine_;
-			SizeType n_; // number of sites for one block only (both blocks are assumed equal)
-			SizeType ne_; // number of electrons in the combined lattice (right+left)
-			MatrixType psi_; // the overlap of the g.s. with the product state
-			MatrixType rho_; // the reduced density matrix (reduced over right block)
-	}; // ReducedDensityMatrix
+	EngineType& engine_;
+	SizeType n_; // number of sites for one block only (both blocks are assumed equal)
+	SizeType ne_; // number of electrons in the combined lattice (right+left)
+	MatrixType psi_; // the overlap of the g.s. with the product state
+	MatrixType rho_; // the reduced density matrix (reduced over right block)
+}; // ReducedDensityMatrix
 } // FreeFermions namespace
 /*@}*/
 #endif // R_DENSITY_MATRIX_H

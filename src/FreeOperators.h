@@ -38,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -87,202 +87,202 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 namespace FreeFermions {
 
-	struct FreeOperator {
-		FreeOperator() : lambda(0),type(0) {}
-		SizeType lambda;
-		SizeType type;
-	};
+struct FreeOperator {
+	FreeOperator() : lambda(0),type(0) {}
+	SizeType lambda;
+	SizeType type;
+};
 
-	template<typename OperatorType,typename OpPointerType>
-	class FreeOperators {
+template<typename OperatorType,typename OpPointerType>
+class FreeOperators {
 
-		enum {DRY_RUN,NORMAL_RUN};
+	enum {DRY_RUN,NORMAL_RUN};
 
-	public:
+public:
 
-		typedef PsimagLite::Vector<SizeType>::Type VectorSizeType;
-		typedef typename OperatorType::RealType RealType;
-		typedef typename OperatorType::FieldType FieldType;
-		typedef IndexGenerator IndexGeneratorType;
-		typedef PsimagLite::Permutations<IndexGeneratorType> PermutationsType;
-		typedef typename PsimagLite::Vector<OpPointerType>::Type OpPointersType;
+	typedef PsimagLite::Vector<SizeType>::Type VectorSizeType;
+	typedef typename OperatorType::RealType RealType;
+	typedef typename OperatorType::FieldType FieldType;
+	typedef IndexGenerator IndexGeneratorType;
+	typedef PsimagLite::Permutations<IndexGeneratorType> PermutationsType;
+	typedef typename PsimagLite::Vector<OpPointerType>::Type OpPointersType;
 
-		enum {CREATION = OperatorType::CREATION,
-		      DESTRUCTION = OperatorType::DESTRUCTION,
-		      DIAGONAL};
+	enum {CREATION = OperatorType::CREATION,
+		  DESTRUCTION = OperatorType::DESTRUCTION,
+		  DIAGONAL};
 
-		FreeOperators(const OpPointersType& opPointers,
-		              const IndexGeneratorType& lambda,
-		              const PermutationsType& lambda2,
-		              SizeType sigma,
-		              const VectorSizeType& occupations,
-		              const VectorSizeType& occupations2)
-			: value_(1),loc_(0)
-		{
-			SizeType counter3 = addAtTheFront(occupations,DRY_RUN);
-			SizeType counter2=0;
-			SizeType counter = 0;
-			addAtTheMiddle(counter,counter2,opPointers,lambda,lambda2,sigma,DRY_RUN);
-			counter += counter3;
-			
-			counter2 += addAtTheBack(occupations2,DRY_RUN);
+	FreeOperators(const OpPointersType& opPointers,
+	              const IndexGeneratorType& lambda,
+	              const PermutationsType& lambda2,
+	              SizeType sigma,
+	              const VectorSizeType& occupations,
+	              const VectorSizeType& occupations2)
+	    : value_(1),loc_(0)
+	{
+		SizeType counter3 = addAtTheFront(occupations,DRY_RUN);
+		SizeType counter2=0;
+		SizeType counter = 0;
+		addAtTheMiddle(counter,counter2,opPointers,lambda,lambda2,sigma,DRY_RUN);
+		counter += counter3;
+
+		counter2 += addAtTheBack(occupations2,DRY_RUN);
 
 
-			data_.resize(loc_);
-			loc_=0;
+		data_.resize(loc_);
+		loc_=0;
 
-			addAtTheFront(occupations,NORMAL_RUN);
-			SizeType counter4=0;
-			SizeType counter5=0;
-			addAtTheMiddle(counter4,counter5,opPointers,lambda,lambda2,sigma,NORMAL_RUN);
-			addAtTheBack(occupations2,NORMAL_RUN);
+		addAtTheFront(occupations,NORMAL_RUN);
+		SizeType counter4=0;
+		SizeType counter5=0;
+		addAtTheMiddle(counter4,counter5,opPointers,lambda,lambda2,sigma,NORMAL_RUN);
+		addAtTheBack(occupations2,NORMAL_RUN);
 
-			// if daggers > non-daggers, result is zero
-			if (counter!=counter2) {
-				value_ = 0;
-				return;
-			}
+		// if daggers > non-daggers, result is zero
+		if (counter!=counter2) {
+			value_ = 0;
+			return;
 		}
+	}
 
-		SizeType findLocOfDiagOp(SizeType ind) const
-		{
-			SizeType counter = 0;
-			SizeType j = 0;
-			for (SizeType i=0;i<data_.size();i++) {
-				if (data_[i].type == DIAGONAL) {
-					if (counter==ind) return j;
-					counter++;
-					j++;
-				}
+	SizeType findLocOfDiagOp(SizeType ind) const
+	{
+		SizeType counter = 0;
+		SizeType j = 0;
+		for (SizeType i=0;i<data_.size();i++) {
+			if (data_[i].type == DIAGONAL) {
+				if (counter==ind) return j;
+				counter++;
 				j++;
 			}
-			assert(false);
-			return 0;
+			j++;
 		}
+		assert(false);
+		return 0;
+	}
 
-		void removeNonCsOrDs()
-		{
-			typename PsimagLite::Vector<FreeOperator>::Type dataOld = data_;
-			data_.clear();
-			for (SizeType i=0;i<dataOld.size();i++) {
-				SizeType type1 = dataOld[i].type;
-				if (type1 == CREATION || type1 == DESTRUCTION)
-					data_.push_back(dataOld[i]);
+	void removeNonCsOrDs()
+	{
+		typename PsimagLite::Vector<FreeOperator>::Type dataOld = data_;
+		data_.clear();
+		for (SizeType i=0;i<dataOld.size();i++) {
+			SizeType type1 = dataOld[i].type;
+			if (type1 == CREATION || type1 == DESTRUCTION)
+				data_.push_back(dataOld[i]);
+		}
+	}
+
+	SizeType size() const { return data_.size(); }
+
+	const FreeOperator& operator[](SizeType i) const { return data_[i]; }
+
+	void reverse()
+	{
+		// flip'em
+		typename PsimagLite::Vector<FreeOperator>::Type dataCopy = data_;
+		SizeType n = data_.size();
+		for (SizeType i=0;i<n;i++)
+			data_[i] = dataCopy[n-i-1];
+	}
+
+	RealType operator()()
+	{
+		return value_;
+	}
+
+	void removePair(SizeType loc)
+	{
+		typename PsimagLite::Vector<FreeOperator>::Type::iterator itp = data_.begin();
+		data_.erase(itp);
+		if (loc == 0) throw PsimagLite::RuntimeError("removePair failed\n");
+		--loc;
+		itp = data_.begin()+loc;
+		assert(itp < data_.end());
+		data_.erase(itp);
+	}
+
+	bool notCreationOrDestruction(SizeType type1) const
+	{
+		return (type1 != CREATION && type1 != DESTRUCTION);
+	}
+
+private:
+
+	SizeType addAtTheBack(const VectorSizeType&  occupations2,SizeType typeOfRun)
+	{
+		SizeType counter = 0;
+		for (int i=occupations2.size()-1;i>=0;i--) {
+			if (occupations2[i]==0) continue;
+			counter++;
+			if (typeOfRun==DRY_RUN) {
+				loc_++;
+				continue;
 			}
+			FreeOperator fo;
+			fo.lambda = i;
+			fo.type = DESTRUCTION;
+			data_[loc_++]=fo;
 		}
+		return counter;
+	}
 
-		SizeType size() const { return data_.size(); }
-
-		const FreeOperator& operator[](SizeType i) const { return data_[i]; }
-
-		void reverse()
-		{
-			// flip'em
-			typename PsimagLite::Vector<FreeOperator>::Type dataCopy = data_;
-			SizeType n = data_.size();
-			for (SizeType i=0;i<n;i++)
-				data_[i] = dataCopy[n-i-1];
+	SizeType addAtTheFront(const VectorSizeType&  occupations,SizeType typeOfRun)
+	{
+		SizeType counter = 0;
+		for (SizeType i=0;i<occupations.size();++i) {
+			if (occupations[i]==0) continue;
+			counter++;
+			if (typeOfRun==DRY_RUN) {
+				loc_++;
+				continue;
+			}
+			FreeOperator fo;
+			fo.lambda = i;
+			fo.type = CREATION;
+			data_[loc_++]=fo;
 		}
+		return counter;
+	}
 
-		RealType operator()()
-		{
-			return value_;
-		}
+	void addAtTheMiddle(SizeType& counter,
+	                    SizeType& counter2,
+	                    const OpPointersType& opPointers,
+	                    const IndexGeneratorType& lambda,
+	                    const PermutationsType& lambda2,
+	                    SizeType sigma,
+	                    SizeType typeOfRun)
+	{
+		for (SizeType i=0;i<opPointers.size();i++) {
+			FreeOperator fo;
+			fo.type = opPointers[i].type;
+			if (notCreationOrDestruction(fo.type)) {
+				fo.lambda = 0;
+				if (typeOfRun==NORMAL_RUN) data_[loc_++]=fo;
+				else loc_++;
+				continue;
+			}
+			if (opPointers[i].sigma!=sigma) continue;
 
-		void removePair(SizeType loc)
-		{
-			typename PsimagLite::Vector<FreeOperator>::Type::iterator itp = data_.begin();
-			data_.erase(itp);
-			if (loc == 0) throw PsimagLite::RuntimeError("removePair failed\n");
-			--loc;
-			itp = data_.begin()+loc;
-			assert(itp < data_.end());
-			data_.erase(itp);
-		}
-
-		 bool notCreationOrDestruction(SizeType type1) const
-		 {
-			 return (type1 != CREATION && type1 != DESTRUCTION);
-		 }
-
-	private:
-
-		SizeType addAtTheBack(const VectorSizeType&  occupations2,SizeType typeOfRun)
-		{
-			SizeType counter = 0;
-			for (int i=occupations2.size()-1;i>=0;i--) {
-				if (occupations2[i]==0) continue;
+			if (typeOfRun==DRY_RUN) {
+				loc_++;
+				continue;
+			}
+			if (fo.type==CREATION) {
+				if (counter<lambda.size()) fo.lambda = lambda[counter];
 				counter++;
-				if (typeOfRun==DRY_RUN) {
-					loc_++;
-					continue;
-				}
-				FreeOperator fo;
-				fo.lambda = i;
-				fo.type = DESTRUCTION;
-				data_[loc_++]=fo;
+			} else if (fo.type==DESTRUCTION) {
+				if (counter2<lambda2.size()) fo.lambda = lambda2[counter2];
+				counter2++;
+			} else {
+				fo.lambda = 0;
 			}
-			return counter;
+			data_[loc_++]=fo;
 		}
+	}
 
-		 SizeType addAtTheFront(const VectorSizeType&  occupations,SizeType typeOfRun)
-		 {
-			 SizeType counter = 0;
-			 for (SizeType i=0;i<occupations.size();++i) {
-				 if (occupations[i]==0) continue;
-				 counter++;
-				 if (typeOfRun==DRY_RUN) {
-					 loc_++;
-					 continue;
-				 }
-				 FreeOperator fo;
-				 fo.lambda = i;
-				 fo.type = CREATION;
-				 data_[loc_++]=fo;
-			 }
-			 return counter;
-		 }
-
-		 void addAtTheMiddle(SizeType& counter,
-							 SizeType& counter2,
-							 const OpPointersType& opPointers,
-							 const IndexGeneratorType& lambda,
-							 const PermutationsType& lambda2,
-							 SizeType sigma,
-							 SizeType typeOfRun)
-		 {
-			 for (SizeType i=0;i<opPointers.size();i++) {
-				 FreeOperator fo;
-				 fo.type = opPointers[i].type;
-				 if (notCreationOrDestruction(fo.type)) {
-					 fo.lambda = 0;
-					 if (typeOfRun==NORMAL_RUN) data_[loc_++]=fo;
-					 else loc_++;
-					 continue;
-				 }
-				 if (opPointers[i].sigma!=sigma) continue;
-
-				 if (typeOfRun==DRY_RUN) {
-					 loc_++;
-					 continue;
-				 }
-				 if (fo.type==CREATION) {
-					 if (counter<lambda.size()) fo.lambda = lambda[counter];
-					 counter++;
-				 } else if (fo.type==DESTRUCTION) {
-					 if (counter2<lambda2.size()) fo.lambda = lambda2[counter2];
-					 counter2++;
-				 } else {
-					 fo.lambda = 0;
-				 }
-				 data_[loc_++]=fo;
-			 }
-		 }
-
-		typename PsimagLite::Vector<FreeOperator>::Type data_;
-		RealType value_;
-		SizeType loc_;
-	}; // FreeOperators
+	typename PsimagLite::Vector<FreeOperator>::Type data_;
+	RealType value_;
+	SizeType loc_;
+}; // FreeOperators
 } // namespace Dmrg 
 
 /*@}*/

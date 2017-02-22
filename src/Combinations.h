@@ -1,9 +1,8 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009 , UT-Battelle, LLC
+Copyright (c) 2009-2017, UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -39,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -68,9 +67,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
@@ -85,70 +82,70 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include <vector>
 
 namespace FreeFermions {
-	class Combinations {
-	public:
+class Combinations {
+public:
 
-		Combinations(SizeType n,SizeType k)
-		: k_(k)
-		{
-			if (k==0 || n<k) throw std::runtime_error(
-			  "Combinations::ctor\n");
-			mainLoop(n);
-		}
-		
-		const PsimagLite::Vector<SizeType>::Type& operator()(SizeType i) const
-		{
-			return data_[i];
-		}
-		
-		SizeType size() const { return data_.size(); }
+	Combinations(SizeType n,SizeType k)
+	    : k_(k)
+	{
+		if (k==0 || n<k) throw std::runtime_error(
+		            "Combinations::ctor\n");
+		mainLoop(n);
+	}
 
-	private:
-		void mainLoop(SizeType n)
-		{
-			PsimagLite::Vector<int>::Type c(k_+3);
-			PsimagLite::Vector<SizeType>::Type tmpVec(k_);
-			int x = 0;
-			for (int i=1; i <= int(k_); i++) c[i] = i;
-			c[k_+1] = n+1;
-			c[k_+2] = 0;
-			int j = k_;
+	const PsimagLite::Vector<SizeType>::Type& operator()(SizeType i) const
+	{
+		return data_[i];
+	}
+
+	SizeType size() const { return data_.size(); }
+
+private:
+	void mainLoop(SizeType n)
+	{
+		PsimagLite::Vector<int>::Type c(k_+3);
+		PsimagLite::Vector<SizeType>::Type tmpVec(k_);
+		int x = 0;
+		for (int i=1; i <= int(k_); i++) c[i] = i;
+		c[k_+1] = n+1;
+		c[k_+2] = 0;
+		int j = k_;
 visit:
-			SizeType counter = 0;
-			for (int i=k_; i >= 1; i--)
-				tmpVec[counter++] = c[i]-1;
-			data_.push_back(tmpVec);
+		SizeType counter = 0;
+		for (int i=k_; i >= 1; i--)
+			tmpVec[counter++] = c[i]-1;
+		data_.push_back(tmpVec);
 
-			if (j > 0) {x = j+1; goto incr;}
-			if (c[1] + 1 < c[2]) {
-				c[1] += 1;
-				goto visit;
-			}
-			j = 2;
-do_more:
-			c[j-1] = j-1;
-			x = c[j] + 1;
-			if (x == c[j+1]) {j++; goto do_more;}
-			if (j > int(k_)) return;
-incr:
-			c[j] = x;
-			j--;
+		if (j > 0) {x = j+1; goto incr;}
+		if (c[1] + 1 < c[2]) {
+			c[1] += 1;
 			goto visit;
 		}
-
-		SizeType k_;
-		PsimagLite::Vector<PsimagLite::Vector<SizeType>::Type>::Type data_;
-	}; // Combinations
-	
-	std::ostream& operator<<(std::ostream& os,const Combinations& ig)
-	{
-		for (SizeType i=0;i<ig.size();++i) {
-			for (SizeType j=0;j<ig(i).size();++j)
-				os<<ig(i)[j]<<" ";
-			os<<"\n";
-		}
-		return os;
+		j = 2;
+do_more:
+		c[j-1] = j-1;
+		x = c[j] + 1;
+		if (x == c[j+1]) {j++; goto do_more;}
+		if (j > int(k_)) return;
+incr:
+		c[j] = x;
+		j--;
+		goto visit;
 	}
+
+	SizeType k_;
+	PsimagLite::Vector<PsimagLite::Vector<SizeType>::Type>::Type data_;
+}; // Combinations
+
+std::ostream& operator<<(std::ostream& os,const Combinations& ig)
+{
+	for (SizeType i=0;i<ig.size();++i) {
+		for (SizeType j=0;j<ig(i).size();++j)
+			os<<ig(i)[j]<<" ";
+		os<<"\n";
+	}
+	return os;
+}
 } // namespace Dmrg 
 
 /*@}*/

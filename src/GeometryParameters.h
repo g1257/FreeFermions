@@ -90,15 +90,15 @@ struct GeometryParameters {
 	typedef typename PsimagLite::Real<FieldType>::Type RealType;
 
 	enum {CHAIN,
-	      LADDER,
-	      FEAS,
-	      KTWONIFFOUR,
-	      FEAS1D,
-	      CHAIN_EX,
-	      LADDER_BATH,
-	      STAR,
-	      KANE_MELE_HUBBARD,
-	      RAW};
+		  LADDER,
+		  FEAS,
+		  KTWONIFFOUR,
+		  FEAS1D,
+		  CHAIN_EX,
+		  LADDER_BATH,
+		  STAR,
+		  KANE_MELE_HUBBARD,
+		  RAW};
 
 	enum {DIRECTION_X=0,DIRECTION_Y=1,DIRECTION_XPY=2,DIRECTION_XMY=3};
 

@@ -82,69 +82,70 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Vector.h"
 
 namespace FreeFermions {
-	// All interactions == 0
-	template<typename RealType_,typename FieldType_>
-	class Engine {
+// All interactions == 0
+template<typename RealType_,typename FieldType_>
+class Engine {
 
-		public:
+public:
 
-			typedef RealType_ RealType;
-			typedef FieldType_ FieldType;
+	typedef RealType_ RealType;
+	typedef FieldType_ FieldType;
 
-			Engine(const PsimagLite::Matrix<FieldType>& geometry,
-			       SizeType dof,
-			       bool verbose=false)
-			: dof_(dof),
-			  verbose_(verbose),
-			  eigenvectors_(geometry)
-			{
-				diagonalize();
-				if (verbose_) {
-					std::cerr<<"#Created core "<<eigenvectors_.n_row();
-					std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
-				}
-			}
+	Engine(const PsimagLite::Matrix<FieldType>& geometry,
+	       SizeType dof,
+	       bool verbose=false)
+	    : dof_(dof),
+	      verbose_(verbose),
+	      eigenvectors_(geometry)
+	{
+		diagonalize();
+		if (verbose_) {
+			std::cerr<<"#Created core "<<eigenvectors_.n_row();
+			std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
+		}
+	}
 
-			RealType energy(SizeType ne) const
-			{
-				RealType sum = 0;
-				for (SizeType i=0;i<ne;i++) sum += eigenvalues_[i];
-				return sum;
-			}
+	RealType energy(SizeType ne) const
+	{
+		RealType sum = 0;
+		for (SizeType i=0;i<ne;i++) sum += eigenvalues_[i];
+		return sum;
+	}
 
-			const RealType& eigenvalue(SizeType i) const { return eigenvalues_[i]; }
+	const RealType& eigenvalue(SizeType i) const { return eigenvalues_[i]; }
 
-			const FieldType& eigenvector(SizeType i,SizeType j) const
-			{
-				return eigenvectors_(i,j);
-			}
+	const FieldType& eigenvector(SizeType i,SizeType j) const
+	{
+		return eigenvectors_(i,j);
+	}
 
-			SizeType dof() const { return dof_; }
+	SizeType dof() const { return dof_; }
 
-			SizeType size() const { return eigenvalues_.size(); }
+	SizeType size() const { return eigenvalues_.size(); }
 
-		private:
+private:
 
-			void diagonalize()
-			{
-				if (!isHermitian(eigenvectors_,true)) throw std::runtime_error("Matrix not hermitian\n");
+	void diagonalize()
+	{
+		if (!isHermitian(eigenvectors_,true)) throw std::runtime_error("Matrix not hermitian\n");
 
-				diag(eigenvectors_,eigenvalues_,'V');
+		diag(eigenvectors_,eigenvalues_,'V');
 
-				if (verbose_) {
-					std::cerr<<"eigenvalues\n";
-					std::cerr<<eigenvalues_;
-					std::cerr<<"*************\n";
-					std::cerr<<"Eigenvectors:\n";
-					std::cerr<<eigenvectors_;
-				}
-			}
+		if (verbose_) {
+			std::cerr<<"eigenvalues\n";
+			std::cerr<<eigenvalues_;
+			std::cerr<<"*************\n";
+			std::cerr<<"Eigenvectors:\n";
+			std::cerr<<eigenvectors_;
+		}
+	}
 
-			SizeType dof_; // degrees of freedom that are simply repetition (hoppings are diagonal in these)
-			bool verbose_;
-			PsimagLite::Matrix<FieldType> eigenvectors_;
-			typename PsimagLite::Vector<RealType>::Type eigenvalues_;
-	}; // Engine
+	// degrees of freedom that are simply repetition (hoppings are diagonal in these)
+	SizeType dof_;
+	bool verbose_;
+	PsimagLite::Matrix<FieldType> eigenvectors_;
+	typename PsimagLite::Vector<RealType>::Type eigenvalues_;
+}; // Engine
 } // namespace FreeFermions
 
 /*@}*/

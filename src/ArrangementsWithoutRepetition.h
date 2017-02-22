@@ -1,9 +1,8 @@
-// BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009 , UT-Battelle, LLC
+Copyright (c) 2009-2017, UT-Battelle, LLC
 All rights reserved
 
-[DMRG++, Version 2.0.0]
+[FreeFermions, Version 1.]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -39,7 +38,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
- 
+
 *********************************************************
 DISCLAIMER
 
@@ -68,9 +67,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
-
 */
-// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
@@ -86,20 +83,20 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Sort.h"
 
 namespace FreeFermions {
-	template<typename ContainerType>
-	class ArrangementsWithoutRepetition {
-		typedef typename ContainerType::value_type FieldType;
-	public:
-		typedef FieldType value_type;
+template<typename ContainerType>
+class ArrangementsWithoutRepetition {
+	typedef typename ContainerType::value_type FieldType;
+public:
+	typedef FieldType value_type;
 
-		ArrangementsWithoutRepetition(SizeType n,SizeType k)
-		: data_(n),k_(k)
-		{
-			if (k==0 || n<k) throw std::runtime_error(
-			  "ArrangementsWithoutRepetition\n");
-		}
+	ArrangementsWithoutRepetition(SizeType n,SizeType k)
+	    : data_(n),k_(k)
+	{
+		if (k==0 || n<k) throw std::runtime_error(
+		            "ArrangementsWithoutRepetition\n");
+	}
 
-		/*
+	/*
 		 * Generates the next combination of n elements as k after comb
 		 * comb => the previous combination ( use (0, 1, 2, ..., k) for first)
 		 * k => the size of the subsets to generate
@@ -108,48 +105,48 @@ namespace FreeFermions {
 		 *  true if a valid combination was found
 		 *  false, otherwise
 		 */
-		bool increase()
-		{
-			if (data_.size()==0) return false;
-			SizeType n = data_.size();
-			SizeType i = k_ - 1;
-			++data_[i];
-			while (data_[i] >= n - k_ + 1 + i) {
-				if (i==0) break;
-				--i;
-				++data_[i];
-			}
-			if (data_[0] > n - k_) /* Combination (n-k, n-k+1, ..., n) reached */
-				return false; /* No more combinations can be generated */
-
-			/* comb now looks like (..., x, n, n, n, ..., n).
-			 * Turn it into (..., x, x + 1, x + 2, ...) */
-			for (i = i + 1; i < k_; ++i)
-				data_[i] = data_[i - 1] + 1;
-			return true;
-		}
-
-
-		SizeType operator[](SizeType i) const
-		{
-			return data_[i];
-		}
-
-		SizeType size() const { return k_; }
-
-	private:
-
-		typename PsimagLite::Vector<SizeType>::Type data_;
-		SizeType k_;
-	}; // ArrangementsWithoutRepetition
-	
-	template<typename T>
-	std::ostream& operator<<(std::ostream& os,
-	                          const ArrangementsWithoutRepetition<T>& ig)
+	bool increase()
 	{
-		for (SizeType i=0;i<ig.size();i++) os<<ig[i]<<" ";
-		return os;
+		if (data_.size()==0) return false;
+		SizeType n = data_.size();
+		SizeType i = k_ - 1;
+		++data_[i];
+		while (data_[i] >= n - k_ + 1 + i) {
+			if (i==0) break;
+			--i;
+			++data_[i];
+		}
+		if (data_[0] > n - k_) /* Combination (n-k, n-k+1, ..., n) reached */
+			return false; /* No more combinations can be generated */
+
+		/* comb now looks like (..., x, n, n, n, ..., n).
+			 * Turn it into (..., x, x + 1, x + 2, ...) */
+		for (i = i + 1; i < k_; ++i)
+			data_[i] = data_[i - 1] + 1;
+		return true;
 	}
+
+
+	SizeType operator[](SizeType i) const
+	{
+		return data_[i];
+	}
+
+	SizeType size() const { return k_; }
+
+private:
+
+	typename PsimagLite::Vector<SizeType>::Type data_;
+	SizeType k_;
+}; // ArrangementsWithoutRepetition
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os,
+                         const ArrangementsWithoutRepetition<T>& ig)
+{
+	for (SizeType i=0;i<ig.size();i++) os<<ig[i]<<" ";
+	return os;
+}
 } // namespace Dmrg 
 
 /*@}*/

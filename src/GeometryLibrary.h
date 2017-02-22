@@ -100,24 +100,24 @@ public:
 	typedef typename PsimagLite::Vector<RealType>::Type VectorRealType;
 
 	enum {CHAIN=GeometryParamsType::CHAIN,
-	      LADDER=GeometryParamsType::LADDER,
-	      FEAS=GeometryParamsType::FEAS,
-	      KTWONIFFOUR=GeometryParamsType::KTWONIFFOUR,
-	      FEAS1D=GeometryParamsType::FEAS1D,
-	      CHAIN_EX = GeometryParamsType::CHAIN_EX,
-	      LADDER_BATH = GeometryParamsType::LADDER_BATH,
-	      STAR = GeometryParamsType::STAR,
+		  LADDER=GeometryParamsType::LADDER,
+		  FEAS=GeometryParamsType::FEAS,
+		  KTWONIFFOUR=GeometryParamsType::KTWONIFFOUR,
+		  FEAS1D=GeometryParamsType::FEAS1D,
+		  CHAIN_EX = GeometryParamsType::CHAIN_EX,
+		  LADDER_BATH = GeometryParamsType::LADDER_BATH,
+		  STAR = GeometryParamsType::STAR,
 		  KANE_MELE_HUBBARD = GeometryParamsType::KANE_MELE_HUBBARD,
-	      RAW = GeometryParamsType::RAW};
+		  RAW = GeometryParamsType::RAW};
 
 	enum {DIRECTION_X   = GeometryParamsType::DIRECTION_X,
-	      DIRECTION_Y   = GeometryParamsType::DIRECTION_Y,
-	      DIRECTION_XPY = GeometryParamsType::DIRECTION_XPY,
-	      DIRECTION_XMY = GeometryParamsType::DIRECTION_XMY
+		  DIRECTION_Y   = GeometryParamsType::DIRECTION_Y,
+		  DIRECTION_XPY = GeometryParamsType::DIRECTION_XPY,
+		  DIRECTION_XMY = GeometryParamsType::DIRECTION_XMY
 	     };
 
 	GeometryLibrary(GeometryParamsType& geometryParams,DecayEnum decay = DECAY_NONE)
-	: geometryParams_(geometryParams),decay_(decay)
+	    : geometryParams_(geometryParams),decay_(decay)
 	{
 		switch (geometryParams.type) {
 		case CHAIN:
@@ -386,8 +386,8 @@ private:
 				}
 
 				FieldType tmp = (ladderSameColumn(i,j,leg))?
-				                geometryParams_.hopping[ijminOver2 + sites-2] :
-				                geometryParams_.hopping[ijmin];
+				            geometryParams_.hopping[ijminOver2 + sites-2] :
+				        geometryParams_.hopping[ijmin];
 				t_(i,j) = tmp;
 				t_(j,i) = PsimagLite::conj(t_(i,j));
 			}
@@ -711,7 +711,8 @@ private:
 			throw PsimagLite::RuntimeError("getFourierMatrix: unsupported\n");
 		SizeType n = B.n_row();
 		SizeType lengthx = n/leg;
-		if (n%leg !=0) throw PsimagLite::RuntimeError("Leg must divide number of sites for FEAS\n");
+		if (n%leg !=0)
+			throw PsimagLite::RuntimeError("Leg must divide number of sites for FEAS\n");
 		for (SizeType i=0; i<n; i++) {
 			SizeType rx = i % lengthx;
 			SizeType ry = i/lengthx;
