@@ -117,16 +117,20 @@ public:
 	              const PermutationsType& lambda2,
 	              SizeType sigma,
 	              const VectorSizeType& occupations,
-	              const VectorSizeType& occupations2)
+	              SizeType nz,
+	              const VectorSizeType& occupations2,
+	              SizeType nz2)
 	    : value_(1),loc_(0)
 	{
-		SizeType counter3 = dryRun(occupations);
+		SizeType counter3 = nz;
+		loc_ += counter3;
 		SizeType counter2 = 0;
 		SizeType counter = 0;
 		addAtTheMiddle(counter,counter2,opPointers,lambda,lambda2,sigma,DRY_RUN);
 		counter += counter3;
 
-		counter2 += dryRun(occupations2);
+		counter2 += nz2;
+		loc_ += nz2;
 
 		data_.resize(loc_);
 		loc_=0;
@@ -202,18 +206,6 @@ public:
 	}
 
 private:
-
-	SizeType dryRun(const VectorSizeType& occupations2)
-	{
-		SizeType counter = 0;
-		for (SizeType i = 0; i < occupations2.size(); ++i) {
-			SizeType x = (occupations2[i] == 0) ? 0 : 1;
-			counter += x;
-			loc_ += x;
-		}
-
-		return counter;
-	}
 
 	void addAtTheBack(const VectorSizeType& occupations2)
 	{

@@ -248,6 +248,8 @@ private:
 		populateLocs(locsCreation, operatorsCreation_, sigma);
 		VectorIntType locsDestruction(operatorsDestruction_.size(), 0);
 		populateLocs(locsDestruction, operatorsDestruction_, sigma);
+		SizeType nz = nonZerosOf(occupations_[sigma]);
+		SizeType nz2 = nonZerosOf(occupations2);
 
 		SizeType m = findCreationGivenSpin(sigma);
 		IndexGeneratorType lambda(m,engine_->size());
@@ -255,7 +257,9 @@ private:
 		do {
 			sum += compute(lambda,
 			               sigma,
+			               nz,
 			               occupations2,
+			               nz2,
 			               locsCreation,
 			               locsDestruction);
 		} while (lambda.increase());
@@ -274,7 +278,9 @@ private:
 
 	FieldType compute(const IndexGeneratorType& lambda,
 	                  SizeType sigma,
+	                  SizeType nz,
 	                  const VectorSizeType& occupations2,
+	                  SizeType nz2,
 	                  const VectorIntType& locsCreation,
 	                  const VectorIntType& locsDestruction) const
 	{
@@ -295,7 +301,9 @@ private:
 			                                  lambda2,
 			                                  sigma,
 			                                  occupations_[sigma],
-			                                  occupations2);
+			                                  nz,
+			                                  occupations2,
+			                                  nz2);
 			// diag. part need to be done here, because...
 			FieldType dd = 1.0;
 			for (SizeType i=0;i<operatorsDiagonal_.size();i++) {
@@ -382,6 +390,18 @@ private:
 			}
 		}
 	}
+
+	SizeType nonZerosOf(const VectorSizeType& occupations2) const
+	{
+		SizeType counter = 0;
+		for (SizeType i = 0; i < occupations2.size(); ++i) {
+			SizeType x = (occupations2[i] == 0) ? 0 : 1;
+			counter += x;
+		}
+
+		return counter;
+	}
+
 
 	const EngineType* engine_;
 	bool debug_;
