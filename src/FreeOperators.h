@@ -202,17 +202,17 @@ namespace FreeFermions {
 			data_.erase(itp);
 		}
 
-		int findOpGivenLambda(SizeType thisLambda,
-		                         SizeType start) const
-		{
-			SizeType n = data_.size();
-			for (SizeType  i= start;i < n; ++i) {
-					if (notCreationOrDestruction(data_[i].type)) continue;
-					if (data_[i].lambda==thisLambda) return i;
-			}
-			return -1;
-			//throw std::runtime_error("FreeOperators::findOpGivenLambda()\n");
-		}
+//		int findOpGivenLambda(SizeType thisLambda,
+//		                         SizeType start) const
+//		{
+//			SizeType n = data_.size();
+//			for (SizeType  i= start;i < n; ++i) {
+//					if (notCreationOrDestruction(data_[i].type)) continue;
+//					if (data_[i].lambda==thisLambda) return i;
+//			}
+//			return -1;
+//			//throw std::runtime_error("FreeOperators::findOpGivenLambda()\n");
+//		}
 
 		 bool notCreationOrDestruction(SizeType type1) const
 		 {

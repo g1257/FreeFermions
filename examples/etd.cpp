@@ -33,7 +33,7 @@ typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertSta
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 typedef FreeFermions::LibraryOperator<OperatorType> LibraryOperatorType;
-typedef typename LibraryOperatorType::FactoryType OpLibFactoryType;
+typedef LibraryOperatorType::FactoryType OpLibFactoryType;
 
 int main(int argc,char *argv[])
 {

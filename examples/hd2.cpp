@@ -89,7 +89,7 @@ FieldType calcSuperDensity(SizeType site,
 class MyLoop {
 
 	typedef PsimagLite::Concurrency ConcurrencyType;
-	typedef typename PsimagLite::Vector<ComplexType>::Type VectorComplexType;
+	typedef PsimagLite::Vector<ComplexType>::Type VectorComplexType;
 
 	enum {SPIN_UP,SPIN_DOWN};
 
