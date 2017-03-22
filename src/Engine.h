@@ -90,6 +90,7 @@ public:
 
 	typedef RealType_ RealType;
 	typedef FieldType_ FieldType;
+	typedef  PsimagLite::Matrix<FieldType> MatrixType;
 
 	Engine(const PsimagLite::Matrix<FieldType>& geometry,
 	       SizeType dof,
@@ -119,6 +120,12 @@ public:
 		return eigenvectors_(i,j);
 	}
 
+	void transform(MatrixType& m) const
+	{
+		MatrixType tmp = multiplyTransposeConjugate(eigenvectors_, m);
+		m = tmp * eigenvectors_;
+	}
+
 	SizeType dof() const { return dof_; }
 
 	SizeType size() const { return eigenvalues_.size(); }
@@ -143,7 +150,7 @@ private:
 	// degrees of freedom that are simply repetition (hoppings are diagonal in these)
 	SizeType dof_;
 	bool verbose_;
-	PsimagLite::Matrix<FieldType> eigenvectors_;
+	MatrixType eigenvectors_;
 	typename PsimagLite::Vector<RealType>::Type eigenvalues_;
 }; // Engine
 } // namespace FreeFermions
