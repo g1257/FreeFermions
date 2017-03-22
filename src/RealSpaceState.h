@@ -122,7 +122,7 @@ public:
 	void pushInto(const CorDOperatorType& op)
 	{
 		for (SizeType i=0;i<terms_.size();i++) {
-			if (fabs(values_[i])<1e-8) continue;
+			if (PsimagLite::norm(values_[i])<1e-8) continue;
 			int x = terms_[i].apply(op.type(),op.sigma(),op.index());
 			values_[i] *= x;
 			if (x==0) zeroVals_++;
@@ -208,10 +208,10 @@ private:
 			//std::cerr<<"p.size="<<p.size()<<" terms="<<terms_.size()<<"\n";
 			for (SizeType i=0;i<v.size();i++) v[i] = false;
 			for (SizeType i=0;i<ne_[sigma];i++) v[p[i]] = true;
-			RealType sum = 0;
+			FieldType sum = 0;
 			do {
 				//					std::cerr<<"--------> "<<p<<" <---------\n";
-				RealType prod = (isArrangementOdd(p)) ? -1.0 : 1.0;
+				FieldType prod = (isArrangementOdd(p)) ? -1.0 : 1.0;
 				for (SizeType i=0;i<ne_[sigma];i++) {
 					prod *= engine_->eigenvector(p[i],i);
 				}
@@ -254,7 +254,7 @@ private:
 		terms_.push_back(prev);
 		values_.push_back(values_[0]);
 		for (SizeType i=1;i<terms2.size();i++) {
-			if (fabs(values2[i])<1e-8) continue;
+			if (PsimagLite::norm(values2[i])<1e-8) continue;
 			terms_.push_back(terms2[i]);
 			values_.push_back(values2[i]);
 		}
