@@ -8,7 +8,7 @@
 #include "GeometryLibrary.h"
 #include "TypeToString.h"
 #include "CreationOrDestructionOp.h"
-#include "RealSpaceState.h"
+#include "HilbertState.h"
 #include "GeometryParameters.h"
 #include "Tokenizer.h"
 #include "Concurrency.h"
@@ -25,7 +25,7 @@ typedef FreeFermions::GeometryParameters<FieldType,InputNgType::Readable> Geomet
 typedef FreeFermions::GeometryLibrary<MatrixType,GeometryParamsType> GeometryLibraryType;
 typedef FreeFermions::Engine<RealType,FieldType> EngineType;
 typedef FreeFermions::CreationOrDestructionOp<EngineType> OperatorType;
-typedef FreeFermions::RealSpaceState<OperatorType> HilbertStateType;
+typedef FreeFermions::HilbertState<OperatorType> HilbertStateType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
 
 void verify(MatrixType cicj, const EngineType& engine)
@@ -77,7 +77,7 @@ int main(int argc,char* argv[])
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
 	EngineType engine(geometry.matrix(),dof,true);
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); 
-	HilbertStateType gs(engine,ne,0,false);
+	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
 	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
