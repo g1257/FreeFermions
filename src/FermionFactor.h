@@ -1,8 +1,9 @@
+// BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2009-2017, UT-Battelle, LLC
+Copyright (c) 2009 , UT-Battelle, LLC
 All rights reserved
 
-[FreeFermions, Version 1.]
+[DMRG++, Version 2.0.0]
 [by G.A., Oak Ridge National Laboratory]
 
 UT Battelle Open Source Software License 11242008
@@ -38,7 +39,7 @@ must include the following acknowledgment:
 "This product includes software produced by UT-Battelle,
 LLC under Contract No. DE-AC05-00OR22725  with the
 Department of Energy."
-
+ 
 *********************************************************
 DISCLAIMER
 
@@ -67,7 +68,9 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 *********************************************************
 
+
 */
+// END LICENSE BLOCK
 /** \ingroup DMRG */
 /*@{*/
 
@@ -81,108 +84,90 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 #include "Complex.h" // in PsimagLite
 #include "FreeOperators.h" // in PsimagLite
-#include "Vector.h"
+
 
 namespace FreeFermions {
+	
 
 template<typename OperatorType,typename OpPointerType>
-class FermionFactor {
+	class FermionFactor {
+	public:
+		typedef typename OperatorType::RealType RealType;
+		//typedef typename OperatorType::FieldType FieldType;
+		typedef FreeOperators<OperatorType,OpPointerType> FreeOperatorsType;
 
-public:
+		enum {CREATION = OperatorType::CREATION,
+		       DESTRUCTION = OperatorType::DESTRUCTION
+		};
 
-	typedef typename OperatorType::RealType RealType;
-	typedef PsimagLite::Vector<bool>::Type VectorBoolType;
-	typedef PsimagLite::Vector<SizeType>::Type VectorSizeType;
-	typedef FreeOperators<OperatorType,OpPointerType> FreeOperatorsType;
-
-	enum {CREATION = OperatorType::CREATION,
-		  DESTRUCTION = OperatorType::DESTRUCTION
-	     };
-
-	FermionFactor(FreeOperatorsType& freeOps)
-	    : value_(1)
-	{
-		if (freeOps()==0) {
-			value_ = 0;
-			return;
-		}
-		freeOps.removeNonCsOrDs();
-		freeOps.reverse();
-
-		pairUp(freeOps);
-	}
-
-	RealType operator()()
-	{
-		return value_;
-	}
-
-private:
-
-	void pairUp(FreeOperatorsType& freeOps)
-	{
-		SizeType n = freeOps.size();
-		VectorBoolType removed(n, false);
-		VectorSizeType lambdas(n, 0);
-
-		// pair up daggers with non-daggers
-		value_ = 1;
-		for (SizeType i = 0; i < n; ++i) {
-			lambdas[i] = freeOps[i].lambda;
-			if (freeOps[i].type == CREATION) {
+		FermionFactor(FreeOperatorsType& freeOps)
+		: value_(1)
+		{
+			if (freeOps()==0) {
 				value_ = 0;
 				return;
 			}
+			freeOps.removeNonCsOrDs();
+			freeOps.reverse();
+			
+			pairUp(freeOps);
 		}
 
-		PsimagLite::Sort<VectorSizeType> sort;
-		VectorSizeType iperm(n,0);
-		sort.sort(lambdas, iperm);
-		VectorSizeType partitions(1,0);
-		assert(n > 0);
-		SizeType prevLambda = lambdas[0];
-		for(SizeType i = 1; i < n; ++i) {
-			if (lambdas[i] == prevLambda)
-				continue;
-			prevLambda = lambdas[i];
-			partitions.push_back(i);
+		RealType operator()()
+		{
+			return value_;
 		}
 
-		partitions.push_back(n);
+	private:
 
-		for (SizeType p = 0; p < partitions.size() - 1; ++p) {
-			SizeType start = partitions[p];
-			SizeType end = partitions[p+1];
-			for (SizeType ii = start; ii < end; ++ii) {
-				if (removed[ii]) continue;
-				SizeType i = iperm[ii];
-				for (SizeType jj = ii + 1; jj < end; ++jj) {
-					if (removed[jj]) continue;
-
-					SizeType j = iperm[jj];
-
-					// if types are equal then result is zero, and we're done:
-					if (freeOps[j].type == freeOps[i].type) {
-						value_ = 0;
-						return;
-					}
-
-					// now let's deal with the sign
-					SizeType x = j;
-					x++;
-					int f = (x&1) ? -1 : 1;
-					value_ *= f;
-
-					// finally, we remove the pair
-					removed[jj] = true;
+		void pairUp(//const typename PsimagLite::Vector<SizeType>::Type& occupations,
+		            FreeOperatorsType& freeOps)
+		{
+			// pair up daggers with non-daggers
+			value_ = 1;
+			while(freeOps.size()>0) {
+				if (freeOps.notCreationOrDestruction(freeOps[0].type))
+					continue;
+				// take first operator's lambda:
+				SizeType thisLambda = freeOps[0].lambda;
+				// find next operator with same lambda:
+				int x = freeOps.findOpGivenLambda(thisLambda,1);
+				
+				// if types are equal then result is zero, and we're done:
+				if (x<0 || freeOps[0].type == freeOps[x].type) {
+					value_ = 0;
+					return;
 				}
+				// then we produce a sign, and either an occupation
+				// or an anti-occupation
+				// let's deal with the (anti)occupation first:
+
+				bool nNormal = (freeOps[0].type == CREATION) ? true : false;
+				SizeType occupationForThisLamda = 0; //occupations[thisLambda];
+				if (nNormal && occupationForThisLamda==0) {
+					value_=0;
+					return;
+				}
+
+				if (!nNormal && occupationForThisLamda==1) {
+					value_=0;
+					return;
+				}
+
+				// now let's deail with the sign
+				SizeType xSaved = x;
+				x++;
+				int f = (x&1) ? -1 : 1;
+				value_ *= f;
+
+				// finally, we remove the pair
+				freeOps.removePair(xSaved);
 			}
 		}
-	}
 
-	RealType value_;
-}; // FermionFactor
-
+		RealType value_;
+	}; // FermionFactor
+	
 
 } // namespace Dmrg 
 
