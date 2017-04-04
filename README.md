@@ -1,11 +1,11 @@
 # Introduction
 
-FreeFermions is free software (see file LICENSE) 
+FreeFermions is free software (see file LICENSE)
 
-Please cite FreeFermions if you base any scientific 
+Please cite FreeFermions if you base any scientific
 publication on this software. Citation should read:
 
-G. Alvarez (2011), FreeFermions (version 1.0.0) 
+G. Alvarez (2011), FreeFermions (version 1.0.0)
 [computer software], Oak Ridge National Laboratory.
 
 # DISCLAIMER
@@ -36,10 +36,10 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 # Code Integrity
 
 Hash of the latest commit is also posted at
-https://web.ornl.gov/~gz1/hashes.html
+https://g1257.github.com/hashes.html
 
 Latest commit should always be signed.
-Keys at https://web.ornl.gov/~gz1/keys.html
+https://g1257.github.com/keys.html
 
 # Quick Start
 
@@ -71,5 +71,5 @@ git pull
 
 ## See Also
 
-https://web.ornl.gov/~gz1/FreeFermions/
+https://g1257.github.com/FreeFermions/
 
