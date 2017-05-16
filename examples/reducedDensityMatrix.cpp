@@ -1,4 +1,4 @@
-
+#define USE_PTHREADS_OR_NOT_NG
 #include "ReducedDensityMatrix.h"
 #include "Concurrency.h"
 

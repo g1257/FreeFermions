@@ -138,51 +138,45 @@ class ReducedDensityMatrix {
 				psiV_[i].resize(states);
 		}
 
-		void thread_function_(SizeType threadNum,
-		                      SizeType blockSize,
-		                      SizeType total,
-		                      typename ConcurrencyType::MutexType*)
+		SizeType tasks() const { return psiVv_.size(); }
+
+		void doTask(SizeType taskNumber, SizeType threadNum)
 		{
 			OpNormalFactoryType opNormalFactory(engine_);
-			RealType each = 0.1 * total;
+			RealType each = 0.1 * tasks();
 			if (each < 1) each = 1;
 			SizeType eachInteger = static_cast<SizeType>(each);
 			HilbertStateType gs(engine_,neV_,threadNum,false);
 
-			SizeType mpiRank = PsimagLite::MPI::commRank(PsimagLite::MPI::COMM_WORLD);
-			SizeType npthreads = ConcurrencyType::npthreads;
-			for (SizeType p=0;p<blockSize;p++) {
-				SizeType i = (threadNum+npthreads*mpiRank)*blockSize + p;
-				if (i>=total) break;
-
-				if (eachInteger > 0 && i%eachInteger == 0) {
-					std::cerr<<"Done "<<(i*10/each)<<"%\n";
-					std::cerr.flush();
-				}
-
-				SizeType ind = ConcurrencyType::storageIndex(threadNum);
-
-				VectorUintType v;
-				aux_.getSites(v,i);
-				HilbertStateType phi(engine_,zeroV_,threadNum,false);
-				psiOneBlock(phi,v,CREATION,opNormalFactory);
-				//std::cout<<phi;
-				for (SizeType j=0;j<total;j++) {
-					VectorUintType w;
-					aux_.getSites(w,j);
-					if (v.size()+w.size()!=ne_) {
-						psiV_[threadNum][j] = 0;
-						continue;
-					}
-
-					HilbertStateType phi2 = gs;
-					psiOneBlock(phi2,w,DESTRUCTION,opNormalFactory,n_);
-					psiV_[threadNum][j] = scalarProduct(phi2,phi);
-					//std::cout<<psi(i,j)<<" ";
-				}
-				psiVv_[i]=psiV_[threadNum];
-				sumV_[ind] += psiV_[threadNum]*psiV_[threadNum];
+			if (eachInteger > 0 && taskNumber%eachInteger == 0) {
+				std::cerr<<"Done "<<(taskNumber*10/each)<<"%\n";
+				std::cerr.flush();
 			}
+
+			SizeType ind = ConcurrencyType::storageIndex(threadNum);
+
+			VectorUintType v;
+			aux_.getSites(v,taskNumber);
+			HilbertStateType phi(engine_,zeroV_,threadNum,false);
+			psiOneBlock(phi,v,CREATION,opNormalFactory);
+			//std::cout<<phi;
+			for (SizeType j=0;j<tasks();j++) {
+				VectorUintType w;
+				aux_.getSites(w,j);
+				if (v.size()+w.size()!=ne_) {
+					psiV_[threadNum][j] = 0;
+					continue;
+				}
+
+				HilbertStateType phi2 = gs;
+				psiOneBlock(phi2,w,DESTRUCTION,opNormalFactory,n_);
+				psiV_[threadNum][j] = scalarProduct(phi2,phi);
+				//std::cout<<psi(i,j)<<" ";
+			}
+
+			psiVv_[taskNumber]=psiV_[threadNum];
+			sumV_[ind] += psiV_[threadNum]*psiV_[threadNum];
+
 		}
 
 		FieldType sum() const
@@ -256,6 +250,7 @@ public:
 	}
 
 private:
+
 	void calculatePsi(MatrixType& psi)
 	{
 		CanonicalStates aux(n_,ne_);
@@ -274,7 +269,7 @@ private:
 		std::cout<<"Using "<<threadObject.name();
 		std::cout<<" with "<<threadObject.threads()<<" threads.\n";
 		std::cout<<"npthreads= "<<PsimagLite::Concurrency::npthreads<<"\n";
-		threadObject.loopCreate(states,myLoop);
+		threadObject.loopCreate(myLoop);
 
 		myLoop.sync();
 
