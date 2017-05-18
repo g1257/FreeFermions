@@ -1,0 +1,5 @@
+2017-05-18 Version 1.10
+
+*  reducedDensityMatrix: uses PthreadsNg
+
+
