@@ -248,8 +248,9 @@ struct GeometryParameters {
 
 			try {
 				io.readline(x,"LadderLeg=");
-			} catch (std::exception& e) {
-				x=1;
+			} catch (std::exception&) {
+				if (geometry == "ladder" || geometry == "ladderx")
+					throw std::runtime_error("No LadderLeg=\n");
 			}
 
 			if (x!=1 && x!=2) {
