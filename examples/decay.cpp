@@ -8,7 +8,6 @@
 #include "Engine.h"
 #include "GeometryLibrary.h"
 #include "TypeToString.h"
-#include "Tokenizer.h" // in PsimagLite
 #include "GeometryParameters.h"
 #include "ParallelDecay.h"
 #include "Concurrency.h"

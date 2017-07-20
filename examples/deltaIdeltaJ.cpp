@@ -11,7 +11,6 @@
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
 #include "GeometryParameters.h"
-#include "Tokenizer.h"
 #include "LibraryOperator.h"
 #include "Concurrency.h"
 #include "InputNg.h"

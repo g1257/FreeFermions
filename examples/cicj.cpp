@@ -10,7 +10,6 @@
 #include "CreationOrDestructionOp.h"
 #include "HilbertState.h"
 #include "GeometryParameters.h"
-#include "Tokenizer.h"
 #include "Concurrency.h"
 #include "InputNg.h"
 #include "InputCheck.h"

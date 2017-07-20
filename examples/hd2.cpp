@@ -16,7 +16,6 @@ typedef double RealType;
 #include "EtoTheIhTime.h"
 #include "DiagonalOperator.h"
 #include "LibraryOperator.h"
-#include "Tokenizer.h" // in PsimagLite
 #include "GeometryParameters.h"
 #include "Concurrency.h"
 #include "Parallelizer.h"

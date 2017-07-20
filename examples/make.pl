@@ -29,7 +29,7 @@ sub writeMakefile
 	$cppflags .= " -I../../PsimagLite ";
 	$cppflags .= " -I../../PsimagLite/src -I../src";
 	my $cxx="g++ ";
-	my $lapack = Make::findLapack();
+	my $lapack = " -lblas -llapack ";
 
 	Make::make($fh,\@drivers,"FreeFermions","Linux",0,
 	"-lpsimaglite $lapack    -lm  -lpthread ",$cxx,$cppflags,"true"," "," ");

@@ -10,7 +10,6 @@
 #include "HilbertState.h"
 #include "EtoTheBetaH.h"
 #include "DiagonalOperator.h"
-#include "Tokenizer.h"
 #include "LibraryOperator.h"
 #include "Combinations.h"
 #include "GeometryParameters.h"

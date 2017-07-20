@@ -8,7 +8,6 @@
 #include "HilbertState.h"
 #include "OneOverZminusH.h"
 #include "DiagonalOperator.h"
-#include "Tokenizer.h"
 #include "GeometryParameters.h"
 #include "Concurrency.h"
 #include "InputNg.h"
