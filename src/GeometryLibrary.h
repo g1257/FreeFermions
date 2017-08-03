@@ -569,7 +569,7 @@ private:
 
 		for (SizeType dir = 0; dir < dirs; ++dir) {
 			VectorType v;
-			io.readMatrix(v,"Connectors");
+			io.read(v,"Connectors");
 			setKaneMeleHubbard(v,dir,distance);
 		}
 	}
