@@ -72,7 +72,7 @@ sub readSpace
 	my ($space,$inFile) = @_;
 	my $counter = 0;
 
-	open(FIN,"$inFile") or die "$0: Cannot open $inFile : $!\n";
+	open(FIN, "<", "$inFile") or die "$0: Cannot open $inFile : $!\n";
 	while(<FIN>) {
 		if (/^#/) {
 		        next;
@@ -109,20 +109,20 @@ sub printGnuplot
         } elsif ($geometry eq "LongRange") {
 
                 defined($subgeometry) or die "$0 LongeRange geometry: need to specify geometry (chain or ladder) for the Fourier Transform\n";
-		
+
 		if ($subgeometry eq "chain") {
-                	$factor = 1.0;
-        	} elsif ($subgeometry eq "ladder") {
-                	$factor = 0.5;
-                	@fileIndices=(0,1);
-        	}
+			$factor = 1.0;
+		} elsif ($subgeometry eq "ladder") {
+			$factor = 0.5;
+			@fileIndices=(0,1);
+		}
 	} else {
 		die "$0: Unknown geometry $geometry\n";
 	}
 
 	foreach my $fileIndex (@fileIndices) {
 		my $outFile = "outSpectrum$fileIndex.gnuplot";
-		open(FOUT,"> $outFile") or die "$0: Cannot write to $outFile : $!\n";
+		open(FOUT, ">", "$outFile") or die "$0: Cannot write to $outFile : $!\n";
 
 		for (my $i = 0; $i < $numberOfOmegas; ++$i) {
 			my $omega = $omegas->[$i];

@@ -22,7 +22,7 @@ sub make
 
 sub writeMakefile
 {
-	open(my $fh,">Makefile") or die "Cannot open Makefile for writing: $!\n";
+	open(my $fh, ">", "Makefile") or die "Cannot open Makefile for writing: $!\n";
 
 	my $cppflags = "-Werror -Wall -std=c++98 -pedantic -Wendif-labels ";
 	$cppflags .= " -DNDEBUG -O3 ";
