@@ -1,3 +1,7 @@
+2017-11-09 Version 1.14
+
+* perl: open with 3 args
+
 2017-08-07 Version 1.12
 
 * LadderLeg is now mandatory if ladder is in use
