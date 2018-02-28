@@ -106,10 +106,10 @@ public:
 			io.rewind();
 		}
 
-		io.readMatrix(coHoppingsX_,"Connectors");
-		io.readMatrix(coHoppingsY_,"Connectors");
-		io.readMatrix(ooHoppingsXPY_,"Connectors");
-		io.readMatrix(ooHoppingsXMY_,"Connectors");
+		io.read(coHoppingsX_, "Connectors");
+		io.read(coHoppingsY_, "Connectors");
+		io.read(ooHoppingsXPY_, "Connectors");
+		io.read(ooHoppingsXMY_, "Connectors");
 	}
 
 	void fillMatrix(MatrixType& t) const

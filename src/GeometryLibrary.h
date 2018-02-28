@@ -312,7 +312,7 @@ private:
 	void setGeometryRaw()
 	{
 		typename PsimagLite::IoSimple::In io(geometryParams_.filename);
-		io.readMatrix(t_,"Connectors");
+		io.read(t_, "Connectors");
 	}
 
 	void setGeometryKniffour()
@@ -682,7 +682,7 @@ private:
 		v.clear();
 		for (SizeType i=0; i<dirs; i++) {
 			MatrixType m;
-			io.readMatrix(m,"Connectors");
+			io.read(m, "Connectors");
 			if (m.n_row()!=m.n_col() || m.n_row()!=geometryParams_.orbitals) {
 				PsimagLite::String str(__FILE__);
 				str += " " + ttos(__LINE__) + "\n";
