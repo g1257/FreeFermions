@@ -79,7 +79,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define KTWONIFFOUR_H
 #include <stdexcept>
 #include <cassert>
-#include "IoSimple.h"
+#include "Io/IoSimple.h"
 
 namespace FreeFermions {
 

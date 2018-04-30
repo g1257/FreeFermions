@@ -80,7 +80,6 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define GEOMETRY_PARAMS_H
 
 #include <assert.h>
-#include "IoSimple.h"
 
 namespace FreeFermions {
 

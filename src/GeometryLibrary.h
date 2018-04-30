@@ -79,7 +79,6 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
  */
 #ifndef GEOMETRY_LIB_H
 #define GEOMETRY_LIB_H
-#include "IoSimple.h" // in psimaglite
 #include "Matrix.h" // in psimaglite
 #include <cassert>
 #include "KTwoNiFFour.h"
