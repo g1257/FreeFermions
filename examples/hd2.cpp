@@ -270,8 +270,7 @@ int main(int argc,char *argv[])
 
 	typedef MyLoop MyLoopType;
 	typedef PsimagLite::Parallelizer<MyLoopType> ParallelizerType;
-	ParallelizerType threadObject(PsimagLite::Concurrency::npthreads,
-	                              PsimagLite::MPI::COMM_WORLD);
+	ParallelizerType threadObject(PsimagLite::Concurrency::codeSectionParams);
 
 	MyLoopType myLoop(engine,step,offset,gs,sites,total,verbose);
 

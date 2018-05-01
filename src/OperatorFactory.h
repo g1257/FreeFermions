@@ -92,7 +92,7 @@ public:
 
 	OperatorFactory(const EngineType& engine)
 	    : engine_(&engine),
-	      garbage_(PsimagLite::Concurrency::npthreads)
+	      garbage_(PsimagLite::Concurrency::codeSectionParams.npthreads)
 	{}
 
 	~OperatorFactory()

@@ -341,13 +341,12 @@ int main(int argc,char *argv[])
 	std::cout<<"#OmegaStep="<<step<<"\n";
 	std::cout<<"#GeometryKind="<<geometryParams.geometry<<"\n";
 	std::cout<<"#TSPSites 1 "<<centralSite<<"\n";
-	std::cout<<"#Threads="<<PsimagLite::Concurrency::npthreads<<"\n";
+	std::cout<<"#Threads="<<PsimagLite::Concurrency::codeSectionParams.npthreads<<"\n";
 	std::cout<<"#What="<<what<<"\n";
 	std::cout<<"#############\n";
 
 	typedef PsimagLite::Parallelizer<SqOmegaParallel> ParallelizerType;
-	ParallelizerType threadObject(PsimagLite::Concurrency::npthreads,
-	                              PsimagLite::MPI::COMM_WORLD);
+	ParallelizerType threadObject(PsimagLite::Concurrency::codeSectionParams);
 
 	SqOmegaParams params(engine,gs,Eg,geometryParams.sites,centralSite,what);
 	SqOmegaParallel helperSqOmega(params,total,step,offset);

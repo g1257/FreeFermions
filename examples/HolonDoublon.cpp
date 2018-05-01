@@ -102,18 +102,19 @@ int main(int argc,char *argv[])
 	for (SizeType i=0;i<sites.size();i++) std::cout<<sites[i]<<" ";
 	std::cout<<"\n";
 
-	typedef FreeFermions::ParallelHolonDoublon<RealType,FieldType,EngineType> ParallelHolonDoublonType;
+	typedef FreeFermions::ParallelHolonDoublon<RealType,
+	        FieldType,
+	        EngineType> ParallelHolonDoublonType;
 	typedef PsimagLite::Parallelizer<ParallelHolonDoublonType> ParallelizerType;
-	ParallelizerType threadedHolonDoublon(PsimagLite::Concurrency::npthreads,
-	                                      PsimagLite::MPI::COMM_WORLD);
+	ParallelizerType threadedHolonDoublon(PsimagLite::Concurrency::codeSectionParams);
 
 	ParallelHolonDoublonType::HolonDoublonParamsType params(ne,
-															sites,
-															sigma3,
-															offset,
-															step,
-															debug,
-															verbose);
+	                                                        sites,
+	                                                        sigma3,
+	                                                        offset,
+	                                                        step,
+	                                                        debug,
+	                                                        verbose);
 	ParallelHolonDoublonType helperHolonDoublon(engine,params,total);
 
 	FieldType superdensity = helperHolonDoublon.calcSuperDensity(sites[0],sites[1]);

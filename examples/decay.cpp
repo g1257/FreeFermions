@@ -107,8 +107,7 @@ int main(int argc,char *argv[])
 
 
 	typedef PsimagLite::Parallelizer<ParallelDecayType> ParallelizerType;
-	ParallelizerType threadedDecay(PsimagLite::Concurrency::npthreads,
-	                               PsimagLite::MPI::COMM_WORLD);
+	ParallelizerType threadedDecay(PsimagLite::Concurrency::codeSectionParams);
 
 	ParallelDecayType::DecayParamsType params(geometryParams.orbitals,
 	                                          geometryParams.sites,
