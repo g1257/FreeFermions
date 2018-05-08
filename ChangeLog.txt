@@ -1,3 +1,9 @@
+2018-05-08 Version 1.16
+
+* changes due to PsimagLite's IoSimple changes
+
+* changes due to PsimagLite's Parallelizer changes
+
 2017-11-09 Version 1.14
 
 * perl: open with 3 args
