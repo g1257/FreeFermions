@@ -1,4 +1,6 @@
 
+IoSimple::In should become InputNg
+
 FEATURES:
 
 * Need to implement the case of a chain with multiple orbitals.
