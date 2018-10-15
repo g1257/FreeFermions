@@ -91,6 +91,7 @@ struct GeometryParameters {
 
 	enum {CHAIN,
 		  LADDER,
+		  LADDERX,
 		  FEAS,
 		  KTWONIFFOUR,
 		  FEAS1D,
@@ -159,7 +160,8 @@ struct GeometryParameters {
 		        model == "SuperHubbardExtended")  {
 
 			if (geometry == "chain" || geometry == "chainEx") return;
-			if (geometry != "ladder" && geometry != "ladderbath") {
+			bool ladderOrLadderX = (geometry == "ladder" || geometry == "ladderx");
+			if (!ladderOrLadderX && geometry != "ladderbath") {
 				PsimagLite::String str("GeometryParameters: This model supports");
 				throw std::runtime_error(str + " chain or ladder or ladderbath only\n");
 			}
@@ -175,50 +177,79 @@ struct GeometryParameters {
 			}
 
 			io.readline(x,"LadderLeg=");
-			if (x<0) {
+			if (x < 0) {
 				PsimagLite::String str("GeometryParameters: HubbardOneBand ladder leg");
-				throw std::runtime_error(str + " must be non negative\n");
+				err(str + " must be non negative\n");
 			}
 
 			leg = x;
 
-			hopping.resize(sites/2 + sites - 2,defaultHopping);
-			if (geometry == "ladder" && constantHoppings) {
+			hopping.resize(2*sites - leg, defaultHopping);
+			if (geometry == "ladderx") {
+				hopping.resize(4*sites - 3*leg, defaultHopping);
+				type = LADDERX;
+			}
+
+			if (ladderOrLadderX && constantHoppings) {
 				typename PsimagLite::Vector<FieldType>::Type v;
 				io.read(v,"Connectors");
 				if (v.size() != 1)
-					throw std::runtime_error("Connectors must be vector of size 1\n");
-				for (SizeType i = 0; i < sites-2; ++i)
+					err("Connectors must be vector of size 1\n");
+				for (SizeType i = 0; i < sites - leg; ++i)
 					hopping[i] = v[0];
 				io.read(v,"Connectors");
 				if (v.size() != 1)
-					throw std::runtime_error("Connectors must be vector of size 1\n");
-				for (SizeType i = sites-2; i < hopping.size(); ++i)
-					hopping[i] = v[0];
+					err("Connectors must be vector of size 1\n");
+				for (SizeType i = 0; i < sites; ++i)
+					hopping[i + sites - leg] = v[0];
+
+				if (geometry == "ladderx") {
+					typename PsimagLite::Vector<FieldType>::Type v;
+					io.read(v,"Connectors");
+					if (v.size() != 1)
+						err("Connectors must be vector of size 1\n");
+					for (SizeType i = 0; i < sites - leg; ++i)
+						hopping[i + 2*sites - leg] = v[0];
+					io.read(v,"Connectors");
+					if (v.size() != 1)
+						err("Connectors must be vector of size 1\n");
+					for (SizeType i = 0; i < sites - leg; ++i)
+						hopping[i + 3*sites - 2*leg] = v[0];
+				}
 			}
 
 			if (!constantHoppings) {
 				typename PsimagLite::Vector<FieldType>::Type v;
 				io.read(v,"Connectors");
-				assert(v.size() == sites - 2);
+				assert(v.size() == sites - leg);
 				for (SizeType i = 0; i < v.size(); ++i)
 					hopping[i] = v[i];
 				io.read(v,"Connectors");
-				assert(v.size() == sites/2);
+				assert(v.size() == sites);
 				for (SizeType i = 0; i < v.size(); ++i)
-					hopping[i+sites-2] = v[i];
+					hopping[i + sites - leg] = v[i];
+				if (geometry == "ladderx") {
+					io.read(v,"Connectors");
+					assert(v.size() == sites - leg);
+					for (SizeType i = 0; i < v.size(); ++i)
+						hopping[i + 2*sites - leg] = v[i];
+					io.read(v,"Connectors");
+					assert(v.size() == sites - leg);
+					for (SizeType i = 0; i < v.size(); ++i)
+						hopping[i + 3*sites - 2*leg] = v[i];
+				}
 			}
 
 			if (geometry == "ladderbath")  {
 				io.read(tb,"Connectors");
 				if (tb.size() != bathSitesPerSite * sites)
-					throw PsimagLite::RuntimeError("ladderbath Connectors\n");
+					err("ladderbath Connectors\n");
 			}
 
 			io.readline(x,"IsPeriodicY=");
 			if (x<0) {
 				PsimagLite::String str("GeometryParameters: ");
-				throw std::runtime_error(str + "IsPeriodicY must be 0 or 1\n");
+				err(str + "IsPeriodicY must be 0 or 1\n");
 			}
 
 			isPeriodic[DIRECTION_Y] = (x>0);

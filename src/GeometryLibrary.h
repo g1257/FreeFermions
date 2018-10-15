@@ -83,6 +83,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Matrix.h" // in psimaglite
 #include <cassert>
 #include "KTwoNiFFour.h"
+#include "PsimagLite.h"
 
 namespace FreeFermions {
 
@@ -101,6 +102,7 @@ public:
 
 	enum {CHAIN=GeometryParamsType::CHAIN,
 		  LADDER=GeometryParamsType::LADDER,
+		  LADDERX = GeometryParamsType::LADDERX,
 		  FEAS=GeometryParamsType::FEAS,
 		  KTWONIFFOUR=GeometryParamsType::KTWONIFFOUR,
 		  FEAS1D=GeometryParamsType::FEAS1D,
@@ -128,6 +130,10 @@ public:
 			break;
 		case LADDER:
 			setGeometryLadder();
+			break;
+		case LADDERX:
+			setGeometryLadder();
+			setXpyAndXmY();
 			break;
 		case LADDER_BATH:
 			setGeometryLadder();
@@ -204,6 +210,9 @@ public:
 			break;
 		case LADDER:
 			return "ladder";
+			break;
+		case LADDERX:
+			return "ladderx";
 			break;
 		case LADDER_BATH:
 			return "ladderbath";
@@ -365,32 +374,44 @@ private:
 	void setGeometryLadder()
 	{
 		SizeType leg = geometryParams_.leg;
-		if (leg<2)
-			throw PsimagLite::RuntimeError("GeometryLibrary:: ladder must have leg>1\n");
+		if (leg < 2)
+			err("GeometryLibrary:: ladder must have leg>1\n");
 		assert(!geometryParams_.isPeriodic[DIRECTION_Y] || leg>2);
 		SizeType sites = geometryParams_.sites;
-		assert(geometryParams_.hopping.size()==sites/2 + sites -2);
+		assert(geometryParams_.hopping.size() == sites + sites - leg);
 		resizeAndZeroOut(sites,sites);
-		for (SizeType i=0; i<sites; i++) {
-			PsimagLite::Vector<SizeType>::Type v;
-			ladderFindNeighbors(v,i,leg,geometryParams_.isPeriodic);
-			for (SizeType k=0; k<v.size(); k++) {
-				SizeType j = v[k];
-				SizeType ijmin = (i < j) ? i : j;
-				SizeType ijminOver2 = static_cast<SizeType>(ijmin/2);
-
-				if (ijmin & 1) {
-					ijmin = (ijmin-1)/2  + sites/2 -1  ;
-				} else {
-					ijmin = ijminOver2;
-				}
-
-				FieldType tmp = (ladderSameColumn(i,j,leg))?
-				            geometryParams_.hopping[ijminOver2 + sites-2] :
-				        geometryParams_.hopping[ijmin];
-				t_(i,j) = tmp;
-				t_(j,i) = PsimagLite::conj(t_(i,j));
+		for (SizeType i = 0; i < sites; ++i) {
+			SizeType ix = i / leg;
+			SizeType iy = i % leg;
+			SizeType k = ix*leg + iy + 1;
+			if (i + leg < sites) {
+				SizeType j = (ix + 1)*leg + iy;
+				t_(i, j) = geometryParams_.hopping[i];
+				t_(j, i) = PsimagLite::conj(t_(i, j));
 			}
+
+			t_(i, k) = geometryParams_.hopping[sites - leg + i];
+			t_(i, i) = PsimagLite::conj(t_(i, k));
+		}
+	}
+
+	void setXpyAndXmY()
+	{
+		SizeType leg = geometryParams_.leg;
+		SizeType sites = geometryParams_.sites;
+		SizeType offsetp = 2*sites - leg;
+		SizeType offsetm = offsetp + sites - leg;
+		for (SizeType i = 0; i < sites - leg; ++i) {
+			SizeType ix = i / leg;
+			SizeType iy = i % leg;
+			SizeType iyp1 = (iy + 1 < leg) ? iy + 1 : 0;
+			SizeType jp = (ix + 1)*leg + iyp1;
+			t_(i, jp) = geometryParams_.hopping[offsetp + i];
+			t_(jp, i) = PsimagLite::conj(t_(i, jp));
+			SizeType iym1 = (iy == 0) ? leg - 1 : iy - 1;
+			SizeType jm = (ix + 1)*leg + iym1;
+			t_(i, jm) = geometryParams_.hopping[offsetm + i];
+			t_(jm, i) = PsimagLite::conj(t_(i, jm));
 		}
 	}
 
@@ -436,8 +457,7 @@ private:
 	{
 		SizeType i1 = i/leg;
 		SizeType k1 = k/leg;
-		if (i1 == k1) return true;
-		return false;
+		return (i1 == k1);
 	}
 
 	// only 2 orbitals supported
