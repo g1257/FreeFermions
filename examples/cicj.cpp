@@ -16,7 +16,7 @@
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
-typedef ComplexType FieldType;
+typedef RealType FieldType;
 typedef PsimagLite::Concurrency ConcurrencyType;
 typedef PsimagLite::Matrix<FieldType> MatrixType;
 typedef PsimagLite::InputNg<FreeFermions::InputCheck> InputNgType;

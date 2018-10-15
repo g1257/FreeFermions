@@ -47,7 +47,7 @@ sub MAIN($file, $lx)
 	loop (my $i = 0; $i < $rows; ++$i) {
 		my $val = $matrix.value($i, $i);
 		print "$val";
-		print ($i > 0 && $i % $lx == 0) ?? "\n" :: " ";
+		print ($i > 0 && (($i + 1) % $lx == 0)) ?? "\n" !! " ";
 	}
 }
 

@@ -378,20 +378,21 @@ private:
 			err("GeometryLibrary:: ladder must have leg>1\n");
 		assert(!geometryParams_.isPeriodic[DIRECTION_Y] || leg>2);
 		SizeType sites = geometryParams_.sites;
-		assert(geometryParams_.hopping.size() == sites + sites - leg);
+		assert(geometryParams_.hopping.size() >= sites + sites - leg);
 		resizeAndZeroOut(sites,sites);
 		for (SizeType i = 0; i < sites; ++i) {
 			SizeType ix = i / leg;
 			SizeType iy = i % leg;
-			SizeType k = ix*leg + iy + 1;
 			if (i + leg < sites) {
 				SizeType j = (ix + 1)*leg + iy;
 				t_(i, j) = geometryParams_.hopping[i];
 				t_(j, i) = PsimagLite::conj(t_(i, j));
 			}
 
+			SizeType iyp1 = (iy + 1 == leg) ? 0 : iy + 1;
+			SizeType k = ix*leg + iyp1;
 			t_(i, k) = geometryParams_.hopping[sites - leg + i];
-			t_(i, i) = PsimagLite::conj(t_(i, k));
+			t_(k, i) = PsimagLite::conj(t_(i, k));
 		}
 	}
 
