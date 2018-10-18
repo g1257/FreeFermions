@@ -71,11 +71,13 @@ int main(int argc,char* argv[])
 
 	GeometryLibraryType geometry(geometryParams);
 
-	std::cerr<<geometry;
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry.matrix(),dof,true);
-	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); 
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
 	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
@@ -91,11 +93,15 @@ int main(int argc,char* argv[])
 		MatrixType cicj(n,n);
 		for (SizeType site = 0; site < n; site++) {
 			OpNormalFactoryType opNormalFactory(engine);
-			OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,site+orbital*geometryParams.sites,sigma);
+			OperatorType& myOp = opNormalFactory(OperatorType::DESTRUCTION,
+			                                     site+orbital*geometryParams.sites,
+			                                     sigma);
 			for (SizeType site2 = site ; site2 < n; site2++) {
 				HilbertStateType phi = gs;
 				myOp.applyTo(phi);
-				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,site2+orbital*geometryParams.sites,sigma);
+				OperatorType& myOp2 = opNormalFactory(OperatorType::CREATION,
+				                                      site2+orbital*geometryParams.sites,
+				                                      sigma);
 				myOp2.applyTo(phi);
 				cicj(site,site2) += scalarProduct(gs,phi);
 			}

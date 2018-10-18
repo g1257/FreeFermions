@@ -80,6 +80,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #define ENGINE_H
 #include "Matrix.h"
 #include "Vector.h"
+#include <fstream>
 
 namespace FreeFermions {
 // All interactions == 0
@@ -92,17 +93,21 @@ public:
 	typedef FieldType_ FieldType;
 	typedef  PsimagLite::Matrix<FieldType> MatrixType;
 
+	enum VerboseEnum {VERBOSE_NO, VERBOSE_YES};
+
 	Engine(const PsimagLite::Matrix<FieldType>& geometry,
+	       PsimagLite::String outputFile,
 	       SizeType dof,
-	       bool verbose=false)
+	       VerboseEnum verbose)
 	    : dof_(dof),
 	      verbose_(verbose),
-	      eigenvectors_(geometry)
+	      eigenvectors_(geometry),
+	      fout_(outputFile.c_str(), std::ios::app)
 	{
 		diagonalize();
 		if (verbose_) {
-			std::cerr<<"#Created core "<<eigenvectors_.n_row();
-			std::cerr<<"  times "<<eigenvectors_.n_col()<<"\n";
+			fout_<<"#Created core "<<eigenvectors_.n_row();
+			fout_<<"  times "<<eigenvectors_.n_col()<<"\n";
 		}
 	}
 
@@ -139,11 +144,11 @@ private:
 		diag(eigenvectors_,eigenvalues_,'V');
 
 		if (verbose_) {
-			std::cerr<<"eigenvalues\n";
-			std::cerr<<eigenvalues_;
-			std::cerr<<"*************\n";
-			std::cerr<<"Eigenvectors:\n";
-			std::cerr<<eigenvectors_;
+			fout_<<"eigenvalues\n";
+			fout_<<eigenvalues_;
+			fout_<<"*************\n";
+			fout_<<"Eigenvectors:\n";
+			fout_<<eigenvectors_;
 		}
 	}
 
@@ -152,6 +157,7 @@ private:
 	bool verbose_;
 	MatrixType eigenvectors_;
 	typename PsimagLite::Vector<RealType>::Type eigenvalues_;
+	std::ofstream fout_;
 }; // Engine
 } // namespace FreeFermions
 

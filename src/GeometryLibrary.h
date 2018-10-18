@@ -119,7 +119,9 @@ public:
 	     };
 
 	GeometryLibrary(GeometryParamsType& geometryParams,DecayEnum decay = DECAY_NONE)
-	    : geometryParams_(geometryParams),decay_(decay)
+	    : geometryParams_(geometryParams),
+	      decay_(decay),
+	      fout_(geometryParams.outputFile.c_str())
 	{
 		switch (geometryParams.type) {
 		case CHAIN:
@@ -160,6 +162,9 @@ public:
 		VectorRealType v;
 		readPotential(v,potentialT_,geometryParams_.filename);
 		addPotential(v);
+
+		fout_<<"HoppingMatrix\n";
+		fout_<<t_;
 	}
 
 	template<typename ComplexType>
@@ -179,6 +184,7 @@ public:
 					sum += PsimagLite::conj(B(i,k))*src(i,j)*B(j,k);
 				}
 			}
+
 			dest[k] = sum;
 		}
 	}
@@ -408,11 +414,15 @@ private:
 			SizeType iyp1 = (iy + 1 < leg) ? iy + 1 : 0;
 			SizeType jp = (ix + 1)*leg + iyp1;
 			t_(i, jp) = geometryParams_.hopping[offsetp + i];
+			fout_<<"t("<<i<<","<<jp<<")="<<t_(i, jp)<<"\n";
+
 			t_(jp, i) = PsimagLite::conj(t_(i, jp));
 			SizeType iym1 = (iy == 0) ? leg - 1 : iy - 1;
 			SizeType jm = (ix + 1)*leg + iym1;
 			t_(i, jm) = geometryParams_.hopping[offsetm + i];
 			t_(jm, i) = PsimagLite::conj(t_(i, jm));
+			fout_<<"t("<<i<<","<<jm<<")="<<t_(i, jm)<<"\n";
+
 		}
 	}
 
@@ -806,6 +816,7 @@ private:
 				tnew(i+firstC,k) = tnew(k,i+firstC) =geometryParams_.tb[k2];
 			}
 		}
+
 		t_ = tnew;
 	}
 
@@ -813,7 +824,7 @@ private:
 	DecayEnum decay_;
 	VectorRealType potentialT_;
 	MatrixType t_;
-
+	std::ofstream fout_;
 }; // GeometryLibrary
 
 template<typename MatrixType,typename ParamsType>

@@ -114,6 +114,10 @@ struct GeometryParameters {
 	      omega(0.0),
 	      phase(0.0)
 	{
+		io.readline(outputFile, "OutputFile=");
+		if (outputFile.find(".") == PsimagLite::String::npos)
+			outputFile += ".txt";
+
 		io.readline(sites,"TotalNumberOfSites=");
 
 		// default value
@@ -380,6 +384,7 @@ struct GeometryParameters {
 	SizeType leg;
 	typename PsimagLite::Vector<bool>::Type isPeriodic;
 	typename PsimagLite::Vector<FieldType>::Type hopping;
+	PsimagLite::String outputFile;
 	PsimagLite::String filename;
 	SizeType orbitals;
 	SizeType bathSitesPerSite;
