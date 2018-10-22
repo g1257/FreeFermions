@@ -266,7 +266,7 @@ int main(int argc,char *argv[])
 	SizeType total=0;
 	RealType offset = 0;
 	RealType step = 0;
-        SizeType centralSite =0;
+	SizeType centralSite =0;
 	ObservableEnum what = OBS_SZ;
 
 	while ((opt = getopt(argc, argv, "f:t:o:i:c:w:")) != -1) {
@@ -284,9 +284,8 @@ int main(int argc,char *argv[])
 			offset = atof(optarg);
 			break;
 		case 'c':
-                        centralSite = atoi(optarg);
-                        break;
-
+			centralSite = atoi(optarg);
+			break;
 		case 'w':
 			if (PsimagLite::String(optarg) == "c")
 				what = OBS_C;
@@ -322,8 +321,10 @@ int main(int argc,char *argv[])
 	SizeType npthreads = 1;
 	io.readline(npthreads,"Threads=");
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry.matrix(),dof,true);
-
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
@@ -331,9 +332,6 @@ int main(int argc,char *argv[])
 	RealType Eg = 0;
 	for (SizeType i=0;i<ne[0];i++) Eg += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*Eg<<"\n";
-
-	//SizeType centralSite = static_cast<SizeType>(geometryParams.sites/2)-1;
-	//if (geometryParams.geometry == "ladder" || geometryParams.geometry == "LongRange") centralSite--;
 
 	std::cout<<"#TotalNumberOfSites="<<geometryParams.sites<<"\n";
 	std::cout<<"#OmegaTotal="<<total<<"\n";
@@ -355,4 +353,3 @@ int main(int argc,char *argv[])
 
 	helperSqOmega.print(std::cout);
 }
-
