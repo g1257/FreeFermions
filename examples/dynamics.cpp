@@ -37,7 +37,8 @@ void usage(const PsimagLite::String& thisFile)
 	std::cout<<" -n sites -e electronsUp -g geometry,[leg,filename]\n";
 }
 
-void setMyGeometry(GeometryParamsType& geometryParams,const PsimagLite::Vector<PsimagLite::String>::Type& vstr)
+void setMyGeometry(GeometryParamsType& geometryParams,
+                   const PsimagLite::Vector<PsimagLite::String>::Type& vstr)
 {
 	// default value
 	geometryParams.type = GeometryLibraryType::CHAIN;
@@ -136,7 +137,10 @@ int main(int argc,char *argv[])
 
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry.matrix(),dof,true);
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
 
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
@@ -148,7 +152,8 @@ int main(int argc,char *argv[])
 
 	SizeType sigma =0;
 	OpNormalFactoryType opNormalFactory(engine);
-	SizeType creatOrDest = (dynType == DYN_TYPE_1) ? OperatorType::CREATION : OperatorType::DESTRUCTION;
+	SizeType creatOrDest = (dynType == DYN_TYPE_1) ? OperatorType::CREATION :
+	                                                 OperatorType::DESTRUCTION;
 
 	OperatorType& opKet = opNormalFactory(creatOrDest,sites[0],sigma);
 	HilbertStateType phiKet = gs;

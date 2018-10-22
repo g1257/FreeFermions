@@ -44,12 +44,14 @@ sub MAIN($file, $lx)
 
 	$input.close;
 
-	my $leg = $rows.Int div $lx;
-	loop (my $i = 0; $i < $rows; ++$i) {
-		my $row = $i mod $leg;
+	my Int $leg = $rows.Int div $lx;
+	loop (my Int $ii = 0; $ii < $rows.Int; ++$ii) {
+		my Int $row = $ii div $lx;
+		my Int $col = $ii mod $lx;
+		my Int $i = $row + $col*$leg;
 		my $val = $matrix.value($i, $i);
 		print "$val";
-		print ($row == $leg - 1) ?? "\n" !! " ";
+		print ($col == $lx - 1) ?? "\n" !! " ";
 	}
 }
 
