@@ -55,7 +55,6 @@ $input .= ".dat";
 #print STDERR "$0: Trying to exec $cmd\n";
 #my $ret = system($cmd);
 #die "$0: Command $cmd failed\n" if ($ret != 0);
-$input = "out.txt";
 
 my @spaceValues;
 readSpace(\@spaceValues, $input);
@@ -65,15 +64,17 @@ my %h;
 for (my $i = 0; $i < $total; ++$i) {
 	my $thisOmega = $spaceValues[$i];
 	my $omega = shift @$thisOmega;
+	defined($omega) or die "$0: Undefined for $i\n";
 	my @qValues;
 	OmegaUtils::fourier(\@qValues, $thisOmega, $geometry, $hptr);
 	my $nf = scalar(@qValues); # n. of m values
 	my @final = ($omega);
+	print STDERR "$0: Found $nf m values\n";
 	for (my $j = 0; $j < $nf; ++$j) {
-		my @temp = $qValues[$j];
-		my $ntemp = scalar(@temp); # == 2
-		die "$0: Expected array of 2 values (real, imag) but found $ntemp instead\n";
-		push @final, @temp;
+		my $temp = $qValues[$j];
+		my $ntemp = scalar(@$temp); # == 2
+		die "$0: Expected array of 2 values (real, imag) but found $ntemp instead\n" if ($ntemp != 2);
+		push @final, @$temp;
 	}
 		
 	$h{$omega} = \@final;
