@@ -42,14 +42,18 @@ int main(int argc,char* argv[])
 	int opt = 0;
 	PsimagLite::String file("");
 	bool energyOnly = false;
+	SizeType prec = 8;
 
-	while ((opt = getopt(argc, argv, "f:e")) != -1) {
+	while ((opt = getopt(argc, argv, "f:e:p:")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
 			break;
 		case 'e':
 			energyOnly=true;
+			break;
+		case 'p':
+			prec = atoi(optarg);
 			break;
 		default: /* '?' */
 			throw std::runtime_error("Wrong usage\n");
@@ -60,6 +64,8 @@ int main(int argc,char* argv[])
 		throw std::runtime_error("Wrong usage\n");
 	}
 
+	std::cout.precision(prec);
+	std::cerr.precision(prec);
 	FreeFermions::InputCheck inputCheck;
 	InputNgType::Writeable ioWriteable(file,inputCheck);
 	InputNgType::Readable io(ioWriteable);
