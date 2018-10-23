@@ -95,7 +95,7 @@ public:
 		assert(what_ == OBS_C);
 
 		if (dynType == 0) {
-			OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::DESTRUCTION,
+			OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::CREATION,
 			                                       site0,
 			                                       sigma0,
 			                                       threadNum);
@@ -104,7 +104,7 @@ public:
 		}
 
 		assert(dynType == 1);
-		OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::CREATION,
+		OperatorType& nOpI =  opNormalFactory_(LibraryOperatorType::DESTRUCTION,
 		                                       site0,
 		                                       sigma0,
 		                                       threadNum);
@@ -244,11 +244,11 @@ private:
 	{
 		SizeType site0 = params_.centralSite;
 		for (SizeType site1 = 0; site1 < params_.sites; ++site1) {
-			std::cerr<<"site1="<<site1<<"\n";
 			result_(it,site1) = doOneOmegaOneSitePair(site0,
 			                                          site1,
 			                                          omega,
 			                                          threadNum);
+			std::cerr<<"site1="<<site1<<" "<<result_(it, site1)<<"\n";
 		}
 	}
 

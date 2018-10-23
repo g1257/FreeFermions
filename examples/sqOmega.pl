@@ -50,11 +50,11 @@ my $input = $input1;
 $input =~ s/\.(.*$)//;
 $input .= ".dat";
 
-#my $cmd = "./sqOmega -f $input1 -t $total -i $omegaStep -o $omega0 -c $centralSite -w $observable";
-#$cmd .= " > $input 2> /dev/null";
-#print STDERR "$0: Trying to exec $cmd\n";
-#my $ret = system($cmd);
-#die "$0: Command $cmd failed\n" if ($ret != 0);
+my $cmd = "./sqOmega -f $input1 -t $total -i $omegaStep -o $omega0 -c $centralSite -w $observable";
+$cmd .= " > $input 2> /dev/null";
+print STDERR "$0: Trying to exec $cmd\n";
+my $ret = system($cmd);
+die "$0: Command $cmd failed\n" if ($ret != 0);
 
 my @spaceValues;
 readSpace(\@spaceValues, $input);
