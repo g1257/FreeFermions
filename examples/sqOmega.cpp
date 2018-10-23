@@ -173,8 +173,22 @@ public:
 	      step_(step),
 	      offset_(offset),
 	      observable_(params.observable,params.engine),
-	      result_(total,params.sites)
-	{}
+	      result_(total,params.sites),
+	      phiKet0_(params_.gs),
+	      phiKet1_(params_.gs)
+	{
+		SizeType site0 = params_.centralSite;
+		observable_.applyRightOperator(phiKet0_,
+		                               site0,
+		                               0,
+		                               0,
+		                               0);
+		observable_.applyRightOperator(phiKet1_,
+		                               site0,
+		                               0,
+		                               1,
+		                               0);
+	}
 
 	void doTask(SizeType taskNumber,SizeType threadNum)
 	{
@@ -200,24 +214,18 @@ public:
 
 private:
 
-	FieldType doOneOmegaOneSitePair(SizeType site0,
-	                                SizeType site1,
-	                                RealType omega,
-	                                SizeType threadNum)
+	FieldType doOneOmegaOneSitePair(SizeType site1,
+	                                SizeType threadNum,
+	                                const HilbertStateType& phiKet0,
+	                                const HilbertStateType& phiKet1)
 	{
 		FieldType tmpC = 0.0;
-		RealType epsilon = 0.1;
 		SizeType sigma0 = 0;
 		SizeType sigma1 = 0;
 		for (SizeType dynType = 0; dynType < 2; ++dynType) {
-			RealType sign = observable_.signForWeight(sigma0,sigma1,dynType);
-			RealType signForDen = (dynType == 1) ? -1.0 : 1.0;
-			HilbertStateType phiKet = params_.gs;
-			observable_.applyRightOperator(phiKet,
-			                               site0,
-			                               sigma0,
-			                               dynType,
-			                               threadNum);
+			RealType sign = observable_.signForWeight(sigma0, sigma1, dynType);
+
+			const HilbertStateType& phiKet = (dynType == 0) ? phiKet0 : phiKet1;
 
 			HilbertStateType phiBra = params_.gs;
 			observable_.applyLeftOperator(phiBra,
@@ -226,15 +234,7 @@ private:
 			                              dynType,
 			                              threadNum);
 
-			OpDiagonalFactoryType opDiagonalFactory(params_.engine);
-
-			ComplexType z = ComplexType(omega,epsilon);
-			OneOverZminusHType eih(z,signForDen,params_.Eg,params_.engine);
-			DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
-			HilbertStateType phi3 = phiKet;
-			eihOp.applyTo(phi3);
-
-			tmpC += sign*scalarProduct(phiBra,phi3);
+			tmpC += sign*scalarProduct(phiBra, phiKet);
 		}
 
 		return tmpC;
@@ -242,12 +242,27 @@ private:
 
 	void doOneOmega(SizeType it, RealType omega, SizeType threadNum)
 	{
-		SizeType site0 = params_.centralSite;
+		HilbertStateType phiKet0 = phiKet0_;
+		HilbertStateType phiKet1 = phiKet1_;
+		RealType epsilon = 0.1;
+		ComplexType z = ComplexType(omega, epsilon);
+		OpDiagonalFactoryType opDiagonalFactory(params_.engine);
+		for (SizeType dynType = 0; dynType < 2; ++dynType) {
+
+			RealType signForDen = (dynType == 1) ? -1.0 : 1.0;
+			OneOverZminusHType eih(z, signForDen, params_.Eg, params_.engine);
+			DiagonalOperatorType& eihOp = opDiagonalFactory(eih);
+			if (dynType == 0)
+				eihOp.applyTo(phiKet0);
+			else
+				eihOp.applyTo(phiKet1);
+		}
+
 		for (SizeType site1 = 0; site1 < params_.sites; ++site1) {
-			result_(it,site1) = doOneOmegaOneSitePair(site0,
-			                                          site1,
-			                                          omega,
-			                                          threadNum);
+			result_(it, site1) = doOneOmegaOneSitePair(site1,
+			                                          threadNum,
+			                                          phiKet0,
+			                                          phiKet1);
 			std::cerr<<"site1="<<site1<<" "<<result_(it, site1)<<"\n";
 		}
 	}
@@ -257,6 +272,8 @@ private:
 	RealType offset_;
 	DynamicObservable observable_;
 	MatrixComplexType result_;
+	HilbertStateType phiKet0_;
+	HilbertStateType phiKet1_;
 };
 
 int main(int argc,char *argv[])
