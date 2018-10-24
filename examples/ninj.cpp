@@ -60,7 +60,8 @@ int main(int argc,char* argv[])
 	InputNgType::Readable io(ioWriteable);
 
 	GeometryParamsType geometryParams(io);
-	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	SizeType electronsUp = GeometryParamsType::readElectrons(io,
+	                                                         geometryParams.sites);
 
 	SizeType dof = 1; // spinless
 
@@ -69,25 +70,33 @@ int main(int argc,char* argv[])
 	std::cerr<<geometry;
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry.matrix(),dof,true);
-	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
 	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
-	std::cerr<<"Energy="<<dof*sum<<"\n";	
+	std::cerr<<"Energy="<<dof*sum<<"\n";
 
 	SizeType sigma = 0;
-	SizeType tot = geometryParams.sites; //(debug) ? 1 : n;
+	SizeType tot = geometryParams.sites;
 	for (SizeType site = 0; site<tot ; site++) {
 		OpLibFactoryType opLibFactory(engine);
-		LibraryOperatorType& myOp = opLibFactory(LibraryOperatorType::N,site,sigma);
+		LibraryOperatorType& myOp = opLibFactory(LibraryOperatorType::N,
+		                                         site,
+		                                         sigma);
 		for (SizeType site2=0; site2<tot; site2++) {
 			HilbertStateType phi = gs;
 			myOp.applyTo(phi);
-			LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,site2,sigma);
+			LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,
+			                                          site2,
+			                                          sigma);
 			myOp2.applyTo(phi);
 			std::cout<<scalarProduct(gs,phi)<<" ";
 		}
+
 		std::cout<<"\n";
 	}
 }

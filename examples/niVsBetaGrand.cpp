@@ -1,5 +1,3 @@
-
-
 // SAmple of how to use FreeFermions core engine to calculate
 // <c^\dagger_i c_j >
 #include <cstdlib>
@@ -53,7 +51,8 @@ void doOneBeta(const EngineType& engine,
 	RealType sum = 0;
 	for (SizeType i = 0; i<engine.size(); ++i) {
 		RealType fermiFactor = 1.0/(1.0 + exp(beta*engine.eigenvalue(i)));
-		sum += PsimagLite::conj(engine.eigenvector(site,i)) * engine.eigenvector(site,i)* fermiFactor;
+		sum += PsimagLite::conj(engine.eigenvector(site,i)) * engine.eigenvector(site,i)*
+		        fermiFactor;
 	}
 
 	std::cout<<beta<<" "<<sum<<" "<<(density/engine.size())<<" "<<energy<<"\n";
@@ -111,8 +110,10 @@ int main(int argc,char *argv[])
 
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry.matrix(),dof,true);
-
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
 	std::cout<<geometry;
 	std::cout<<"#site="<<site<<"\n";
 

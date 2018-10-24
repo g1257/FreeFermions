@@ -65,8 +65,11 @@ int main(int argc,char* argv[])
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
 
-	EngineType engine(geometry.matrix(),dof,true);
-	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	HilbertStateType gs(engine,ne);
 	RealType sum = 0;
 	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
@@ -76,20 +79,26 @@ int main(int argc,char* argv[])
 	MatrixType m(n,n);
 	FieldType sum2 = 0;
 	SizeType effectiveN  = n;
-	SizeType norb = (geometryParams.type == GeometryLibraryType::FEAS || geometryParams.type == GeometryLibraryType::FEAS1D) ? geometryParams.orbitals : 1;
+	SizeType norb = (geometryParams.type == GeometryLibraryType::FEAS ||
+	                 geometryParams.type == GeometryLibraryType::FEAS1D) ?
+	            geometryParams.orbitals : 1;
 
 	OpLibFactoryType opLibFactory(engine);
 	for (SizeType site = 0; site<effectiveN ; site++) {
 		FieldType y = 0;
 		for (SizeType orb1 = 0;orb1<norb; orb1++) {
 			HilbertStateType phi = gs;
-			LibraryOperatorType& myOp = opLibFactory(LibraryOperatorType::DELTA,site+orb1*n,0);
+			LibraryOperatorType& myOp = opLibFactory(LibraryOperatorType::DELTA,
+			                                         site+orb1*n,
+			                                         0);
 			myOp.applyTo(phi);
 			y += scalarProduct(phi,gs);
 			for (SizeType site2=0; site2<effectiveN; site2++) {
 				for (SizeType orb2=0;orb2<norb;orb2++) {
 					HilbertStateType phi2 = gs;
-					LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::DELTA,site2+orb2*n,0);
+					LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::DELTA,
+					                                          site2+orb2*n,
+					                                          0);
 					myOp2.applyTo(phi2);
 					FieldType x = scalarProduct(phi2,phi);
 					std::cout<<x<<" ";
@@ -98,6 +107,7 @@ int main(int argc,char* argv[])
 					sum2 += y*y;
 				}
 			}
+
 			std::cout<<"\n";
 		}
 	}

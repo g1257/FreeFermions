@@ -83,8 +83,10 @@ int main(int argc,char *argv[])
 
 	std::cerr<<geometry;
 
-	EngineType engine(geometry.matrix(),dof,false);
-
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;
 	bool verbose = false;
@@ -103,7 +105,10 @@ int main(int argc,char *argv[])
 
 	GeometryLibraryType geometry2(geometryParams,GeometryLibraryType::DECAY_1);
 	std::cerr<<geometry2;
-	EngineType engine2(geometry2.matrix(),dof,false);
+	EngineType engine2(geometry2.matrix(),
+	                   geometryParams.outputFile,
+	                   dof,
+	                   EngineType::VERBOSE_YES);
 
 
 	typedef PsimagLite::Parallelizer<ParallelDecayType> ParallelizerType;

@@ -38,7 +38,9 @@ void computeOneBucket(HilbertStateType& phi,
                       SizeType siteMixed)
 {
 	SizeType sigma = 0;
-	OperatorType& opCsite = opNormalFactory(OperatorType::DESTRUCTION,siteMixed,sigma);
+	OperatorType& opCsite = opNormalFactory(OperatorType::DESTRUCTION,
+	                                        siteMixed,
+	                                        sigma);
 	opCsite.applyTo(phi);
 }
 
@@ -49,7 +51,9 @@ void computeOneBucket(HilbertStateType& phi,
                       SizeType siteMixed)
 {
 	SizeType sigma = 0;
-	OperatorType& opCsite = opNormalFactory(OperatorType::DESTRUCTION,siteMixed,sigma);
+	OperatorType& opCsite = opNormalFactory(OperatorType::DESTRUCTION,
+	                                        siteMixed,
+	                                        sigma);
 	opCsite.applyTo(phi);
 	eihOp.applyTo(phi);
 	opCp.applyTo(phi);
@@ -251,7 +255,10 @@ int main(int argc,char *argv[])
 
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry.matrix(),dof,true);
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
 
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;

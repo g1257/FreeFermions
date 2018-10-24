@@ -1,5 +1,3 @@
-
-
 // SAmple of how to use FreeFermions core engine to calculate
 // <c^\dagger_i c_j >
 #include <cstdlib>
@@ -61,20 +59,20 @@ int main(int argc,char *argv[])
 			site3 = atoi(optarg);
 			break;
 		default: /* '?' */
-			throw std::runtime_error("Wrong usage\n");
+			err("Wrong usage\n");
 		}
 	}
 
-	if (file=="") {
-		throw std::runtime_error("Wrong usage\n");
-	}
+	if (file == "")
+		err("Wrong usage\n");
 
 	FreeFermions::InputCheck inputCheck;
 	InputNgType::Writeable ioWriteable(file,inputCheck);
 	InputNgType::Readable io(ioWriteable);
 
 	GeometryParamsType geometryParams(io);
-	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	SizeType electronsUp = GeometryParamsType::readElectrons(io,
+	                                                         geometryParams.sites);
 	PsimagLite::Vector<SizeType>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
 	sites.resize(3);
@@ -88,9 +86,12 @@ int main(int argc,char *argv[])
 
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry.matrix(),dof,true);
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
 
-	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // 8 up and 8 down
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
 
@@ -102,7 +103,10 @@ int main(int argc,char *argv[])
 		RealType time = it * step + offset;
 		RealType arg = geometryParams.omega*time + geometryParams.phase;
 		geometry.addPotentialT(arg);
-		EngineType engine2(geometry.matrix(),dof,true);
+		EngineType engine2(geometry.matrix(),
+		                   geometryParams.outputFile,
+		                   dof,
+		                   EngineType::VERBOSE_YES);
 		OpDiagonalFactoryType opDiagonalFactory(engine2);
 		OpLibFactoryType opLibFactory(engine2);
 		EtoTheIhTimeType eih(time,engine2,0);
@@ -110,7 +114,7 @@ int main(int argc,char *argv[])
 		HilbertStateType phi = gs;
 		eihOp.applyTo(phi);
 		HilbertStateType phi2 = phi;
-		LibraryOperatorType& myOp = opLibFactory(LibraryOperatorType::N,sites[0],0);
+		LibraryOperatorType& myOp = opLibFactory(LibraryOperatorType::N, sites[0], 0);
 		myOp.applyTo(phi2);
 		ComplexType tmp = scalarProduct(gs,phi2);
 		std::cout<<time<<" "<<tmp<<" "<<arg<<"\n";

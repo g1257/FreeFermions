@@ -2,7 +2,8 @@
 
 // Calculates <phi | phi>
 // where
-// |phi> = c_{p up} exp(iHt) c_{i\sigma} nbar_{i \bar{sigma}} c^dagger_{j sigma'} n_{j \bar{sigma'}} |gs>
+// |phi> = c_{p up} exp(iHt) c_{i\sigma} nbar_{i \bar{sigma}}
+//                 c^dagger_{j sigma'} n_{j \bar{sigma'}} |gs>
 
 typedef double RealType;
 #include <cstdlib>
@@ -232,7 +233,8 @@ int main(int argc,char *argv[])
 	InputNgType::Readable io(ioWriteable);
 
 	GeometryParamsType geometryParams(io);
-	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	SizeType electronsUp = GeometryParamsType::readElectrons(io,
+	                                                         geometryParams.sites);
 
 	PsimagLite::Vector<SizeType>::Type sites;
 	GeometryParamsType::readVector(sites,file,"TSPSites");
@@ -250,9 +252,12 @@ int main(int argc,char *argv[])
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
 
-	EngineType engine(geometry.matrix(),dof,false);
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
 
-	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // 8 up and 8 down
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;
 	bool verbose = false;
 	HilbertStateType gs(engine,ne,debug);

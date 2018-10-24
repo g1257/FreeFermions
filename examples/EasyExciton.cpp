@@ -1,5 +1,3 @@
-
-
 // SAmple of how to use FreeFermions core engine to calculate
 // <c^\dagger_i c_j >
 #include <cstdlib>
@@ -85,8 +83,10 @@ int main(int argc,char *argv[])
 	
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry.matrix(),dof,true);
-
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
@@ -110,7 +110,7 @@ int main(int argc,char *argv[])
 		HilbertStateType phi = gs;
 		myOp.applyTo(phi);
 		eihOp.applyTo(phi);
-		OperatorType& myOp2 = opNormalFactory(OperatorType::DESTRUCTION,sites[1],sigma);
+		OperatorType& myOp2 = opNormalFactory(OperatorType::DESTRUCTION, sites[1], sigma);
 		myOp2.applyTo(phi);
 		std::cout<<time<<" "<<scalarProduct(phi,phi)/density<<"\n";
 	}

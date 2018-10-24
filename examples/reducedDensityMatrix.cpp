@@ -42,7 +42,8 @@ int main(int argc,char* argv[])
 	InputNgType::Readable io(ioWriteable);
 
 	GeometryParamsType geometryParams(io);
-	SizeType electronsUp = GeometryParamsType::readElectrons(io,geometryParams.sites);
+	SizeType electronsUp = GeometryParamsType::readElectrons(io,
+	                                                         geometryParams.sites);
 
 	SizeType dof = 1; // spinless
 
@@ -53,17 +54,20 @@ int main(int argc,char* argv[])
 	SizeType npthreads = 1;
 	try {
 		io.readline(npthreads,"Threads=");
-	} catch (std::exception& e) {}
+	} catch (std::exception&) {}
 
 	PsimagLite::Concurrency concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry.matrix(),dof,true);
-	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // n. of up (= n. of  down electrons)
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
+	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	HilbertStateType gs(engine,ne,0,false);
 	RealType sum = 0;
 	for (SizeType i=0;i<ne[0];i++) sum += engine.eigenvalue(i);
 	std::cerr<<"Energy="<<dof*sum<<"\n";
 
-	SizeType halfSites = static_cast<SizeType>(0.5*engine.size());	
+	SizeType halfSites = static_cast<SizeType>(0.5*engine.size());
 	ReducedDensityMatrixType reducedDensityMatrix(engine,halfSites,electronsUp);
 	
 	PsimagLite::Vector<double>::Type e(reducedDensityMatrix.rank());

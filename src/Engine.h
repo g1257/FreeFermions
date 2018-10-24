@@ -106,6 +106,8 @@ public:
 	{
 		diagonalize();
 		if (verbose_) {
+			fout_<<"Eigenvalues\n";
+			fout_<<eigenvalues_;
 			fout_<<"#Created core "<<eigenvectors_.n_row();
 			fout_<<"  times "<<eigenvectors_.n_col()<<"\n";
 		}

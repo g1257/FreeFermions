@@ -118,7 +118,7 @@ class ReducedDensityMatrix {
 
 	public:
 
-		MyLoop(EngineType& engine,
+		MyLoop(const EngineType& engine,
 		       SizeType n,
 		       SizeType ne,
 		       CanonicalStates& aux,
@@ -217,7 +217,7 @@ class ReducedDensityMatrix {
 			}
 		}
 
-		EngineType engine_;
+		const EngineType& engine_;
 		SizeType n_;
 		SizeType ne_;
 		CanonicalStates aux_;

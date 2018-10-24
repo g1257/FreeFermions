@@ -44,7 +44,7 @@ int main(int argc,char* argv[])
 	bool energyOnly = false;
 	SizeType prec = 8;
 
-	while ((opt = getopt(argc, argv, "f:e:p:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:ep:")) != -1) {
 		switch (opt) {
 		case 'f':
 			file=optarg;
@@ -119,7 +119,7 @@ int main(int argc,char* argv[])
 
 		std::cout<<cicj;
 
-		verify(cicj, engine);
+		//verify(cicj, engine);
 	}
 }
 

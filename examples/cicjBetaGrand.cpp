@@ -1,5 +1,3 @@
-
-
 // SAmple of how to use FreeFermions core engine to calculate
 // <c^\dagger_i c_j >
 #include <cstdlib>
@@ -78,7 +76,10 @@ int main(int argc,char *argv[])
 
 	SizeType npthreads = 1;
 	ConcurrencyType concurrency(&argc,&argv,npthreads);
-	EngineType engine(geometry.matrix(),dof,true);
+	EngineType engine(geometry.matrix(),
+	                  geometryParams.outputFile,
+	                  dof,
+	                  EngineType::VERBOSE_YES);
 
 	SizeType n = engine.size();
 
@@ -116,6 +117,7 @@ int main(int argc,char *argv[])
 			sum2 += ni[i];
 		}
 	}
+
 	std::cout<<"#total density= "<<sum1<<" "<<sum2<<" "<<(sum1+sum2)<<"\n";
 	std::cout<<"#energy= "<<energy<<"\n";
 }
