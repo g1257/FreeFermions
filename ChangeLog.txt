@@ -1,3 +1,14 @@
+2018-10-25 Version 1.20
+
+* extractni.pl to extract diagonal from matrix
+of <c^\dagger_i c_j>
+
+* Engine logs to file
+
+* sqOmega bug fixes and improvements
+
+* precision added to cicj driver
+
 2018-07-31 Version 1.18
 
 * configure.pl uses PsiTag
