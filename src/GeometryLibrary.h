@@ -165,6 +165,7 @@ public:
 
 		fout_<<"HoppingMatrix\n";
 		fout_<<t_;
+		fout_.flush();
 	}
 
 	template<typename ComplexType>

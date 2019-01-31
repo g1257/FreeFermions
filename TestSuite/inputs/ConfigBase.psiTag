@@ -8,7 +8,7 @@ LDFLAGS = -L../../PsimagLite/lib -lpsimaglite
 dependency cpp = (
 CXX = g++
 # We're using ansi C++
-CPPFLAGS += -pedantic -std=c++98
+CPPFLAGS += -pedantic -std=c++11
 
 # Enable warnings and treat warnings as errors
 CPPFLAGS += -Wall -Werror
