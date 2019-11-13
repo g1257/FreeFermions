@@ -255,7 +255,7 @@ int main(int argc,char *argv[])
 	EngineType engine(geometry.matrix(),
 	                  geometryParams.outputFile,
 	                  dof,
-	                  EngineType::VERBOSE_YES);
+	                  EngineType::VerboseEnum::YES);
 
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;

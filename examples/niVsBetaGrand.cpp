@@ -113,7 +113,7 @@ int main(int argc,char *argv[])
 	EngineType engine(geometry.matrix(),
 	                  geometryParams.outputFile,
 	                  dof,
-	                  EngineType::VERBOSE_YES);
+	                  EngineType::VerboseEnum::YES);
 	std::cout<<geometry;
 	std::cout<<"#site="<<site<<"\n";
 

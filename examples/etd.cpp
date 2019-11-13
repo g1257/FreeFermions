@@ -89,7 +89,7 @@ int main(int argc,char *argv[])
 	EngineType engine(geometry.matrix(),
 	                  geometryParams.outputFile,
 	                  dof,
-	                  EngineType::VERBOSE_YES);
+	                  EngineType::VerboseEnum::YES);
 
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;
@@ -106,7 +106,7 @@ int main(int argc,char *argv[])
 		EngineType engine2(geometry.matrix(),
 		                   geometryParams.outputFile,
 		                   dof,
-		                   EngineType::VERBOSE_YES);
+		                   EngineType::VerboseEnum::YES);
 		OpDiagonalFactoryType opDiagonalFactory(engine2);
 		OpLibFactoryType opLibFactory(engine2);
 		EtoTheIhTimeType eih(time,engine2,0);

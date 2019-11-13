@@ -93,7 +93,7 @@ public:
 	typedef FieldType_ FieldType;
 	typedef  PsimagLite::Matrix<FieldType> MatrixType;
 
-	enum VerboseEnum {VERBOSE_NO, VERBOSE_YES};
+	enum class VerboseEnum {NO, YES};
 
 	Engine(const PsimagLite::Matrix<FieldType>& geometry,
 	       PsimagLite::String outputFile,
@@ -105,7 +105,7 @@ public:
 	      fout_(outputFile.c_str(), std::ios::app)
 	{
 		diagonalize();
-		if (verbose_) {
+		if (verbose_ == VerboseEnum::YES) {
 			fout_<<"Eigenvalues\n";
 			fout_<<eigenvalues_;
 			fout_<<"#Created core "<<eigenvectors_.n_row();
@@ -145,7 +145,7 @@ private:
 
 		diag(eigenvectors_,eigenvalues_,'V');
 
-		if (verbose_) {
+		if (verbose_ == VerboseEnum::YES) {
 			fout_<<"eigenvalues\n";
 			fout_<<eigenvalues_;
 			fout_<<"*************\n";
@@ -156,7 +156,7 @@ private:
 
 	// degrees of freedom that are simply repetition (hoppings are diagonal in these)
 	SizeType dof_;
-	bool verbose_;
+	VerboseEnum verbose_;
 	MatrixType eigenvectors_;
 	typename PsimagLite::Vector<RealType>::Type eigenvalues_;
 	std::ofstream fout_;

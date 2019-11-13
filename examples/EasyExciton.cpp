@@ -86,7 +86,7 @@ int main(int argc,char *argv[])
 	EngineType engine(geometry.matrix(),
 	                  geometryParams.outputFile,
 	                  dof,
-	                  EngineType::VERBOSE_YES);
+	                  EngineType::VerboseEnum::YES);
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp); // 8 up and 8 down
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
