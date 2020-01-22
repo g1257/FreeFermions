@@ -36,7 +36,7 @@ $args{"configFiles"} = \@configFiles;
 my @drivers = ("cicj","deltaIdeltaJ","EasyExciton","HolonDoublon","decay",
 	       "reducedDensityMatrix","cicjBetaGrand",
 	       "dynamics","hd2","ninj","niVsBetaGrand","splusSminus","szsz",
-               "SzSzTime","etd","sqOmega","WavePacket");
+               "SzSzTime","etd","sqOmega","WavePacket", "WavePacket2");
 
 createMakefile(\@drivers, \%args);
 
