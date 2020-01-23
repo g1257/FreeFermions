@@ -113,7 +113,7 @@ public:
 	}
 
 	template<typename SomeStateType>
-	void applyTo(SomeStateType& state)
+	void applyTo(SomeStateType& state) const
 	{
 		state.pushInto(*this);
 	}

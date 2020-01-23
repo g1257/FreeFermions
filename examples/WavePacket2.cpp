@@ -12,6 +12,7 @@
 #include "Concurrency.h"
 #include "InputNg.h"
 #include "InputCheck.h"
+#include "Parallelizer2.h"
 
 typedef double RealType;
 typedef std::complex<double> ComplexType;
@@ -81,7 +82,7 @@ ComplexType doOneTime(RealType time,
                       const EngineType& engine,
                       OpNormalFactoryType& opNormalFactory,
                       OpDiagonalFactoryType& opDiagonalFactory,
-                      OperatorType& opCp,
+                      const OperatorType& opCp,
                       const VectorSizeType& sites,
                       const VectorType& weights,
                       SizeType totalSites)
@@ -115,8 +116,22 @@ void doOneSite(MatrixType& values,
 	OperatorType& opCp = opNormalFactory(OperatorType::DESTRUCTION, site3, sigma);
 	SizeType total = values.n_col();
 
-	for (SizeType it = 0; it < total; ++it) {
-		OpDiagonalFactoryType opDiagonalFactory(engine);
+	PsimagLite::Parallelizer2<> parallelizer2(PsimagLite::Concurrency::codeSectionParams);
+	OpDiagonalFactoryType opDiagonalFactory(engine);
+	auto lambda = [
+	        &values,
+	        site3,
+	        step,
+	        offset,
+	        &gs,
+	        &engine,
+	        &opNormalFactory,
+	        &opDiagonalFactory,
+	        &opCp,
+	        sites,
+	        &weights,
+	        totalSites](SizeType it, SizeType) {
+
 		const RealType time = it * step + offset;
 		const ComplexType result =  doOneTime(time,
 		                                      gs,
@@ -128,7 +143,9 @@ void doOneSite(MatrixType& values,
 		                                      weights,
 		                                      totalSites);
 		values(site3, it) = result;
-	}
+	};
+
+	parallelizer2.parallelFor(0, total, lambda);
 }
 
 ComplexType superDensity(const HilbertStateType& gs,
