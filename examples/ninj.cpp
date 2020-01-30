@@ -81,23 +81,29 @@ int main(int argc,char* argv[])
 	std::cerr<<"Energy="<<dof*sum<<"\n";
 
 	SizeType sigma = 0;
+	SizeType norbs = 1;
+    io.readline(norbs, "Orbitals=");
 	SizeType tot = geometryParams.sites;
-	for (SizeType site = 0; site<tot ; site++) {
-		OpLibFactoryType opLibFactory(engine);
-		LibraryOperatorType& myOp = opLibFactory(LibraryOperatorType::N,
-		                                         site,
-		                                         sigma);
-		for (SizeType site2=0; site2<tot; site2++) {
-			HilbertStateType phi = gs;
-			myOp.applyTo(phi);
-			LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,
-			                                          site2,
-			                                          sigma);
-			myOp2.applyTo(phi);
-			std::cout<<scalarProduct(gs,phi)<<" ";
+	for (SizeType orbital = 0; orbital < norbs; ++orbital) {
+		for (SizeType site = 0; site<tot ; site++) {
+			OpLibFactoryType opLibFactory(engine);
+			LibraryOperatorType& myOp = opLibFactory(LibraryOperatorType::N,
+			                                         site + orbital*tot,
+				                                     sigma);
+			for (SizeType site2=0; site2<tot; site2++) {
+				HilbertStateType phi = gs;
+				myOp.applyTo(phi);
+				LibraryOperatorType& myOp2 = opLibFactory(LibraryOperatorType::N,
+				                                          site2 + orbital*tot,
+				                                          sigma);
+				myOp2.applyTo(phi);
+				std::cout<<scalarProduct(gs,phi)<<" ";
+			}
+
+			std::cout<<"\n";
 		}
 
-		std::cout<<"\n";
+		std::cout<<"----------------\n";
 	}
 }
 
