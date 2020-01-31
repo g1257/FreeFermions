@@ -107,7 +107,9 @@ public:
 			value_ = 0;
 			return;
 		}
+
 		freeOps.removeNonCsOrDs();
+
 		freeOps.reverse();
 
 		pairUp(freeOps);

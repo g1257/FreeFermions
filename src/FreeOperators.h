@@ -1,6 +1,6 @@
 // BEGIN LICENSE BLOCK
 /*
-Copyright (c) 2011 , UT-Battelle, LLC
+Copyright (c) 2011-2020, UT-Battelle, LLC
 All rights reserved
 
 [FreeFermions, Version 1.0.0]
@@ -108,6 +108,7 @@ public:
 	typedef IndexGenerator IndexGeneratorType;
 	typedef PsimagLite::Permutations<IndexGeneratorType> PermutationsType;
 	typedef typename PsimagLite::Vector<OpPointerType>::Type OpPointersType;
+	typedef typename PsimagLite::Vector<SizeType>::Type VectorSizeType;
 
 	enum {CREATION = OperatorType::CREATION,
 		  DESTRUCTION = OperatorType::DESTRUCTION,
@@ -150,7 +151,7 @@ public:
 	{
 		SizeType counter = 0;
 		SizeType j = 0;
-		for (SizeType i=0;i<data_.size();i++) {
+		for (SizeType i = 0; i < data_.size(); i++) {
 			if (data_[i].type == DIAGONAL) {
 				if (counter==ind) return j;
 				counter++;
@@ -158,11 +159,13 @@ public:
 			}
 			j++;
 		}
+
+
 		assert(false);
 		return 0;
 	}
 
-	void removeNonCsOrDs()
+	void removeNonCsOrDs2()
 	{
 		typename PsimagLite::Vector<FreeOperator>::Type dataOld = data_;
 		data_.clear();
@@ -173,6 +176,31 @@ public:
 		}
 	}
 
+	void removeNonCsOrDs()
+	{
+		const SizeType n = data_.size();
+		SizeType i = 0;
+		SizeType j = 0;
+		for (i = 0; i < n; ++i) {
+
+			SizeType offset = 0;
+			for (SizeType k = j; k  < n; ++k) {
+				SizeType type1 = data_[k].type;
+				if (type1 == CREATION || type1 == DESTRUCTION) break;
+				++offset;
+			}
+
+			j += offset;
+			if (j == n) break;
+			assert(j < data_.size());
+			if (i != j) data_[i] = data_[j];
+			++j;
+			if (j == n) break;
+		}
+
+		data_.resize(i + 1);
+	}
+
 	SizeType size() const { return data_.size(); }
 
 	const FreeOperator& operator[](SizeType i) const { return data_[i]; }
@@ -180,10 +208,13 @@ public:
 	void reverse()
 	{
 		// flip'em
-		typename PsimagLite::Vector<FreeOperator>::Type dataCopy = data_;
 		SizeType n = data_.size();
-		for (SizeType i=0;i<n;i++)
-			data_[i] = dataCopy[n-i-1];
+		const SizeType nOver2 = (n & 1) ? (n - 1)/2 : n/2;
+		for (SizeType i = 0; i < nOver2; ++i) {
+			FreeOperator copy = data_[i];
+			data_[i] = data_[n - i - 1];
+			data_[n - i - 1] = copy;
+		}
 	}
 
 	RealType operator()()
@@ -294,7 +325,7 @@ private:
 		}
 	}
 
-	typename PsimagLite::Vector<FreeOperator>::Type data_;
+	PsimagLite::Vector<FreeOperator>::Type data_;
 	RealType value_;
 	SizeType loc_;
 }; // FreeOperators
