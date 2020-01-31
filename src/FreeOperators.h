@@ -147,6 +147,11 @@ public:
 		}
 	}
 
+	void clear()
+	{
+		data_.clear();
+	}
+
 	SizeType findLocOfDiagOp(SizeType ind) const
 	{
 		SizeType counter = 0;
@@ -163,17 +168,6 @@ public:
 
 		assert(false);
 		return 0;
-	}
-
-	void removeNonCsOrDs2()
-	{
-		typename PsimagLite::Vector<FreeOperator>::Type dataOld = data_;
-		data_.clear();
-		for (SizeType i=0;i<dataOld.size();i++) {
-			SizeType type1 = dataOld[i].type;
-			if (type1 == CREATION || type1 == DESTRUCTION)
-				data_.push_back(dataOld[i]);
-		}
 	}
 
 	void removeNonCsOrDs()
@@ -222,38 +216,15 @@ public:
 		return value_;
 	}
 
-	void removePair(SizeType loc)
+	static bool notCreationOrDestruction(SizeType type1)
 	{
-		typename PsimagLite::Vector<FreeOperator>::Type::iterator itp = data_.begin();
-		data_.erase(itp);
-		if (loc == 0) throw PsimagLite::RuntimeError("removePair failed\n");
-		--loc;
-		itp = data_.begin()+loc;
-		assert(itp < data_.end());
-		data_.erase(itp);
-	}
-
-	int findOpGivenLambda(SizeType thisLambda,
-	                      SizeType start) const
-	{
-		SizeType n = data_.size();
-		for (SizeType  i= start;i < n; ++i) {
-			if (notCreationOrDestruction(data_[i].type)) continue;
-			if (data_[i].lambda==thisLambda) return i;
-		}
-		return -1;
-		//throw std::runtime_error("FreeOperators::findOpGivenLambda()\n");
-	}
-
-	bool notCreationOrDestruction(SizeType type1) const
-	{
-		if (type1!=CREATION && type1!=DESTRUCTION) return true;
-		return false;
+		return (type1 != CREATION && type1 != DESTRUCTION);
 	}
 
 private:
 
-	SizeType addAtTheBack(const typename PsimagLite::Vector<SizeType>::Type&  occupations2,SizeType typeOfRun)
+	SizeType addAtTheBack(const typename PsimagLite::Vector<SizeType>::Type& occupations2,
+	                      SizeType typeOfRun)
 	{
 		SizeType counter = 0;
 		for (int i=occupations2.size()-1;i>=0;i--) {
@@ -268,10 +239,12 @@ private:
 			fo.type = DESTRUCTION;
 			data_[loc_++]=fo;
 		}
+
 		return counter;
 	}
 
-	SizeType addAtTheFront(const typename PsimagLite::Vector<SizeType>::Type&  occupations,SizeType typeOfRun)
+	SizeType addAtTheFront(const typename PsimagLite::Vector<SizeType>::Type& occupations,
+	                       SizeType typeOfRun)
 	{
 		SizeType counter = 0;
 		for (SizeType i=0;i<occupations.size();++i) {

@@ -91,10 +91,12 @@ namespace FreeFermions {
 
 template<typename OperatorType,typename OpPointerType>
 class FermionFactor {
+
 public:
+
 	typedef typename OperatorType::RealType RealType;
-	//typedef typename OperatorType::FieldType FieldType;
 	typedef FreeOperators<OperatorType,OpPointerType> FreeOperatorsType;
+	typedef PsimagLite::Vector<bool>::Type VectorBoolType;
 
 	enum {CREATION = OperatorType::CREATION,
 		  DESTRUCTION = OperatorType::DESTRUCTION
@@ -113,6 +115,8 @@ public:
 		freeOps.reverse();
 
 		pairUp(freeOps);
+
+		freeOps.clear();
 	}
 
 	RealType operator()()
@@ -122,49 +126,89 @@ public:
 
 private:
 
-	void pairUp(//const typename PsimagLite::Vector<SizeType>::Type& occupations,
-	            FreeOperatorsType& freeOps)
+	void pairUp(FreeOperatorsType& freeOps)
 	{
 		// pair up daggers with non-daggers
 		value_ = 1;
-		while(freeOps.size()>0) {
-			if (freeOps.notCreationOrDestruction(freeOps[0].type))
+		VectorBoolType bits(freeOps.size(), true);
+		SizeType count = freeOps.size();
+		while(count > 0) {
+			SizeType firstIndex = findActualIndex(bits, 0);
+
+			if (FreeOperatorsType::notCreationOrDestruction(freeOps[firstIndex].type))
 				continue;
 			// take first operator's lambda:
-			SizeType thisLambda = freeOps[0].lambda;
+			SizeType thisLambda = freeOps[firstIndex].lambda;
 			// find next operator with same lambda:
-			int x = freeOps.findOpGivenLambda(thisLambda,1);
+			SizeType firstIndexPlusOne = findActualIndex(bits, firstIndex + 1);
+			int x = findOpGivenLambda(thisLambda, firstIndexPlusOne, bits, freeOps);
 
 			// if types are equal then result is zero, and we're done:
-			if (x<0 || freeOps[0].type == freeOps[x].type) {
+			if (x < 0 || freeOps[firstIndex].type == freeOps[x].type) {
 				value_ = 0;
 				return;
 			}
+
 			// then we produce a sign, and either an occupation
 			// or an anti-occupation
 			// let's deal with the (anti)occupation first:
 
-			bool nNormal = (freeOps[0].type == CREATION) ? true : false;
+			bool nNormal = (freeOps[firstIndex].type == CREATION) ? true : false;
 			SizeType occupationForThisLamda = 0; //occupations[thisLambda];
-			if (nNormal && occupationForThisLamda==0) {
-				value_=0;
+			if (nNormal && occupationForThisLamda == 0) {
+				value_ = 0;
 				return;
 			}
 
-			if (!nNormal && occupationForThisLamda==1) {
-				value_=0;
+			if (!nNormal && occupationForThisLamda == 1) {
+				value_ = 0;
 				return;
 			}
 
-			// now let's deail with the sign
-			SizeType xSaved = x;
-			x++;
-			int f = (x&1) ? -1 : 1;
+			// now let's deal with the sign
+			const SizeType xSaved = x;
+			SizeType counter = 0;
+			assert(xSaved < bits.size());
+			for (SizeType j = firstIndex; j < xSaved + 1; ++j)
+				if (bits[j]) ++counter;
+
+			int f = (counter & 1) ? -1 : 1;
 			value_ *= f;
 
-			// finally, we remove the pair
-			freeOps.removePair(xSaved);
+			// we remove the pair
+			assert(x > 0);
+
+			SizeType actualFirst = findActualIndex(bits, 0);
+			bits[actualFirst] = false;
+
+			SizeType second = findActualIndex(bits, x);
+			bits[second] = false;
+
+			count -= 2;
 		}
+	}
+
+	static int findOpGivenLambda(SizeType thisLambda,
+	                      SizeType start,
+	                      const VectorBoolType& bits,
+	                      const FreeOperatorsType& freeOps)
+	{
+		const SizeType n = freeOps.size();
+		for (SizeType  i = start; i < n; ++i) {
+			if (!bits[i]) continue;
+			if (FreeOperatorsType::notCreationOrDestruction(freeOps[i].type)) continue;
+			if (freeOps[i].lambda == thisLambda) return i;
+		}
+
+		return -1;
+	}
+
+	static SizeType findActualIndex(const VectorBoolType& bits, SizeType ind)
+	{
+		const SizeType n = bits.size();
+		for (SizeType i = ind; i < n; ++i)
+			if (bits[i]) return i;
+		throw std::runtime_error("FreeOperators::findActualIndex()\n");
 	}
 
 	RealType value_;
