@@ -263,10 +263,16 @@ private:
 		typedef PsimagLite::Parallelizer<MyLoopType> ParallelizerType;
 		ParallelizerType threadObject(PsimagLite::Concurrency::codeSectionParams);
 
-		MyLoopType myLoop(engine_,n_,ne_,aux,states,threadObject.threads());
+		MyLoopType myLoop(engine_,
+		                  n_,
+		                  ne_,
+		                  aux,
+		                  states,
+		                  PsimagLite::Concurrency::codeSectionParams.npthreads);
 
 		std::cout<<"Using "<<threadObject.name();
-		std::cout<<" with "<<threadObject.threads()<<" threads.\n";
+		std::cout<<" with "<<PsimagLite::Concurrency::codeSectionParams.npthreads;
+		std::cout<<" threads.\n";
 		std::cout<<"npthreads= "<<PsimagLite::Concurrency::codeSectionParams.npthreads<<"\n";
 		threadObject.loopCreate(myLoop);
 

@@ -280,7 +280,7 @@ int main(int argc,char *argv[])
 	MyLoopType myLoop(engine,step,offset,gs,sites,total,verbose);
 
 	std::cout<<"Using "<<threadObject.name();
-	std::cout<<" with "<<threadObject.threads()<<" threads.\n";
+	std::cout<<" with "<<PsimagLite::Concurrency::codeSectionParams.npthreads<<" threads.\n";
 	threadObject.loopCreate(myLoop);
 	myLoop.printTasks(std::cout);
 }

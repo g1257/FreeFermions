@@ -257,8 +257,8 @@ int main(int argc,char *argv[])
 	PsimagLite::Vector<SizeType>::Type ne(dof,electronsUp);
 	bool debug = false;
 	HilbertStateType gs(engine,ne,debug);
-
-	std::cout<<"#Energy="<<engine.energy(ne[0])<<" for ne="<<ne<<"\n";
+	assert(ne.size() > 0);
+	std::cout<<"#Energy="<<engine.energy(ne[0])<<" for ne="<<ne[0]<<"\n";
 	MatrixType values(geometryParams.sites*orbitals, total);
 	SizeType sitesUpTo = values.n_row();
 
