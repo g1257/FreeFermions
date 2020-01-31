@@ -85,7 +85,6 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include "Complex.h" // in PsimagLite
 #include "FreeOperators.h" // in PsimagLite
 
-
 namespace FreeFermions {
 
 
@@ -97,6 +96,7 @@ public:
 	typedef typename OperatorType::RealType RealType;
 	typedef FreeOperators<OperatorType,OpPointerType> FreeOperatorsType;
 	typedef PsimagLite::Vector<bool>::Type VectorBoolType;
+	typedef std::pair<SizeType, SizeType> PairSizeType;
 
 	enum {CREATION = OperatorType::CREATION,
 		  DESTRUCTION = OperatorType::DESTRUCTION
@@ -126,21 +126,90 @@ public:
 
 private:
 
+	class WhoIsOn {
+
+	public:
+
+		WhoIsOn(SizeType n) : data_(n, true), beginEnd_(0, n) {}
+
+		SizeType findActualIndex(SizeType ind) const
+		{
+			SizeType n = data_.size();
+			PairSizeType bE = fromPair(ind, n);
+			for (SizeType i = bE.first; i < bE.second; ++i)
+				if (data_[i]) return i;
+
+			throw std::runtime_error("FreeOperators::findActualIndex()\n");
+		}
+
+		SizeType count(SizeType from, SizeType to) const
+		{
+			PairSizeType bE = fromPair(from, to);
+			SizeType counter = 0;
+			for (SizeType i = bE.first; i < bE.second; ++i)
+				if (data_[i]) ++counter;
+
+			return counter;
+		}
+
+		PairSizeType fromPair(SizeType from, SizeType to) const
+		{
+			PairSizeType bE(from, to);
+			if (beginEnd_.first > from) bE.first = beginEnd_.first;
+			if (beginEnd_.second < to) bE.second = beginEnd_.second;
+			return bE;
+		}
+
+		bool operator[](SizeType ind) const
+		{
+			assert(ind < data_.size());
+			return data_[ind];
+		}
+
+		void set(SizeType ind, bool value)
+		{
+			assert(ind < data_.size());
+			data_[ind] = value;
+		}
+
+		void updateBounds()
+		{
+			for (SizeType i = beginEnd_.first; i < beginEnd_.second; ++i) {
+				if (!data_[i]) continue;
+				if (i > beginEnd_.first) beginEnd_.first = i;
+				break;
+			}
+
+			for (SizeType i = 0; i < beginEnd_.second; ++i) {
+				SizeType j = beginEnd_.second - i - 1;
+				if (!data_[j]) continue;
+				if (j + 1 < beginEnd_.second)  beginEnd_.second = j + 1;
+				break;
+			}
+		}
+
+	private:
+
+		VectorBoolType data_;
+		PairSizeType beginEnd_;
+	};
+
 	void pairUp(FreeOperatorsType& freeOps)
 	{
 		// pair up daggers with non-daggers
 		value_ = 1;
-		VectorBoolType bits(freeOps.size(), true);
+		WhoIsOn bits(freeOps.size());
 		SizeType count = freeOps.size();
+
 		while(count > 0) {
-			SizeType firstIndex = findActualIndex(bits, 0);
+			SizeType firstIndex = bits.findActualIndex(0);
 
 			if (FreeOperatorsType::notCreationOrDestruction(freeOps[firstIndex].type))
 				continue;
 			// take first operator's lambda:
 			SizeType thisLambda = freeOps[firstIndex].lambda;
 			// find next operator with same lambda:
-			SizeType firstIndexPlusOne = findActualIndex(bits, firstIndex + 1);
+			SizeType firstIndexPlusOne = bits.findActualIndex(firstIndex + 1);
 			int x = findOpGivenLambda(thisLambda, firstIndexPlusOne, bits, freeOps);
 
 			// if types are equal then result is zero, and we're done:
@@ -167,10 +236,7 @@ private:
 
 			// now let's deal with the sign
 			const SizeType xSaved = x;
-			SizeType counter = 0;
-			assert(xSaved < bits.size());
-			for (SizeType j = firstIndex; j < xSaved + 1; ++j)
-				if (bits[j]) ++counter;
+			SizeType counter = bits.count(firstIndex, xSaved + 1);
 
 			int f = (counter & 1) ? -1 : 1;
 			value_ *= f;
@@ -178,37 +244,31 @@ private:
 			// we remove the pair
 			assert(x > 0);
 
-			SizeType actualFirst = findActualIndex(bits, 0);
-			bits[actualFirst] = false;
+			SizeType actualFirst = bits.findActualIndex(0);
+			bits.set(actualFirst, false);
 
-			SizeType second = findActualIndex(bits, x);
-			bits[second] = false;
+			SizeType second = bits.findActualIndex(x);
+			bits.set(second, false);
 
+			bits.updateBounds();
 			count -= 2;
 		}
 	}
 
 	static int findOpGivenLambda(SizeType thisLambda,
 	                      SizeType start,
-	                      const VectorBoolType& bits,
+	                      const WhoIsOn& bits,
 	                      const FreeOperatorsType& freeOps)
 	{
 		const SizeType n = freeOps.size();
-		for (SizeType  i = start; i < n; ++i) {
+		PairSizeType bE = bits.fromPair(start, n);
+		for (SizeType  i = bE.first; i < bE.second; ++i) {
 			if (!bits[i]) continue;
 			if (FreeOperatorsType::notCreationOrDestruction(freeOps[i].type)) continue;
 			if (freeOps[i].lambda == thisLambda) return i;
 		}
 
 		return -1;
-	}
-
-	static SizeType findActualIndex(const VectorBoolType& bits, SizeType ind)
-	{
-		const SizeType n = bits.size();
-		for (SizeType i = ind; i < n; ++i)
-			if (bits[i]) return i;
-		throw std::runtime_error("FreeOperators::findActualIndex()\n");
 	}
 
 	RealType value_;
