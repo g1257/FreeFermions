@@ -128,16 +128,24 @@ private:
 
 	class WhoIsOn {
 
+		static const SizeType MAX_BITS = 64;
+
 	public:
 
-		WhoIsOn(SizeType n) : data_(n, true), beginEnd_(0, n) {}
+		WhoIsOn(SizeType n) : word_(~0), n_(n), beginEnd_(0, n)
+		{
+			if (n >= MAX_BITS)
+				err("FermionFactor: hard limit of 64 bits exceeded\n");
+		}
 
 		SizeType findActualIndex(SizeType ind) const
 		{
-			SizeType n = data_.size();
-			PairSizeType bE = fromPair(ind, n);
-			for (SizeType i = bE.first; i < bE.second; ++i)
-				if (data_[i]) return i;
+			PairSizeType bE = fromPair(ind, n_);
+			long unsigned int mask = (1 << bE.first);
+			for (SizeType i = bE.first; i < bE.second; ++i) {
+				if (word_ & mask) return i;
+				mask <<= 1;
+			}
 
 			throw std::runtime_error("FreeOperators::findActualIndex()\n");
 		}
@@ -146,8 +154,11 @@ private:
 		{
 			PairSizeType bE = fromPair(from, to);
 			SizeType counter = 0;
-			for (SizeType i = bE.first; i < bE.second; ++i)
-				if (data_[i]) ++counter;
+			long unsigned int mask = (1 << bE.first);
+			for (SizeType i = bE.first; i < bE.second; ++i) {
+				if (word_ & mask) ++counter;
+				mask <<= 1;
+			}
 
 			return counter;
 		}
@@ -162,27 +173,37 @@ private:
 
 		bool operator[](SizeType ind) const
 		{
-			assert(ind < data_.size());
-			return data_[ind];
+			assert(ind < n_);
+			const long unsigned int mask = (1 << ind);
+			return word_ & mask;
 		}
 
 		void set(SizeType ind, bool value)
 		{
-			assert(ind < data_.size());
-			data_[ind] = value;
+			assert(ind < n_);
+			const long unsigned int mask = (1 << ind);
+			const bool x = (word_ & mask);
+			if (value == x) return;
+			word_ ^= mask;
 		}
 
 		void updateBounds()
 		{
+			long unsigned int mask = (1 << beginEnd_.first);
 			for (SizeType i = beginEnd_.first; i < beginEnd_.second; ++i) {
-				if (!data_[i]) continue;
+				if (!(word_ & mask)) {
+					mask <<= 1;
+					continue;
+				}
+
 				if (i > beginEnd_.first) beginEnd_.first = i;
 				break;
 			}
 
 			for (SizeType i = 0; i < beginEnd_.second; ++i) {
 				SizeType j = beginEnd_.second - i - 1;
-				if (!data_[j]) continue;
+				long unsigned int mask = (1 << j);
+				if (!(word_ & mask)) continue;
 				if (j + 1 < beginEnd_.second)  beginEnd_.second = j + 1;
 				break;
 			}
@@ -190,7 +211,8 @@ private:
 
 	private:
 
-		VectorBoolType data_;
+		long unsigned int word_;
+		SizeType n_;
 		PairSizeType beginEnd_;
 	};
 
