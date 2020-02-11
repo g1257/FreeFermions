@@ -81,6 +81,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 
 #include <assert.h>
 #include "Io/IoSimple.h"
+#include "AnsiColors.h"
 
 namespace FreeFermions {
 
@@ -88,6 +89,7 @@ template<typename FieldType,typename IoInputType>
 struct GeometryParameters {
 
 	typedef typename PsimagLite::Real<FieldType>::Type RealType;
+	typedef typename PsimagLite::Vector<RealType>::Type VectorRealType;
 
 	enum {CHAIN,
 		  LADDER,
@@ -158,6 +160,23 @@ struct GeometryParameters {
 		}
 
 		isPeriodic[DIRECTION_X] = (x>0);
+
+		try {
+			VectorRealType tmpVector;
+			io.read(tmpVector, "hubbardU");
+			bool flag = false;
+			for (SizeType i = 0; i <tmpVector.size(); ++i) {
+				if (tmpVector[i] == 0) continue;
+				flag = true;
+				break;
+			}
+
+			if (flag) {
+				std::cerr<<PsimagLite::AnsiColor::red;
+				std::cerr<<"WARNING: HubbardU is non-zero!\n";
+				std::cerr<<PsimagLite::AnsiColor::reset;
+			}
+		} catch (std::exception&) {}
 
 		if (model=="HubbardOneBand" ||
 		        model=="HubbardOneOrbital" ||
