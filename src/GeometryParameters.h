@@ -114,7 +114,7 @@ struct GeometryParameters {
 	      omega(0.0),
 	      phase(0.0)
 	{
-		io.readline(outputFile, "OutputFile=");
+		outputFile = "bogus.txt";
 		if (outputFile.find(".") == PsimagLite::String::npos)
 			outputFile += ".txt";
 

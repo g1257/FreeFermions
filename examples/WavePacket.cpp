@@ -32,6 +32,7 @@ typedef FreeFermions::HilbertState<OperatorType,DiagonalOperatorType> HilbertSta
 typedef PsimagLite::Vector<HilbertStateType*>::Type VectorHilbertStateType;
 typedef DiagonalOperatorType::FactoryType OpDiagonalFactoryType;
 typedef OperatorType::FactoryType OpNormalFactoryType;
+typedef PsimagLite::Vector<RealType>::Type VectorRealType;
 
 void computeOneBucket(HilbertStateType& phi,
                       OpNormalFactoryType& opNormalFactory,
@@ -167,11 +168,11 @@ void superDensity(MatrixType& sd,
 	return bucketFinal(sd,buckets,weights,orbitals);
 }
 
-void printValue(const MatrixOfMatrixPointersType& values,
-                SizeType thisSite,
-                SizeType it,
-                int orb,
-                SizeType orbitals)
+ComplexType calValue(const MatrixOfMatrixPointersType& values,
+                     SizeType thisSite,
+                     SizeType it,
+                     int orb,
+                     SizeType orbitals)
 {
 	ComplexType sum = 0.0;
 	if (orb < 0) {
@@ -182,8 +183,25 @@ void printValue(const MatrixOfMatrixPointersType& values,
 		sum = values(thisSite,it)->operator()(orb,orb);
 	}
 
-	std::cout<<sum<<" ";
+	return sum;
 
+}
+
+RealType computeNup(SizeType thisSite,
+                    const EngineType& engine,
+                    const HilbertStateType& gs)
+{
+	OpNormalFactoryType opNormalFactory(engine);
+	HilbertStateType* phi = new HilbertStateType(gs);
+	SizeType sigma = 0;
+	OperatorType& opCdagger = opNormalFactory(OperatorType::DESTRUCTION,
+	                                          thisSite,
+	                                          sigma);
+	opCdagger.applyTo(*phi);
+	ComplexType val = scalarProduct(*phi, *phi);
+	delete phi;
+	phi = 0;
+	return PsimagLite::real(val);
 }
 
 int main(int argc,char *argv[])
@@ -288,12 +306,18 @@ int main(int argc,char *argv[])
 			doOneSite(values,garbage,i,gs,engine,sites,weights,orbitals,offset,step);
 	}
 
+	VectorRealType nup(sitesUpTo);
+	for (SizeType i = 0; i < orbitals*geometryParams.sites; ++i)
+		nup[i] = computeNup(i, engine, gs);
+
 	for (SizeType it = 0; it < total; ++it) {
 		RealType time = it * step + offset;
 		std::cout<<time<<" ";
 		for (SizeType i = 0; i < sitesUpTo; ++i) {
 			SizeType thisSite = (allSites) ? i : site3;
-			printValue(values,thisSite,it,option,orbitals);
+			ComplexType value = calValue(values, thisSite, it, option, orbitals);
+			RealType value2 = PsimagLite::real(value)/PsimagLite::real(sum) + nup[i];
+			std::cout<<value2<<" ";
 		}
 
 		std::cout<<"\n";

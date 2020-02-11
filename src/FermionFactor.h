@@ -211,6 +211,7 @@ private:
 
 	private:
 
+
 		long unsigned int word_;
 		SizeType n_;
 		PairSizeType beginEnd_;
