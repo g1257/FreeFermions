@@ -82,6 +82,7 @@ DISCLOSED WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
 #include <assert.h>
 #include "Io/IoSimple.h"
 #include "AnsiColors.h"
+#include "PsimagLite.h"
 
 namespace FreeFermions {
 
