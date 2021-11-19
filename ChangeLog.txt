@@ -1,3 +1,11 @@
+2021-11-19 Version 1.26
+
+* WavePacket2 driver added
+
+* Faster memory handling for FreeOperators.h
+
+* Warns if HubbardU non zero in input
+
 2019-12-09 Version 1.24
 
 * VerboseEnum is an enum class
